@@ -24,7 +24,7 @@ Admin commands are restricted to users with the **Administrator** permission and
 
 `/admins` - manage admin users and roles  
 `/blacklist` - manage blacklisted users and roles  
-`/clear` - clear a queue. (shortcut for `/members delete ALL`)  
+`/clear` - clear a queue.
 `/displays` - manage display channels  
 `/members` - manage queue members  
 `/move` - change the position of a queue member
