@@ -133,9 +133,15 @@ export const MEMBERS_TABLE = sqliteTable("members", ({
 		positionTimeIndex: index("members_position_time_index").on(table.positionTime),
 	}));
 
-export const MEMBERS_RELATIONS = relations(MEMBERS_TABLE, ({ many }) => ({
-	guilds: many(GUILDS_TABLE),
-	queues: many(QUEUES_TABLE),
+export const MEMBERS_RELATIONS = relations(MEMBERS_TABLE, ({ one }) => ({
+	guilds: one(GUILDS_TABLE, {
+		fields: [MEMBERS_TABLE.guildId],
+		references: [GUILDS_TABLE.guildId],
+	}),
+	queues: one(QUEUES_TABLE, {
+		fields: [MEMBERS_TABLE.guildId],
+		references: [QUEUES_TABLE.guildId],
+	}),
 }));
 
 export type NewMember = typeof MEMBERS_TABLE.$inferInsert;
@@ -158,9 +164,15 @@ export const SCHEDULES_TABLE = sqliteTable("schedules", ({
 		queueIdIndex: index("schedules_queue_id_index").on(table.queueId),
 	}));
 
-export const SCHEDULES_RELATIONS = relations(SCHEDULES_TABLE, ({ many }) => ({
-	guilds: many(GUILDS_TABLE),
-	queues: many(QUEUES_TABLE),
+export const SCHEDULES_RELATIONS = relations(SCHEDULES_TABLE, ({ one }) => ({
+	guilds: one(GUILDS_TABLE, {
+		fields: [SCHEDULES_TABLE.guildId],
+		references: [GUILDS_TABLE.guildId],
+	}),
+	queues: one(QUEUES_TABLE, {
+		fields: [SCHEDULES_TABLE.guildId],
+		references: [QUEUES_TABLE.guildId],
+	}),
 }));
 
 export type NewSchedule = typeof SCHEDULES_TABLE.$inferInsert;
@@ -181,9 +193,15 @@ export const BLACKLISTED_TABLE = sqliteTable("blacklisted", ({
 		unq: unique().on(table.queueId, table.subjectId),
 	}));
 
-export const BLACKLISTED_RELATIONS = relations(BLACKLISTED_TABLE, ({ many }) => ({
-	guilds: many(GUILDS_TABLE),
-	queues: many(QUEUES_TABLE),
+export const BLACKLISTED_RELATIONS = relations(BLACKLISTED_TABLE, ({ one }) => ({
+	guilds: one(GUILDS_TABLE, {
+		fields: [BLACKLISTED_TABLE.guildId],
+		references: [GUILDS_TABLE.guildId],
+	}),
+	queues: one(QUEUES_TABLE, {
+		fields: [BLACKLISTED_TABLE.guildId],
+		references: [QUEUES_TABLE.guildId],
+	}),
 }));
 
 export type NewBlacklisted = typeof BLACKLISTED_TABLE.$inferInsert;
@@ -204,9 +222,15 @@ export const WHITELISTED_TABLE = sqliteTable("whitelisted", ({
 		unq: unique().on(table.queueId, table.subjectId),
 	}));
 
-export const WHITELISTED_RELATIONS = relations(WHITELISTED_TABLE, ({ many }) => ({
-	guilds: many(GUILDS_TABLE),
-	queues: many(QUEUES_TABLE),
+export const WHITELISTED_RELATIONS = relations(WHITELISTED_TABLE, ({ one }) => ({
+	guilds: one(GUILDS_TABLE, {
+		fields: [WHITELISTED_TABLE.guildId],
+		references: [GUILDS_TABLE.guildId],
+	}),
+	queues: one(QUEUES_TABLE, {
+		fields: [WHITELISTED_TABLE.guildId],
+		references: [QUEUES_TABLE.guildId],
+	}),
 }));
 
 export type NewWhitelisted = typeof WHITELISTED_TABLE.$inferInsert;
@@ -227,9 +251,15 @@ export const PRIORITIZED_TABLE = sqliteTable("prioritized", ({
 		unq: unique().on(table.guildId, table.subjectId),
 	}));
 
-export const PRIORITIZED_RELATIONS = relations(PRIORITIZED_TABLE, ({ many }) => ({
-	guilds: many(GUILDS_TABLE),
-	queues: many(QUEUES_TABLE),
+export const PRIORITIZED_RELATIONS = relations(PRIORITIZED_TABLE, ({ one }) => ({
+	guilds: one(GUILDS_TABLE, {
+		fields: [PRIORITIZED_TABLE.guildId],
+		references: [GUILDS_TABLE.guildId],
+	}),
+	queues: one(QUEUES_TABLE, {
+		fields: [PRIORITIZED_TABLE.guildId],
+		references: [QUEUES_TABLE.guildId],
+	}),
 }));
 
 export type NewPrioritized = typeof PRIORITIZED_TABLE.$inferInsert;
@@ -248,8 +278,11 @@ export const ADMINS_TABLE = sqliteTable("admins", ({
 		unq: unique().on(table.guildId, table.subjectId),
 	}));
 
-export const ADMINS_RELATIONS = relations(WHITELISTED_TABLE, ({ many }) => ({
-	guilds: many(GUILDS_TABLE),
+export const ADMINS_RELATIONS = relations(ADMINS_TABLE, ({ one }) => ({
+	guilds: one(GUILDS_TABLE, {
+		fields: [ADMINS_TABLE.guildId],
+		references: [GUILDS_TABLE.guildId],
+	}),
 }));
 
 export type NewAdmin = typeof ADMINS_TABLE.$inferInsert;
