@@ -21,6 +21,10 @@ export class ClearButton extends AdminButton {
 		) return;
 
 		MemberUtils.clearMembers(inter.store, queue);
-		await inter.respond({ content: `Cleared the '${queueMention(queue)}' queue.`, ephemeral: false });
+
+		await Promise.all([
+			inter.deleteReply(),
+			inter.channel.send( `Cleared the '${queueMention(queue)}' queue.` ),
+		]);
 	}
 }

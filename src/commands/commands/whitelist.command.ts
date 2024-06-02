@@ -9,7 +9,7 @@ import { AdminCommand } from "../../types/command.types.ts";
 import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
-import { describeUserOrRoleTable, queuesMention } from "../../utils/string.utils.ts";
+import { describeUserOrRoleTable } from "../../utils/string.utils.ts";
 import { WhitelistUtils } from "../../utils/whitelist.utils.ts";
 
 export class WhitelistCommand extends AdminCommand {
@@ -75,9 +75,9 @@ export class WhitelistCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly ADD_OPTIONS = {
+		queues: new QueuesOption({ required: true, description: "Queue(s) to whitelist in" }),
 		mentionable: new MentionableOption({ required: true, description: "User or role to whitelist" }),
 		reason: new ReasonOption({ description: "Reason for whitelisting" }),
-		queues: new QueuesOption({ description: "Whitelist from specific queue(s)" }),
 	};
 
 	static async whitelist_add(inter: SlashInteraction) {
@@ -86,8 +86,6 @@ export class WhitelistCommand extends AdminCommand {
 		const queues = await WhitelistCommand.ADD_OPTIONS.queues.get(inter);
 
 		const insertedWhitedListed = WhitelistUtils.insertWhitelisted(inter.store, queues, mentionable, reason);
-
-		await inter.respond(`Whitelisted ${mentionable}${queues?.size ? ` in ${queuesMention(queues)}` : ""}.`);
 
 		const updatedQueues = insertedWhitedListed.map(inserted => inter.store.dbQueues().get(inserted.queueId));
 		await this.whitelist_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));

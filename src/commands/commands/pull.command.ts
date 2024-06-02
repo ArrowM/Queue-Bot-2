@@ -42,9 +42,9 @@ export class PullCommand extends AdminCommand {
 			notification: { type: NotificationType.PULLED_FROM_QUEUE, channelToLink: inter.channel },
 		});
 
-		await inter.respond({
-			embeds: MemberUtils.formatPulledMemberEmbeds(queues, pulledMembers),
-			ephemeral: false,
-		});
+		await Promise.all([
+			inter.deleteReply(),
+			inter.channel.send({ embeds: MemberUtils.formatPulledMemberEmbeds(queues, pulledMembers) }),
+		]);
 	}
 }

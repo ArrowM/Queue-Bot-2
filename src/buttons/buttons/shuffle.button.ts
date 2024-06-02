@@ -21,6 +21,9 @@ export class ShuffleButton extends AdminButton {
 			!await inter.promptConfirmOrCancel(`Are you sure you want to shuffle the '${queueMention(queue)}' queue?`)
 		) return;
 
-		await inter.respond({ content: `The '${queueMention(queue)}' queue has been shuffled.`, ephemeral: false });
+		await Promise.all([
+			inter.deleteReply(),
+			inter.channel.send( `The '${queueMention(queue)}' queue has been shuffled.` ),
+		]);
 	}
 }

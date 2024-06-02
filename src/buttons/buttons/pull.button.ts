@@ -19,9 +19,12 @@ export class PullButton extends AdminButton {
 		const pulledMembers = MemberUtils.deleteMembers({
 			store: inter.store,
 			queues: [queue],
-			by: { },
 			notification: { type: NotificationType.PULLED_FROM_QUEUE, channelToLink: inter.channel },
 		});
-		await inter.respond({ embeds: MemberUtils.formatPulledMemberEmbeds([queue], pulledMembers), ephemeral: false });
+
+		await Promise.all([
+			inter.deleteReply(),
+			inter.channel.send({ embeds: MemberUtils.formatPulledMemberEmbeds([queue], pulledMembers) }),
+		]);
 	}
 }

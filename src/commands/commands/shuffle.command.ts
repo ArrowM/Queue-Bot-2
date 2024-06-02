@@ -29,6 +29,9 @@ export class ShuffleCommand extends AdminCommand {
 
 		queues.forEach((queue) => MemberUtils.shuffleMembers(inter.store, queue));
 
-		await inter.respond({ content: `Shuffled ${queuesMention(queues)}`, ephemeral: false });
+		await Promise.all([
+			inter.deleteReply(),
+			inter.channel.send( `Shuffled the '${queuesMention(queues)}' queues.` ),
+		]);
 	}
 }

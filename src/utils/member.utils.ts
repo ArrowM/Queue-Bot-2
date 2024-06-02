@@ -1,9 +1,8 @@
 import { Collection, EmbedBuilder, GuildMember, Role, type Snowflake, userMention } from "discord.js";
-import { groupBy } from "lodash-es";
+import { get, groupBy } from "lodash-es";
 
 import type { Store } from "../core/store.ts";
 import { type DbMember, type DbPrioritized, type DbQueue } from "../db/schema.ts";
-import { Color } from "../types/db.types.ts";
 import type { MemberDeleteBy } from "../types/member.types.ts";
 import type { NotificationOptions } from "../types/notification.types.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
@@ -100,14 +99,14 @@ export namespace MemberUtils {
 	export function deleteMembers(options: {
 		store: Store,
 		queues: DbQueue[] | Collection<bigint, DbQueue>,
-		by: MemberDeleteBy,
+		by?: MemberDeleteBy,
 		notification?: NotificationOptions,
 	}) {
 		const { store, queues, by, notification } = options;
 		const deletedMembers: DbMember[] = [];
 		const membersToNotify: DbMember[] = [];
 
-		if (("userId" in by) || ("userIds" in by)) {
+		if (by && ("userId" in by || "userIds" in by)) {
 			const userIds = ("userId" in by) ? [by.userId] : by.userIds;
 			queues.forEach((queue: DbQueue) => {
 				const deleted: DbMember[] = [];
@@ -121,7 +120,7 @@ export namespace MemberUtils {
 				}
 			});
 		}
-		else if ("roleId" in by) {
+		else if (by && "roleId" in by) {
 			const jsMembers = store.guild.roles.cache.get(by.roleId).members;
 			queues.forEach((queue: DbQueue) => {
 				jsMembers.forEach(jsMember => {
@@ -138,7 +137,7 @@ export namespace MemberUtils {
 		else {
 			queues.forEach((queue: DbQueue) => {
 				const deleted: DbMember[] = [];
-				const numToPull = by.count ?? queue.pullBatchSize ?? 1;
+				const numToPull = get(by, "count") ?? queue.pullBatchSize ?? 1;
 				for (let i = 0; i < numToPull; i++) {
 					const member = store.deleteMember({ queueId: queue.id });
 					if (member) {
@@ -210,6 +209,7 @@ export namespace MemberUtils {
 		const jsMember = await store.jsMember(userId);
 		return new EmbedBuilder()
 			.setTitle(queueMention(queue))
+			.setColor(queue.color)
 			.setDescription(DisplayUtils.createMemberDisplayLine(queue, member, jsMember, position));
 	}
 
@@ -218,21 +218,16 @@ export namespace MemberUtils {
 		const grouped = groupBy(pulledMembers, "queueId");
 		for (const [queueId, pulledMembers] of Object.entries(grouped)) {
 			const queue = find(queues, queue => queue.id === BigInt(queueId));
-			const embed = new EmbedBuilder()
-				.setTitle(queueMention(queue))
-				.setColor(Color.Green);
-
-			if (pulledMembers.length) {
-				const membersStr = pulledMembers.map((member) => userMention(member.userId)).join(", ");
-				embed.addFields({
-					name: "Pulled members",
-					value: membersStr,
-				});
-			}
-			else {
-				embed.setDescription("No members were pulled.");
-			}
-			embeds.push(embed);
+			const membersStr = pulledMembers.map((member) => userMention(member.userId)).join(", ");
+			const description = pulledMembers.length
+				? `Pulled ${membersStr} from the '${queueMention(queue)}' queue!`
+				: `No members were pulled from the '${queueMention(queue)}' queue`;
+			embeds.push(
+				new EmbedBuilder()
+					.setTitle(queueMention(queue))
+					.setColor(queue.color)
+					.setDescription(description)
+			);
 		}
 		return embeds;
 	}
