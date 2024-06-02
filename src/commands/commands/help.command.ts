@@ -14,7 +14,7 @@ export class HelpCommand extends EveryoneCommand {
 
 	data = new SlashCommandBuilder()
 		.setName(HelpCommand.ID)
-		.setDescription("Get helpful info about Queue Bot")
+		.setDescription("Get helpful info")
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName("setup")
@@ -76,7 +76,7 @@ export class HelpCommand extends EveryoneCommand {
 					.setDescription("The basic queues commands available to everyone:")
 					.addFields({
 						name: commandMention("help"),
-						value: "Get helpful info about Queue Bot",
+						value: "Get helpful info",
 					},
 					{
 						name: commandMention("join"),

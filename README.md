@@ -13,7 +13,7 @@
 5. **Explore other commands** - `/help general` explains how to join and leave queues. `/help admin` explains how admins can manage queues.
 
 ## Commands for Everyone
-`/help` - get helpful info about Queue Bot  
+`/help` - get helpful info  
 `/join` - join a queue  
 `/leave` - leave a queue  
 `/positions` - get your positions in all queues  
