@@ -71,7 +71,8 @@ export namespace ClientUtils {
 
 			LIVE_COMMANDS = await CLIENT.application.commands.fetch();
 			console.timeEnd(`Registered ${COMMANDS.size} commands with server`);
-		} catch (e) {
+		}
+		catch (e) {
 			console.error(e);
 		}
 	}
@@ -95,8 +96,8 @@ export namespace ClientUtils {
 			}
 		});
 		// color check
-		if (!Object.keys(Color).includes(process.env.COLOR as string)) {
-			throw new Error(`Invalid color value. Please edit .env file\nOptions: [${Object.keys(Color).join(", ")}]`);
+		if (!Object.keys(Color).includes(process.env.DEFAULT_COLOR as string)) {
+			throw new Error(`Invalid DEFAULT_COLOR value. Please edit .env file\nOptions: [${Object.keys(Color).join(", ")}]`);
 		}
 	}
 }

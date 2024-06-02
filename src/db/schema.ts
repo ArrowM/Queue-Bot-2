@@ -42,7 +42,7 @@ export const QUEUES_TABLE = sqliteTable("queues", ({
 	// configurable queue properties
 	autopullToggle: integer("autopull_toggle", { mode: "boolean" }).notNull().default(false),
 	buttonsToggle: integer("buttons_toggle", { mode: "boolean" }).notNull().default(true),
-	color: text("color").$type<ColorResolvable>().notNull().default(get(Color, process.env.COLOR) as ColorResolvable),
+	color: text("color").$type<ColorResolvable>().notNull().default(get(Color, process.env.DEFAULT_COLOR) as ColorResolvable),
 	gracePeriod: integer("grace_period").notNull().default(0),
 	header: text("header"),
 	inlineToggle: integer("inline_toggle", { mode: "boolean" }).notNull().default(false),
