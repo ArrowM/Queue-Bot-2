@@ -1,5 +1,5 @@
 # Queue-Bot
-**Queue Bot** provides live queues of users. Customizable. Easy to use.
+**Queue Bot** is a Discord bot that provides Live queues of users. Customizable. Easy to use. Built with Discord.js
 
 [⛑️ Support](https://discord.gg/RbmfnP3)  
 [🗃️ GitHub](https://github.com/ArrowM/Queue-Bot-2)  
