@@ -15,3 +15,8 @@ This file contains information about the project structure and how to contribute
 ```
 // TODO
 ```
+
+### Misc
+```
+// TODO mention  `drizzle-kit generate` command
+```
