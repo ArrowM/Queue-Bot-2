@@ -1,0 +1,8 @@
+{
+  "out": "./db/migrations",
+  "schema": "./src/db",
+  "driver": "better-sqlite",
+  "dbCredentials": {
+    "url": "./db/main.sqlite"
+  }
+}
