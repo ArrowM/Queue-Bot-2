@@ -1,5 +1,5 @@
 # Queue-Bot
-**Queue Bot** is a Discord bot that provides Live queues of users. Customizable. Easy to use. Built with Discord.js
+**Queue Bot** is a Discord bot that provides Live queues of users. Customizable. Easy to use. Built with [Discord.js](https://discord.js.org/).
 
 [⛑️ Support](https://discord.gg/RbmfnP3)  
 [🗃️ GitHub](https://github.com/ArrowM/Queue-Bot-2)  
@@ -12,17 +12,14 @@
 4. **Pull Members** - members can be pulled from a queue by admins by clicking the 'Pull' button queue displays or with `/pull`.  
 5. **Explore other commands** - `/help general` explains how to join and leave queues. `/help admin` explains how admins can manage queues.
 
-## Commands
-Most commands will be hidden until you have at least one queue.
-
-### Commands for Everyone
+## Commands for Everyone
 `/help` - get helpful info about Queue Bot  
 `/join` - join a queue  
 `/leave` - leave a queue  
 `/positions` - get your positions in all queues  
 `/show` - show queue(s)
 
-### Admin Commands
+## Admin Commands
 Admin commands are restricted to users with the **Administrator** permission and users added via `/admins add`.
 
 `/admins` - manage admin users and roles  
