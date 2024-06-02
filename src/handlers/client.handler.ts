@@ -1,11 +1,12 @@
 import type { Guild } from "discord.js";
 
+import { Store } from "../core/store.ts";
 import { QueryUtils } from "../utils/query.utils.ts";
 
 export namespace ClientHandler {
 	export function handleGuildCreate(guild: Guild) {
 		try {
-			QueryUtils.insertGuild({ guildId: guild.id });
+			new Store(guild);
 		}
 		catch {
 			// ignore

@@ -19,7 +19,7 @@ import {
 	MEMBERS_TABLE,
 	type NewAdmin,
 	type NewBlacklisted,
-	type NewDisplay,
+	type NewDisplay, type NewGuild,
 	type NewMember,
 	type NewPrioritized,
 	type NewQueue,
@@ -69,7 +69,7 @@ export class Store {
 	constructor(public guild: Guild) {
 		const dbGuild = this.dbGuild();
 		if (!dbGuild) {
-			QueryUtils.insertGuild({ guildId: guild.id });
+			this.insertGuild({ guildId: guild.id });
 		}
 	}
 
@@ -131,6 +131,14 @@ export class Store {
 	// ====================================================================
 	//                           Inserts
 	// ====================================================================
+
+	insertGuild(dbGuild: NewGuild) {
+		this.dbGuild.clear();
+		return db
+			.insert(GUILDS_TABLE)
+			.values(dbGuild)
+			.returning().get();
+	}
 
 	// throws error on conflict
 	insertQueue(newQueue: NewQueue) {

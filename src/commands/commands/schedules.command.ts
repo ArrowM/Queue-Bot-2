@@ -153,7 +153,7 @@ export class SchedulesCommand extends AdminCommand {
 	static async schedules_delete(inter: SlashInteraction) {
 		const schedules = await SchedulesCommand.DELETE_OPTIONS.schedules.get(inter);
 
-		const { updatedQueues } = ScheduleUtils.deleteSchedules(inter.store, schedules.map(sch => sch.id));
+		const { updatedQueues } = ScheduleUtils.deleteSchedules(schedules.map(sch => sch.id), inter.store);
 
 		await this.schedules_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}

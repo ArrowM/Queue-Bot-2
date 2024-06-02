@@ -1,7 +1,5 @@
-import { Collection, type Snowflake } from "discord.js";
+import { Collection } from "discord.js";
 
-import { ClientUtils } from "./client.utils.ts";
-import { QueryUtils } from "./query.utils.ts";
 
 export function toCollection<K, V>(property: string | number, list: V[]) {
 	return new Collection<K, V>(list.map(item => [(item as any)[property] as K, item]));
@@ -9,15 +7,6 @@ export function toCollection<K, V>(property: string | number, list: V[]) {
 
 export function toChoices(coll: ({ [key: string | number]: any }) | any[]) {
 	return Object.values(coll).map((value) => ({ name: value, value }));
-}
-
-export async function getJsGuild(guildId: Snowflake) {
-	try {
-		return await ClientUtils.getGuild(guildId);
-	}
-	catch {
-		QueryUtils.deleteGuild({ guildId });
-	}
 }
 
 export function size<T>(items: T[] | Collection<any, T>): number {

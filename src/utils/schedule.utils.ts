@@ -6,10 +6,11 @@ import { type DbQueue, type DbSchedule, type NewSchedule } from "../db/schema.ts
 import { ScheduleCommand } from "../types/db.types.ts";
 import { TIMEZONES } from "../types/misc.types.ts";
 import { NotificationType } from "../types/notification.types.ts";
+import { ClientUtils } from "./client.utils.ts";
 import { DisplayUtils } from "./display.utils.ts";
 import { InvalidCronError } from "./error.utils.ts";
 import { MemberUtils } from "./member.utils.ts";
-import { getJsGuild, map } from "./misc.utils.ts";
+import { map } from "./misc.utils.ts";
 import { QueryUtils } from "./query.utils.ts";
 
 export namespace ScheduleUtils {
@@ -82,7 +83,13 @@ export namespace ScheduleUtils {
 		return { updatedSchedules, updatedQueues: queuesToUpdate };
 	}
 
-	export function deleteSchedules(store: Store, scheduleIds: bigint[]) {
+	export function deleteSchedules(scheduleIds: bigint[], store?: Store) {
+		if (!store) {
+			return {
+				deletedSchedules: scheduleIds.map(id => QueryUtils.deleteSchedule({ id })),
+			};
+		}
+
 		// delete from db and stop cron task
 		const deletedSchedules = scheduleIds.map((id) => {
 			const deletedSchedule = store.deleteSchedule({ id });
@@ -115,19 +122,10 @@ export namespace ScheduleUtils {
 		);
 	}
 
-	async function executeScheduledCommand(id: bigint) {
-		let store, queue, schedule;
+	async function executeScheduledCommand(scheduleId: bigint) {
 		try {
-			schedule = QueryUtils.selectSchedule({ id });
-			store = new Store(await getJsGuild(schedule.guildId));
-			queue = QueryUtils.selectQueue({ id: schedule.queueId });
-		}
-		catch (e) {
-			deleteSchedules(store, [id]);
-			return;
-		}
+			const { store, queue, schedule } = await getScheduleContext(scheduleId);
 
-		try {
 			switch (schedule.command) {
 			case ScheduleCommand.Clear:
 				MemberUtils.clearMembers(store, queue);
@@ -151,5 +149,35 @@ export namespace ScheduleUtils {
 			// TODO disable error log
 			console.error(e);
 		}
+	}
+
+	async function getScheduleContext(scheduleId: bigint) {
+		let store, queue, schedule;
+
+		try {
+			schedule = QueryUtils.selectSchedule({ id: scheduleId });
+		}
+		catch (e) {
+			deleteSchedules([schedule.id]);
+			throw e;
+		}
+
+		try {
+			store = new Store(await ClientUtils.getGuild(schedule.guildId));
+		}
+		catch (e) {
+			QueryUtils.deleteGuild({ guildId: schedule.guildId });
+			throw e;
+		}
+
+		try {
+			queue = QueryUtils.selectQueue({ id: schedule.queueId });
+		}
+		catch (e) {
+			store.deleteQueue({ id: queue.id });
+			throw e;
+		}
+
+		return { store, queue, schedule };
 	}
 }

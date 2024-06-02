@@ -8,7 +8,6 @@ import {
 	DISPLAYS_TABLE,
 	GUILDS_TABLE,
 	MEMBERS_TABLE,
-	type NewGuild,
 	PRIORITIZED_TABLE,
 	QUEUES_TABLE,
 	SCHEDULES_TABLE,
@@ -57,18 +56,11 @@ export namespace QueryUtils {
 		return selectGuildById.get(by);
 	}
 
-	export function insertGuild(dbGuild: NewGuild) {
-		return db
-			.insert(GUILDS_TABLE)
-			.values(dbGuild)
-			.returning().get();
-	}
-
 	export function deleteGuild(by: { guildId: Snowflake }) {
 		return db
 			.delete(GUILDS_TABLE)
 			.where(
-				eq(GUILDS_TABLE.guildId, by.guildId),
+				eq(GUILDS_TABLE.guildId, by.guildId)
 			)
 			.returning().get();
 	}
@@ -179,6 +171,15 @@ export namespace QueryUtils {
 			.select()
 			.from(SCHEDULES_TABLE)
 			.all();
+	}
+
+	export function deleteSchedule(by: { id: bigint }) {
+		return db
+			.delete(SCHEDULES_TABLE)
+			.where(
+				eq(SCHEDULES_TABLE.id, by.id),
+			)
+			.returning().get();
 	}
 
 	// Whitelisted

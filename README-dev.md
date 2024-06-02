@@ -21,9 +21,9 @@ Must restart terminal or device after installing pre-requirements.
 | 3 | Set **credentials** in `.env`                                                                                                                                          |                                                   |
 
 ### Running
-| # |               |                 |
-|---|---------------|-----------------|
-| 1 | Start the bot | `npm run start` |
+| # |               |             |
+|---|---------------|-------------|
+| 1 | Start the bot | `npm start` |
 
 ## How to create commands
 ```
