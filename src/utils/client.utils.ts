@@ -1,4 +1,5 @@
 import {
+	ActivityType,
 	ApplicationCommand,
 	Client as DiscordClient,
 	type Collection,
@@ -40,6 +41,8 @@ export namespace ClientUtils {
 
 		// Startup Events
 
+		CLIENT.user.setActivity({ name: "ready to /help", type: ActivityType.Custom });
+
 		// Startup Functions
 
 		await registerCommands();
@@ -68,8 +71,7 @@ export namespace ClientUtils {
 
 			LIVE_COMMANDS = await CLIENT.application.commands.fetch();
 			console.timeEnd(`Registered ${COMMANDS.size} commands with server`);
-		}
-		catch (e) {
+		} catch (e) {
 			console.error(e);
 		}
 	}

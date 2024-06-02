@@ -2,7 +2,7 @@
 **Queue Bot** provides live queues of users. Customizable. Easy to use.
 
 [⛑️ Support]https://discord.gg/RbmfnP3
-[🗃️ GitHub Repository️]https://github.com/ArrowM/Queue-Bot-2
+[🗃️ GitHub]https://github.com/ArrowM/Queue-Bot-2
 [💖 Donate]https://www.buymeacoffee.com/Arroww
 
 ## Getting Started
