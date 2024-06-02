@@ -89,7 +89,7 @@ export namespace ClientUtils {
 		[
 			"TOKEN",
 			"CLIENT_ID",
-			"COLOR",
+			"DEFAULT_COLOR",
 		].forEach(name => {
 			if (process.env[name] == null) {
 				throw new Error(`Required environment variable ${name} not set. Please edit .env file`);
