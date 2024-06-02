@@ -17,6 +17,7 @@ import {
 } from "./error.utils.ts";
 import { find, map } from "./misc.utils.ts";
 import { NotificationUtils } from "./notification.utils.ts";
+import { QueryUtils } from "./query.utils.ts";
 import { queueMention } from "./string.utils.ts";
 import { WhitelistUtils } from "./whitelist.utils.ts";
 
@@ -107,19 +108,17 @@ export namespace MemberUtils {
 		const membersToNotify: DbMember[] = [];
 
 		if (("userId" in by) || ("userIds" in by)) {
+			const userIds = ("userId" in by) ? [by.userId] : by.userIds;
 			queues.forEach((queue: DbQueue) => {
-				const userIds = ("userId" in by) ? [by.userId] : by.userIds;
-				queues.forEach((queue: DbQueue) => {
-					const deleted: DbMember[] = [];
-					userIds.forEach(userId => {
-						const member = store.deleteMember({ queueId: queue.id, userId });
-						if (member) deleted.push(member);
-					});
-					deletedMembers.push(...deleted);
-					if (queue.notificationsToggle) {
-						membersToNotify.push(...deletedMembers);
-					}
+				const deleted: DbMember[] = [];
+				userIds.forEach(userId => {
+					const member = store.deleteMember({ queueId: queue.id, userId });
+					if (member) deleted.push(member);
 				});
+				deletedMembers.push(...deleted);
+				if (queue.notificationsToggle) {
+					membersToNotify.push(...deletedMembers);
+				}
 			});
 		}
 		else if ("roleId" in by) {
@@ -235,6 +234,21 @@ export namespace MemberUtils {
 			}
 			embeds.push(embed);
 		}
+		return embeds;
+	}
+
+	export async function getPositions(store: Store, userId: Snowflake) {
+		const members = QueryUtils.selectManyMembers({ guildId: store.guild.id, userId });
+		const queues = members.map(member => QueryUtils.selectQueue({ id: member.queueId }));
+
+		const embeds = await Promise.all(queues.map(queue =>
+			MemberUtils.getMemberPositionString(store, queue, userId),
+		));
+
+		if (!embeds.length) {
+			embeds.push(new EmbedBuilder().setDescription("You are not in any queues."));
+		}
+
 		return embeds;
 	}
 

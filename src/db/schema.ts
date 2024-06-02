@@ -16,6 +16,16 @@ export const GUILDS_TABLE = sqliteTable("guilds", ({
 	guildId: text("guild_id").$type<Snowflake>().primaryKey(),
 
 	joinedAt: integer("joined_at").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
+	commandsReceived: integer("commands_received").notNull().default(0),
+	buttonsReceived: integer("buttons_received").notNull().default(0),
+	displaysSent: integer("displays_sent").notNull().default(0),
+	queuesAdded: integer("queues_added").notNull().default(0),
+	membersAdded: integer("members_added").notNull().default(0),
+	schedulesAdded: integer("schedules_added").notNull().default(0),
+	whitelistedAdded: integer("whitelisted_added").notNull().default(0),
+	blacklistedAdded: integer("blacklisted_added").notNull().default(0),
+	prioritizedAdded: integer("prioritized_added").notNull().default(0),
+	adminsAdded: integer("admins_added").notNull().default(0),
 }));
 
 export const GUILDS_RELATIONS = relations(GUILDS_TABLE, ({ many }) => ({

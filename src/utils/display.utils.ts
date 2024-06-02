@@ -19,8 +19,8 @@ import {
 import { BUTTONS } from "../buttons/buttons.loader.ts";
 import { JoinButton } from "../buttons/buttons/join.button.ts";
 import { LeaveButton } from "../buttons/buttons/leave.button.ts";
+import { MyPositionsButton } from "../buttons/buttons/my-positions.button.ts";
 import { PullButton } from "../buttons/buttons/pull.button.ts";
-import { ShuffleButton } from "../buttons/buttons/shuffle.button.ts";
 import type { Store } from "../core/store.ts";
 import { type DbMember, type DbQueue } from "../db/schema.ts";
 import type { Button } from "../types/button.types.ts";
@@ -195,6 +195,8 @@ export namespace DisplayUtils {
 					console.error(e);
 				}
 			}));
+
+			store.incrementGuildStat("displaysSent", displays.size);
 		}
 		catch (e: any) {
 			// TODO disable error log
@@ -361,8 +363,10 @@ export namespace DisplayUtils {
 				);
 			}
 			actionRowBuilder.addComponents(
+				buildButton(BUTTONS.get(MyPositionsButton.ID)),
 				buildButton(BUTTONS.get(PullButton.ID)),
-				buildButton(BUTTONS.get(ShuffleButton.ID)),
+				// buildButton(BUTTONS.get(ClearButton.ID)),
+				// buildButton(BUTTONS.get(ShuffleButton.ID)),
 			);
 			return [actionRowBuilder.toJSON()];
 		}

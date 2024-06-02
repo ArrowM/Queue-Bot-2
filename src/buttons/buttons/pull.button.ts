@@ -11,18 +11,17 @@ export class PullButton extends AdminButton {
 
 	customId = PullButton.ID;
 	label = "Pull";
-	style = ButtonStyle.Secondary;
+	style = ButtonStyle.Primary;
 
 	async handle(inter: ButtonInteraction) {
 		const { queue } = await ButtonUtils.getButtonContext(inter);
+
 		const pulledMembers = MemberUtils.deleteMembers({
 			store: inter.store,
 			queues: [queue],
 			by: { },
 			notification: { type: NotificationType.PULLED_FROM_QUEUE, channelToLink: inter.channel },
 		});
-		const embeds = MemberUtils.formatPulledMemberEmbeds([queue], pulledMembers);
-
-		await inter.respond({ embeds: embeds, ephemeral: false });
+		await inter.respond({ embeds: MemberUtils.formatPulledMemberEmbeds([queue], pulledMembers), ephemeral: false });
 	}
 }

@@ -296,10 +296,9 @@ export class QueuesCommand extends AdminCommand {
 	static async queues_delete(inter: SlashInteraction) {
 		const queue = await QueuesCommand.DELETE_OPTIONS.queue.get(inter);
 
-		const isConfirmed = await inter.promptConfirmOrCancel(`Are you sure you want to delete the '${queueMention(queue)}' queue?`);
-		if (!isConfirmed) {
-			return;
-		}
+		if (
+			!await inter.promptConfirmOrCancel(`Are you sure you want to delete the '${queueMention(queue)}' queue?`)
+		) return;
 
 		const deletedQueue = inter.store.deleteQueue({ id: queue.id });
 

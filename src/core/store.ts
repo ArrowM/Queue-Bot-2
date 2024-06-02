@@ -1,6 +1,6 @@
 import { type DiscordAPIError, Guild, type GuildBasedChannel, type GuildMember, type Snowflake } from "discord.js";
 import { and, eq, isNull, or } from "drizzle-orm";
-import { compact, isNil } from "lodash-es";
+import { compact, get, isNil } from "lodash-es";
 import moize from "moize";
 
 import { db } from "../db/db.ts";
@@ -9,7 +9,7 @@ import {
 	BLACKLISTED_TABLE,
 	type DbAdmin,
 	type DbBlacklisted,
-	type DbDisplay,
+	type DbDisplay, type DbGuild,
 	type DbMember,
 	type DbPrioritized,
 	type DbQueue,
@@ -134,6 +134,7 @@ export class Store {
 
 	// throws error on conflict
 	insertQueue(newQueue: NewQueue) {
+		this.incrementGuildStat("queuesAdded");
 		this.dbQueues.clear();
 		try {
 			return db
@@ -163,6 +164,7 @@ export class Store {
 
 	// conflicts must be handled by the caller
 	insertMember(newMember: NewMember) {
+		this.incrementGuildStat("membersAdded");
 		this.dbMembers.clear();
 		return db
 			.insert(MEMBERS_TABLE)
@@ -176,6 +178,7 @@ export class Store {
 
 	// throws error on conflict
 	insertSchedule(newSchedule: NewSchedule) {
+		this.incrementGuildStat("schedulesAdded");
 		this.dbSchedules.clear();
 		try {
 			return db
@@ -192,6 +195,7 @@ export class Store {
 
 	// throws error on conflict
 	insertWhitelisted(newWhitelisted: NewWhitelisted) {
+		this.incrementGuildStat("whitelistedAdded");
 		this.dbWhitelisted.clear();
 		try {
 			return db
@@ -208,6 +212,7 @@ export class Store {
 
 	// throws error on conflict
 	insertBlacklisted(newBlacklisted: NewBlacklisted) {
+		this.incrementGuildStat("blacklistedAdded");
 		this.dbBlacklisted.clear();
 		try {
 			return db
@@ -224,6 +229,7 @@ export class Store {
 
 	// throws error on conflict
 	insertPrioritized(newPrioritized: NewPrioritized) {
+		this.incrementGuildStat("prioritizedAdded");
 		this.dbPrioritized.clear();
 		try {
 			return db
@@ -240,6 +246,7 @@ export class Store {
 
 	// throws error on conflict
 	insertAdmin(newAdmin: NewAdmin) {
+		this.incrementGuildStat("adminsAdded");
 		this.dbAdmins.clear();
 		try {
 			return db
@@ -257,6 +264,17 @@ export class Store {
 	// ====================================================================
 	//                           Updates
 	// ====================================================================
+
+	incrementGuildStat(col: keyof DbGuild, by: number = 1) {
+		const prev = get(this.dbGuild(), col) as number;
+		return db
+			.update(ADMINS_TABLE)
+			.set({ [col]: prev + by })
+			.where(
+				eq(ADMINS_TABLE.guildId, this.guild.id),
+			)
+			.returning().get();
+	}
 
 	updateQueue(queue: Partial<DbQueue> & { id: bigint }) {
 		this.dbQueues.clear();

@@ -18,9 +18,8 @@ export class ButtonHandler implements Handler {
 		await this.inter.deferReply({ ephemeral: true });
 		const button = BUTTONS.get(this.inter.customId);
 		if (button) {
-			if (button.adminOnly) {
-				AdminUtils.verifyIsAdmin(this.inter.store, this.inter.member);
-			}
+			if (button.adminOnly) AdminUtils.verifyIsAdmin(this.inter.store, this.inter.member);
+			this.inter.store.incrementGuildStat("buttonsReceived");
 			await button.handle(this.inter);
 		}
 	}
