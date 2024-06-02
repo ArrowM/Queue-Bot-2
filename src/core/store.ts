@@ -15,7 +15,7 @@ import {
 	type DbQueue,
 	type DbSchedule,
 	type DbWhitelisted,
-	DISPLAYS_TABLE,
+	DISPLAYS_TABLE, GUILDS_TABLE,
 	MEMBERS_TABLE,
 	type NewAdmin,
 	type NewBlacklisted,
@@ -266,12 +266,12 @@ export class Store {
 	// ====================================================================
 
 	incrementGuildStat(col: keyof DbGuild, by: number = 1) {
-		const prev = get(this.dbGuild(), col) as number;
+		const prev = Number(get(this.dbGuild(), col));
 		return db
-			.update(ADMINS_TABLE)
+			.update(GUILDS_TABLE)
 			.set({ [col]: prev + by })
 			.where(
-				eq(ADMINS_TABLE.guildId, this.guild.id),
+				eq(GUILDS_TABLE.guildId, this.guild.id),
 			)
 			.returning().get();
 	}
