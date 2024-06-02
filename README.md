@@ -1,41 +1,43 @@
 # Queue-Bot
+**Queue Bot** provides live queues of users. Customizable. Easy to use.
 
-[![TopGG](https://top.gg/api/widget/679018301543677959.svg)](https://top.gg/bot/679018301543677959)  
-[![BuyMeACoffee](https://img.shields.io/badge/BuyMeACoffee-Donate-ff9004.svg?logo=CoffeeScript&style=flat-square)](https://www.buymeacoffee.com/Arroww)  
-[![Discord Support Server](https://img.shields.io/discord/678645128755150863?label=Discord&style=flat-square)](https://discord.gg/RbmfnP3)
-
-Create voice & text channel queues. Queue Bot provides live queue displays in chat, assists in removing users in order, and allows for customization.
+[⛑️ Support]https://discord.gg/RbmfnP3
+[🗃️ GitHub Repository️]https://github.com/ArrowM/Queue-Bot-2
+[💖 Donate]https://www.buymeacoffee.com/Arroww
 
 ## Getting Started
-1. [Invite the bot to your server](https://discord.com/oauth2/authorize?client_id=679018301543677959&permissions=290475024&scope=bot%20applications.commands).
-2. Use `/help` and follow the instructions
+1. [Invite the bot to your server](https://discord.com/oauth2/authorize?client_id=721401878654484630).  
+2. **Create a Queue** - create a queue by typing `/queues add`. You can create as many queues as you want.  
+3. **Add Members** - members can join by clicking the 'Join' button beneath queue displays, `/join`, or by entering an integrated voice channel. Admins may also enqueue users with `/members add`.  
+4. **Pull Members** - members can be pulled from a queue by admins by clicking the 'Pull' button queue displays or with `/pull`.  
+5. **Explore other commands** - `/help general` explains how to join and leave queues. `/help admin` explains how admins can manage queues.
 
 ## Commands
 Most commands will be hidden until you have at least one queue.
 
 ### Commands for Everyone
-`/help` - Get helpful info about Queue Bot  
-`/join` - Join a queue  
-`/leave` - Leave a queue  
-`/positions` - Get your positions in all queues  
-`/show` - Show queue(s)
+`/help` - get helpful info about Queue Bot  
+`/join` - join a queue  
+`/leave` - leave a queue  
+`/positions` - get your positions in all queues  
+`/show` - show queue(s)
 
 ### Admin Commands
 Admin commands are restricted to server admins and users added via `/admins add`.
 
-`/admins` - Manage admin users and roles  
-`/blacklist` - Manage blacklisted users and roles  
-`/clear` - Clear a queue. (shortcut for /members delete ALL)  
-`/displays` - Manage display channels  
-`/members` - Manage queue members  
-`/move` - Change the position of a queue member (same as /member set position)  
-`/prioritize` - Manage prioritized users and roles  
-`/pull` - Pull members from queue(s)  
-`/queues` - Manage queues  
-`/schedules` - Manage scheduled commands  
-`/shuffle` - Shuffle queue(s)  
-`/voice` - Manage voice integrations  
-`/whitelist` - Manage whitelisted users and roles
+`/admins` - manage admin users and roles  
+`/blacklist` - manage blacklisted users and roles  
+`/clear` - clear a queue. (shortcut for `/members delete ALL`)  
+`/displays` - manage display channels  
+`/members` - manage queue members  
+`/move` - change the position of a queue member
+`/prioritize` - manage prioritized users and roles  
+`/pull` - pull members from queue(s)  
+`/queues` - manage queues  
+`/schedules` - manage scheduled commands  
+`/shuffle` - shuffle queue(s)  
+`/voice` - manage voice integrations  
+`/whitelist` - manage whitelisted users and roles  
 
 ## Install & Run
 

@@ -18,17 +18,17 @@ export class HelpCommand extends EveryoneCommand {
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName("setup")
-				.setDescription("1. Get help with setup")
+				.setDescription("Get help with setup")
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName("general")
-				.setDescription("2. Get help with general tasks like joining and leaving queues")
+				.setDescription("Get help with general tasks like joining and leaving queues")
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName("admin")
-				.setDescription("2. Get help with admin tasks like managing queues")
+				.setDescription("Get help with admin tasks like managing queues")
 		);
 
 	// ====================================================================
@@ -139,7 +139,7 @@ export class HelpCommand extends EveryoneCommand {
 					},
 					{
 						name: commandMention("pull"),
-						value: "Pull members from queue(s)  ",
+						value: "Pull members from queue(s)",
 					},
 					{
 						name: commandMention("queues", "add"),

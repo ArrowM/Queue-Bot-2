@@ -21,7 +21,7 @@ export class MoveCommand extends AdminCommand {
 
 	data = new SlashCommandBuilder()
 		.setName(MoveCommand.ID)
-		.setDescription("Change the position of a queue member (same as /member set position)")
+		.setDescription("Change the position of a queue member")
 		.addStringOption(MoveCommand.MOVE_OPTIONS.member.build)
 		.addIntegerOption(MoveCommand.MOVE_OPTIONS.position.build);
 
