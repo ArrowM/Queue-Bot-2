@@ -1,12 +1,12 @@
 # Queue-Bot
 **Queue Bot** provides live queues of users. Customizable. Easy to use.
 
-[⛑️ Support]https://discord.gg/RbmfnP3
-[🗃️ GitHub]https://github.com/ArrowM/Queue-Bot-2
-[💖 Donate]https://www.buymeacoffee.com/Arroww
+[⛑️ Support](https://discord.gg/RbmfnP3)  
+[🗃️ GitHub](https://github.com/ArrowM/Queue-Bot-2)  
+[💖 Donate](https://www.buymeacoffee.com/Arroww)  
 
 ## Getting Started
-1. [Invite the bot to your server](https://discord.com/oauth2/authorize?client_id=721401878654484630).  
+1. [Invite the bot to your server](https://discord.com/oauth2/authorize?client_id=1246630417168076901).  
 2. **Create a Queue** - create a queue by typing `/queues add`. You can create as many queues as you want.  
 3. **Add Members** - members can join by clicking the 'Join' button beneath queue displays, `/join`, or by entering an integrated voice channel. Admins may also enqueue users with `/members add`.  
 4. **Pull Members** - members can be pulled from a queue by admins by clicking the 'Pull' button queue displays or with `/pull`.  
