@@ -30,6 +30,7 @@
     "lodash-es": "^4.17.21",
     "moize": "^6.1.6",
     "node-cron": "^3.0.3",
+    "node-gyp": "^10.1.0",
     "topgg-autoposter": "^2.0.2"
   }
 }

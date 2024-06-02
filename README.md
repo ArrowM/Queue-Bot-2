@@ -23,7 +23,7 @@ Most commands will be hidden until you have at least one queue.
 `/show` - show queue(s)
 
 ### Admin Commands
-Admin commands are restricted to server admins and users added via `/admins add`.
+Admin commands are restricted to users with the **Administrator** permission and users added via `/admins add`.
 
 `/admins` - manage admin users and roles  
 `/blacklist` - manage blacklisted users and roles  
@@ -40,11 +40,24 @@ Admin commands are restricted to server admins and users added via `/admins add`
 `/whitelist` - manage whitelisted users and roles  
 
 ## Install & Run
+Install prerequisites then restart terminal or device and proceed with installation.
 
-| # | Instruction                                                                           | Cmd                                               |
-|---|---------------------------------------------------------------------------------------|---------------------------------------------------|
-| 1 | [Download Node.js](https://nodejs.org/en/download/package-manager) & restart terminal |                                                   |
-| 2 | Clone Queue-Bot-2 repo                                                                | `git clone https://github.com/ArrowM/Queue-Bot-2` |
-| 3 | Run setup script                                                                      | `npm run setup`                                   |
-| 4 | Set **credentials** in `.env`                                                         |                                                   |
-| 5 | Start the bot                                                                         | `npm run start`                                   |
+### Pre-requirements
+| # |                                                                                                                                                                         |
+|---|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1 | [Invite the bot to your server](https://discord.com/oauth2/authorize?client_id=1246630417168076901)                                                                     |
+| 2 | [Install Node.js](https://nodejs.org/en/download/package-manager) (any modern release)                                                                                  |
+| 3 | [Install Python](https://www.python.org/downloads/) (any modern release)                                                                                                |
+| 3 | (**WINDOWS ONLY**)<br/>[Install MVSC](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (check the `Desktop Development with C++` tile, then click `Install`) |
+
+### Installation
+| # |                                                                                                                                                                        |                                                   |
+|---|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
+| 1 | Clone Queue-Bot-2 repo                                                                                                                                                 | `git clone https://github.com/ArrowM/Queue-Bot-2` |
+| 2 | Run setup script                                                                                                                                                       | `npm run setup`                                   |
+| 3 | Set **credentials** in `.env`                                                                                                                                          |                                                   |
+
+### Running
+| # |               |                 |
+|---|---------------|-----------------|
+| 1 | Start the bot | `npm run start` |
