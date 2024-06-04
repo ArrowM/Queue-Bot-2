@@ -1,13 +1,15 @@
 import { type DiscordAPIError, Guild, type GuildBasedChannel, type GuildMember, type Snowflake } from "discord.js";
 import { and, eq, isNull, or } from "drizzle-orm";
-import { compact, get, isNil } from "lodash-es";
+import { compact, isNil } from "lodash-es";
 import moize from "moize";
 
-import { db } from "../db/db.ts";
+import { db, PENDING_GUILD_UPDATES } from "../db/db.ts";
 import {
-	ADMIN_TABLE, ARCHIVED_MEMBER_TABLE,
+	ADMIN_TABLE,
+	ARCHIVED_MEMBER_TABLE,
 	BLACKLISTED_TABLE,
-	type DbAdmin, type DbArchivedMember,
+	type DbAdmin,
+	type DbArchivedMember,
 	type DbBlacklisted,
 	type DbDisplay, type DbGuild,
 	type DbMember,
@@ -15,11 +17,14 @@ import {
 	type DbQueue,
 	type DbSchedule,
 	type DbWhitelisted,
-	DISPLAY_TABLE, GUILD_TABLE,
+	DISPLAY_TABLE,
+	GUILD_TABLE,
 	MEMBER_TABLE,
-	type NewAdmin, type NewArchivedMember,
+	type NewAdmin,
+	type NewArchivedMember,
 	type NewBlacklisted,
-	type NewDisplay, type NewGuild,
+	type NewDisplay,
+	type NewGuild,
 	type NewMember,
 	type NewPrioritized,
 	type NewQueue,
@@ -32,7 +37,8 @@ import {
 } from "../db/schema.ts";
 import {
 	AdminAlreadyExistsError,
-	BlacklistedAlreadyExistsError, PrioritizedAlreadyExistsError,
+	BlacklistedAlreadyExistsError,
+	PrioritizedAlreadyExistsError,
 	QueueAlreadyExistsError,
 	ScheduleAlreadyExistsError,
 	WhitelistedAlreadyExistsError,
@@ -53,20 +59,9 @@ export class Store {
 	 *                         ⚠️ IMPORTANT ⚠️
 	 * ====================================================================
 	 *
-	 * Queries MUST be written to only effect a single guild:
-	 * User ids are global, so they must be used in conjunction with another guild-specific identifier.
-	 *
-	 * ✅ by id of a table
-	 * ✅ by guildId
-	 * ✅ by queueId
-	 * ✅ by channelId
-	 * ✅ by messageId
-	 * ✅ by roleId
-	 * ✅ by userId + guildId
-	 * ✅ by subjectId + guildId
-	 * ❌ by userId
-	 * ❌ by subjectId
+	 * Queries must be written to include guildId!
 	 */
+
 
 	constructor(public guild: Guild) {
 		const dbGuild = this.dbGuild();
@@ -115,26 +110,37 @@ export class Store {
 		catch (_e) {
 			const e = _e as DiscordAPIError;
 			if (e.status == 404) {
-				this.deleteManyMembers({ guildId: this.guild.id, userId });
+				this.deleteManyMembers({ userId });
 			}
 		}
 	}
 
 	async jsChannels(channelIds: Snowflake[]) {
 		return toCollection<Snowflake, GuildBasedChannel>("id",
-			compact(await Promise.all(channelIds.map(id => this.jsChannel(id))))
+			compact(await Promise.all(channelIds.map(id => this.jsChannel(id)))),
 		);
 	}
 
 	async jsMembers(userIds: Snowflake[]) {
 		return toCollection<Snowflake, GuildMember>("id",
-			compact(await Promise.all(userIds.map(id => this.jsMember(id))))
+			compact(await Promise.all(userIds.map(id => this.jsMember(id)))),
 		);
 	}
 
 	// ====================================================================
 	//                           Inserts
 	// ====================================================================
+
+	// Increment a stat for a guild
+	incrementGuildStat(stat: keyof Omit<DbGuild, "guildId" | "joinTime" | "lastUpdateTime">, by = 1) {
+		if (!PENDING_GUILD_UPDATES[this.guild.id]) {
+			PENDING_GUILD_UPDATES[this.guild.id] = {};
+		}
+		if (!PENDING_GUILD_UPDATES[this.guild.id][stat]) {
+			PENDING_GUILD_UPDATES[this.guild.id][stat] = 0;
+		}
+		PENDING_GUILD_UPDATES[this.guild.id][stat]! += by;
+	}
 
 	insertGuild(dbGuild: NewGuild) {
 		this.dbGuild.clear();
@@ -288,65 +294,6 @@ export class Store {
 	}
 
 	// ====================================================================
-	//                           Updates
-	// ====================================================================
-
-	incrementGuildStat(col: keyof DbGuild, by: number = 1) {
-		const prev = Number(get(this.dbGuild(), col));
-		return db
-			.update(GUILD_TABLE)
-			.set({ [col]: prev + by })
-			.where(
-				eq(GUILD_TABLE.guildId, this.guild.id),
-			)
-			.returning().get();
-	}
-
-	updateQueue(queue: Partial<DbQueue> & { id: bigint }) {
-		this.dbQueues.clear();
-		return db
-			.update(QUEUE_TABLE)
-			.set(queue)
-			.where(
-				eq(QUEUE_TABLE.id, queue.id),
-			)
-			.returning().get();
-	}
-
-	updateDisplay(display: Partial<DbDisplay> & { id: bigint }) {
-		this.dbDisplays.clear();
-		return db
-			.update(DISPLAY_TABLE)
-			.set(display)
-			.where(and(
-				eq(DISPLAY_TABLE.id, display.id),
-			))
-			.returning().get();
-	}
-
-	updateMember(member: Partial<DbMember> & { id: bigint }) {
-		this.dbMembers.clear();
-		return db
-			.update(MEMBER_TABLE)
-			.set(member)
-			.where(and(
-				eq(MEMBER_TABLE.id, member.id),
-			))
-			.returning().get();
-	}
-
-	updateSchedule(schedule: Partial<DbSchedule> & { id: bigint }) {
-		this.dbSchedules.clear();
-		return db
-			.update(SCHEDULE_TABLE)
-			.set(schedule)
-			.where(
-				eq(SCHEDULE_TABLE.id, schedule.id),
-			)
-			.returning().get();
-	}
-
-	// ====================================================================
 	//                      Condition helper
 	// ====================================================================
 
@@ -356,12 +303,16 @@ export class Store {
 	 * @param table - The table to create the condition for.
 	 * @param params - The parameters to create the condition with.
 	 */
-	private createCondition(table: any, params: { [key: string]: any}) {
+	private createCondition(table: any, params: { [key: string]: any }) {
 		function createSingleCondition(key: string) {
 			const col = table[key];
 			const value = params[key];
 			return isNil(value) ? isNull(col) : eq(col, value);
 		}
+
+		// Add guildId to the params
+		params.guildId = this.guild.id;
+
 		if (Object.keys(params).length > 1) {
 			return and(...Object.keys(params).map(createSingleCondition));
 		}
@@ -371,8 +322,60 @@ export class Store {
 	}
 
 	// ====================================================================
-	//                           Deletes
+	//                           Updates
 	// ====================================================================
+
+	// Updates
+
+	updateQueue(queue: { id: bigint } & Partial<DbQueue>) {
+		this.dbQueues.clear();
+		return db
+			.update(QUEUE_TABLE)
+			.set(queue)
+			.where(and(
+				eq(QUEUE_TABLE.id, queue.id),
+				eq(QUEUE_TABLE.guildId, this.guild.id),
+			))
+			.returning().get();
+	}
+
+	updateDisplay(display: { id: bigint } & Partial<DbDisplay>) {
+		this.dbDisplays.clear();
+		return db
+			.update(DISPLAY_TABLE)
+			.set(display)
+			.where(and(
+				eq(DISPLAY_TABLE.id, display.id),
+				eq(DISPLAY_TABLE.guildId, this.guild.id),
+			))
+			.returning().get();
+	}
+
+	updateMember(member: { id: bigint } & Partial<DbMember>) {
+		this.dbMembers.clear();
+		return db
+			.update(MEMBER_TABLE)
+			.set(member)
+			.where(and(
+				eq(MEMBER_TABLE.id, member.id),
+				eq(MEMBER_TABLE.guildId, this.guild.id),
+			))
+			.returning().get();
+	}
+
+	updateSchedule(schedule: { id: bigint } & Partial<DbSchedule>) {
+		this.dbSchedules.clear();
+		return db
+			.update(SCHEDULE_TABLE)
+			.set(schedule)
+			.where(and(
+				eq(SCHEDULE_TABLE.id, schedule.id),
+				eq(SCHEDULE_TABLE.guildId, this.guild.id),
+			))
+			.returning().get();
+	}
+
+	// Deletes
 
 	deleteQueue(by: { id: bigint }) {
 		this.dbQueues.clear();
@@ -380,9 +383,9 @@ export class Store {
 		return db.delete(QUEUE_TABLE).where(cond).returning().get();
 	}
 
-	deleteManyQueues(by: { guildId: Snowflake }) {
+	deleteManyQueues() {
 		this.dbQueues.clear();
-		const cond = this.createCondition(QUEUE_TABLE, by);
+		const cond = this.createCondition(QUEUE_TABLE, { });
 		return db.delete(QUEUE_TABLE).where(cond).returning().all();
 	}
 
@@ -397,9 +400,8 @@ export class Store {
 	}
 
 	deleteManyDisplays(by:
-		{ guildId: bigint } |
-		{ queueId: bigint } |
-		{ displayChannelId: Snowflake }
+		{ queueId?: bigint } |
+		{ displayChannelId?: Snowflake },
 	) {
 		this.dbDisplays.clear();
 		const cond = this.createCondition(DISPLAY_TABLE, by);
@@ -418,13 +420,16 @@ export class Store {
 	}
 
 	deleteManyMembers(by:
-		{ guildId: Snowflake, userId?: Snowflake } |
-		{ queueId: bigint, count?: number }
+		{ userId?: Snowflake } |
+		{ queueId: bigint, count?: number },
 	) {
 		this.dbMembers.clear();
 		const cond = ("count" in by)
-			? or(...QueryUtils.selectManyMembers(by).map(member => eq(MEMBER_TABLE.id, member.id)))
-		  : this.createCondition(MEMBER_TABLE, by);
+			? or(...QueryUtils.selectManyMembers({
+				...by,
+				guildId: this.guild.id,
+			}).map(member => eq(MEMBER_TABLE.id, member.id)))
+			: this.createCondition(MEMBER_TABLE, by);
 		const deletedMembers = db.delete(MEMBER_TABLE).where(cond).returning().all();
 		deletedMembers.forEach(deletedMember => this.insertArchivedMember(deletedMember));
 		return deleteMembers;
@@ -436,12 +441,9 @@ export class Store {
 		return db.delete(SCHEDULE_TABLE).where(cond).returning().get();
 	}
 
-	deleteManySchedules(by:
-		{ guildId: Snowflake } |
-		{ queueId: bigint }
-	) {
+	deleteManySchedules() {
 		this.dbSchedules.clear();
-		const cond = this.createCondition(SCHEDULE_TABLE, by);
+		const cond = this.createCondition(SCHEDULE_TABLE, { });
 		return db.delete(SCHEDULE_TABLE).where(cond).returning().all();
 	}
 
@@ -455,8 +457,8 @@ export class Store {
 	}
 
 	deleteManyWhitelisted(by:
-		{ guildId: Snowflake, subjectId?: Snowflake } |
-		{ queueId: bigint }
+		{ subjectId?: Snowflake } |
+		{ queueId: bigint },
 	) {
 		this.dbWhitelisted.clear();
 		const cond = this.createCondition(WHITELISTED_TABLE, by);
@@ -465,7 +467,7 @@ export class Store {
 
 	deleteBlacklisted(by:
 		{ id: bigint } |
-		{ queueId: bigint, subjectId: Snowflake }
+		{ queueId: bigint, subjectId: Snowflake },
 	) {
 		this.dbBlacklisted.clear();
 		const cond = this.createCondition(BLACKLISTED_TABLE, by);
@@ -473,8 +475,8 @@ export class Store {
 	}
 
 	deleteManyBlacklisted(by:
-		{ guildId: Snowflake, subjectId?: Snowflake } |
-		{ queueId: bigint }
+		{ subjectId?: Snowflake } |
+		{ queueId: bigint },
 	) {
 		this.dbBlacklisted.clear();
 		const cond = this.createCondition(BLACKLISTED_TABLE, by);
@@ -491,8 +493,8 @@ export class Store {
 	}
 
 	deleteManyPrioritized(by:
-		{ guildId: Snowflake, subjectId?: Snowflake } |
-		{ queueId: bigint }
+		{ subjectId?: Snowflake } |
+		{ queueId: bigint },
 	) {
 		this.dbPrioritized.clear();
 		const cond = this.createCondition(PRIORITIZED_TABLE, by);
@@ -501,19 +503,16 @@ export class Store {
 
 	deleteAdmin(by:
 		{ id: bigint } |
-		{ guildId: Snowflake, subjectId: Snowflake },
+		{ subjectId: Snowflake },
 	) {
 		this.dbAdmins.clear();
 		const cond = this.createCondition(ADMIN_TABLE, by);
 		return db.delete(ADMIN_TABLE).where(cond).returning().get();
 	}
 
-	deleteManyAdmin(by:
-		{ subjectId: Snowflake } |
-		{ guildId: Snowflake }
-	) {
+	deleteManyAdmins() {
 		this.dbAdmins.clear();
-		const cond = this.createCondition(ADMIN_TABLE, by);
+		const cond = this.createCondition(ADMIN_TABLE, { });
 		return db.delete(ADMIN_TABLE).where(cond).returning().get();
 	}
 }

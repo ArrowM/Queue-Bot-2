@@ -15,7 +15,8 @@ import {
 export const GUILD_TABLE = sqliteTable("guild", ({
 	guildId: text("guild_id").$type<Snowflake>().primaryKey(),
 
-	joinedAt: integer("joined_at").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
+	joinTime: integer("joinTime").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
+	lastUpdateTime: integer("last_updated_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
 	commandsReceived: integer("commands_received").notNull().default(0),
 	buttonsReceived: integer("buttons_received").notNull().default(0),
 	displaysSent: integer("displays_sent").notNull().default(0),
@@ -299,7 +300,6 @@ export const ARCHIVED_MEMBER_TABLE = sqliteTable("archived_member", ({
 }),
 (table) => ({
 	unq: unique().on(table.queueId, table.userId),
-	guildIdIndex: index("archived_member_guild_id_index").on(table.guildId),
 }));
 
 export const ARCHIVED_MEMBER_RELATIONS = relations(ARCHIVED_MEMBER_TABLE, ({ one }) => ({

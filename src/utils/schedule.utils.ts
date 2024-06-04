@@ -86,7 +86,7 @@ export namespace ScheduleUtils {
 	export function deleteSchedules(scheduleIds: bigint[], store?: Store) {
 		if (!store) {
 			return {
-				deletedSchedules: scheduleIds.map(id => QueryUtils.deleteSchedule({ id })),
+				deletedSchedules: scheduleIds.map(id => QueryUtils.deleteSchedule({ guildId: store.guild.id, id })),
 			};
 		}
 
@@ -170,7 +170,7 @@ export namespace ScheduleUtils {
 		}
 
 		try {
-			queue = QueryUtils.selectQueue({ id: schedule.queueId });
+			queue = QueryUtils.selectQueue({ guildId: schedule.guildId, id: schedule.queueId });
 		}
 		catch (e) {
 			store.deleteQueue({ id: queue.id });

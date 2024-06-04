@@ -58,6 +58,8 @@ export namespace ClientUtils {
 		}
 
 		console.timeEnd("READY");
+
+
 	}
 
 	export async function registerCommands() {

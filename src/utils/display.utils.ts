@@ -156,6 +156,7 @@ export namespace DisplayUtils {
 							}).catch(console.error);
 							// Update the display
 							store.updateDisplay({
+								guildId: store.guild.id,
 								id: display.id,
 								lastMessageId: message.id,
 							});

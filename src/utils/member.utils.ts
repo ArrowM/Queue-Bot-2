@@ -239,7 +239,7 @@ export namespace MemberUtils {
 
 	export async function getPositions(store: Store, userId: Snowflake) {
 		const members = QueryUtils.selectManyMembers({ guildId: store.guild.id, userId });
-		const queues = members.map(member => QueryUtils.selectQueue({ id: member.queueId }));
+		const queues = members.map(member => QueryUtils.selectQueue({ guildId: store.guild.id, id: member.queueId }));
 
 		const embeds = await Promise.all(queues.map(queue =>
 			MemberUtils.getMemberPositionString(store, queue, userId),

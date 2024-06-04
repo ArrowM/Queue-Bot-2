@@ -3,7 +3,8 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "../db/db.ts";
 import {
-	ADMIN_TABLE, ARCHIVED_MEMBER_TABLE,
+	ADMIN_TABLE,
+	ARCHIVED_MEMBER_TABLE,
 	BLACKLISTED_TABLE,
 	DISPLAY_TABLE,
 	GUILD_TABLE,
@@ -26,19 +27,7 @@ export namespace QueryUtils {
 	 *                         ⚠️ IMPORTANT ⚠️
 	 * ====================================================================
 	 *
-	 * Queries MUST be written to only effect a single guild.
-	 * User ids are global, so they must be used in conjunction with another guild-specific identifier.
-	 *
-	 * ✅ by id of a table
-	 * ✅ by guildId
-	 * ✅ by queueId
-	 * ✅ by channelId
-	 * ✅ by messageId
-	 * ✅ by roleId
-	 * ✅ by userId + guildId
-	 * ✅ by subjectId + guildId
-	 * ❌ by userId
-	 * ❌ by subjectId
+	 * Queries must be written to include guildId!
 	 */
 
 	// ====================================================================
@@ -60,14 +49,14 @@ export namespace QueryUtils {
 		return db
 			.delete(GUILD_TABLE)
 			.where(
-				eq(GUILD_TABLE.guildId, by.guildId)
+				eq(GUILD_TABLE.guildId, by.guildId),
 			)
 			.returning().get();
 	}
 
 	// Queues
 
-	export function selectQueue(by: { id: bigint }) {
+	export function selectQueue(by: { guildId: Snowflake, id: bigint }) {
 		return selectQueueById.get(by);
 	}
 
@@ -75,12 +64,12 @@ export namespace QueryUtils {
 		return selectManyQueuesByGuildId.all(by);
 	}
 
-	// Displays
+// Displays
 
 	export function selectDisplay(by:
-		{ id: bigint } |
-		{ lastMessageId: Snowflake } |
-		{ queueId: bigint, displayChannelId: Snowflake }
+		{ guildId: Snowflake, id: bigint } |
+		{ guildId: Snowflake, lastMessageId: Snowflake } |
+		{ guildId: Snowflake, queueId: bigint, displayChannelId: Snowflake },
 	) {
 		if ("id" in by) {
 			return selectDisplayById.get(by);
@@ -95,8 +84,8 @@ export namespace QueryUtils {
 
 	export function selectManyDisplays(by:
 		{ guildId: Snowflake } |
-		{ queueId: bigint } |
-		{ displayChannelId: Snowflake }
+		{ guildId: Snowflake, queueId: bigint } |
+		{ guildId: Snowflake, displayChannelId: Snowflake },
 	) {
 		if ("guildId" in by) {
 			return selectManyDisplaysByGuildId.all(by);
@@ -109,11 +98,11 @@ export namespace QueryUtils {
 		}
 	}
 
-	// Members
+// Members
 
 	export function selectMember(by:
-		{ id: bigint } |
-		{ queueId: bigint, userId?: Snowflake }
+		{ guildId: Snowflake, id: bigint } |
+		{ guildId: Snowflake, queueId: bigint, userId?: Snowflake },
 	) {
 		if ("id" in by) {
 			return selectMemberById.get(by);
@@ -131,7 +120,7 @@ export namespace QueryUtils {
 	 */
 	export function selectManyMembers(by:
 		{ guildId: Snowflake, userId?: Snowflake } |
-		{ queueId: bigint, count?: number }
+		{ guildId: Snowflake, queueId: bigint, count?: number },
 	) {
 		if ("guildId" in by && "userId" in by) {
 			return selectManyMembersByGuildIdAndUserId.all(by);
@@ -147,15 +136,16 @@ export namespace QueryUtils {
 		}
 	}
 
-	// Schedules
+// Schedules
 
+	// Must allow by without guildId for automatic schedule running
 	export function selectSchedule(by: { id: bigint }) {
 		return selectScheduleById.get(by);
 	}
 
 	export function selectManySchedules(by:
 		{ guildId: Snowflake } |
-		{ queueId: bigint }
+		{ guildId: Snowflake, queueId: bigint },
 	) {
 		if ("guildId" in by) {
 			return selectManySchedulesByGuildId.all(by);
@@ -165,7 +155,7 @@ export namespace QueryUtils {
 		}
 	}
 
-	// Needed for startup schedule load
+// Needed for startup schedule load
 	export function selectAllSchedules() {
 		return db
 			.select()
@@ -173,7 +163,7 @@ export namespace QueryUtils {
 			.all();
 	}
 
-	export function deleteSchedule(by: { id: bigint }) {
+	export function deleteSchedule(by: { guildId: Snowflake, id: bigint }) {
 		return db
 			.delete(SCHEDULE_TABLE)
 			.where(
@@ -182,11 +172,11 @@ export namespace QueryUtils {
 			.returning().get();
 	}
 
-	// Whitelisted
+// Whitelisted
 
 	export function selectWhitelisted(by:
-		{ id: bigint } |
-		{ queueId: bigint, subjectId: Snowflake }
+		{ guildId: Snowflake, id: bigint } |
+		{ guildId: Snowflake, queueId: bigint, subjectId: Snowflake },
 	) {
 		if ("id" in by) {
 			return selectWhitelistedById.get(by);
@@ -198,7 +188,7 @@ export namespace QueryUtils {
 
 	export function selectManyWhitelisted(by:
 		{ guildId: Snowflake, subjectId?: Snowflake } |
-		{ queueId: bigint }
+		{ guildId: Snowflake, queueId: bigint },
 	) {
 		if ("guildId" in by && "subjectId" in by) {
 			return selectManyWhitelistedByGuildIdAndSubjectId.all(by);
@@ -211,11 +201,11 @@ export namespace QueryUtils {
 		}
 	}
 
-	// Blacklisted
+// Blacklisted
 
 	export function selectBlacklisted(by:
-		{ id: bigint } |
-		{ queueId: bigint, subjectId: Snowflake }
+		{ guildId: Snowflake, id: bigint } |
+		{ guildId: Snowflake, queueId: bigint, subjectId: Snowflake },
 	) {
 		if ("id" in by) {
 			return selectBlacklistedById.get(by);
@@ -227,7 +217,7 @@ export namespace QueryUtils {
 
 	export function selectManyBlacklisted(by:
 		{ guildId: Snowflake, subjectId?: Snowflake } |
-		{ queueId: bigint }
+		{ guildId: Snowflake, queueId: bigint },
 	) {
 		if ("guildId" in by && "subjectId" in by) {
 			return selectManyBlacklistedByGuildIdAndSubjectId.all(by);
@@ -240,11 +230,11 @@ export namespace QueryUtils {
 		}
 	}
 
-	// Prioritized
+// Prioritized
 
 	export function selectPrioritized(by:
-		{ id: bigint } |
-		{ queueId: bigint, subjectId: Snowflake }
+		{ guildId: Snowflake, id: bigint } |
+		{ guildId: Snowflake, queueId: bigint, subjectId: Snowflake },
 	) {
 		if ("id" in by) {
 			return selectPrioritizedById.get(by);
@@ -256,7 +246,7 @@ export namespace QueryUtils {
 
 	export function selectManyPrioritized(by:
 		{ guildId: Snowflake, subjectId?: Snowflake } |
-		{ queueId: bigint }
+		{ guildId: Snowflake, queueId: bigint },
 	) {
 		if ("guildId" in by && "subjectId" in by) {
 			return selectManyPrioritizedByGuildIdAndSubjectId.all(by);
@@ -269,11 +259,11 @@ export namespace QueryUtils {
 		}
 	}
 
-	// Admins
+// Admins
 
 	export function selectAdmin(by:
-		{ id: bigint } |
-		{ guildId: Snowflake, subjectId: Snowflake }
+		{ guildId: Snowflake, id: bigint } |
+		{ guildId: Snowflake, subjectId: Snowflake },
 	) {
 		if ("id" in by) {
 			return selectAdminById.get(by);
@@ -284,8 +274,8 @@ export namespace QueryUtils {
 	}
 
 	export function selectManyAdmins(by:
-		{ subjectId: Snowflake } |
-		{ guildId: Snowflake }
+		{ guildId: Snowflake, subjectId: Snowflake } |
+		{ guildId: Snowflake },
 	) {
 		if ("subjectId" in by) {
 			return selectManyAdminsBySubjectId.all(by);
@@ -295,11 +285,11 @@ export namespace QueryUtils {
 		}
 	}
 
-	// Archived Members
+// Archived Members
 
 	export function selectArchivedMember(by:
-		{ id: bigint } |
-		{ queueId: bigint, userId: Snowflake }
+		{ guildId: Snowflake, id: bigint } |
+		{ guildId: Snowflake, queueId: bigint, userId: Snowflake },
 	) {
 		if ("id" in by) {
 			return selectArchivedMemberById.get(by);
@@ -311,7 +301,7 @@ export namespace QueryUtils {
 
 	export function selectManyArchivedMembers(by:
 		{ guildId: Snowflake, userId?: Snowflake } |
-		{ queueId: bigint }
+		{ guildId: Snowflake, queueId: bigint },
 	) {
 		if ("guildId" in by && "userId" in by) {
 			return selectManyArchivedMembersByGuildIdAndUserId.all(by);
@@ -324,11 +314,11 @@ export namespace QueryUtils {
 		}
 	}
 
-	// ====================================================================
-	//                           Prepared Selects
-	// ====================================================================
+// ====================================================================
+//                           Prepared Selects
+// ====================================================================
 
-	// Guilds
+// Guilds
 
 	const selectGuildById = db
 		.select()
@@ -338,14 +328,15 @@ export namespace QueryUtils {
 		)
 		.prepare();
 
-	// Queues
+// Queues
 
 	const selectQueueById = db
 		.select()
 		.from(QUEUE_TABLE)
-		.where(
+		.where(and(
+			eq(QUEUE_TABLE.guildId, sql.placeholder("guildId")),
 			eq(QUEUE_TABLE.id, sql.placeholder("id")),
-		)
+		))
 		.prepare();
 
 	const selectManyQueuesByGuildId = db
@@ -356,28 +347,31 @@ export namespace QueryUtils {
 		)
 		.prepare();
 
-	// Displays
+// Displays
 
 	const selectDisplayById = db
 		.select()
 		.from(DISPLAY_TABLE)
-		.where(
+		.where(and(
+			eq(DISPLAY_TABLE.guildId, sql.placeholder("guildId")),
 			eq(DISPLAY_TABLE.id, sql.placeholder("id")),
-		)
+		))
 		.prepare();
 
 	const selectDisplayByLastMessageId = db
 		.select()
 		.from(DISPLAY_TABLE)
-		.where(
+		.where(and(
+			eq(DISPLAY_TABLE.guildId, sql.placeholder("guildId")),
 			eq(DISPLAY_TABLE.lastMessageId, sql.placeholder("lastMessageId")),
-		)
+		))
 		.prepare();
 
 	const selectDisplayByQueueIdAndDisplayChannelId = db
 		.select()
 		.from(DISPLAY_TABLE)
 		.where(and(
+			eq(DISPLAY_TABLE.guildId, sql.placeholder("guildId")),
 			eq(DISPLAY_TABLE.queueId, sql.placeholder("queueId")),
 			eq(DISPLAY_TABLE.displayChannelId, sql.placeholder("displayChannelId")),
 		))
@@ -394,33 +388,37 @@ export namespace QueryUtils {
 	const selectManyDisplaysByQueueId = db
 		.select()
 		.from(DISPLAY_TABLE)
-		.where(
+		.where(and(
+			eq(DISPLAY_TABLE.guildId, sql.placeholder("guildId")),
 			eq(DISPLAY_TABLE.queueId, sql.placeholder("queueId")),
-		)
+		))
 		.prepare();
 
 	const selectManyDisplaysByDisplayChannelId = db
 		.select()
 		.from(DISPLAY_TABLE)
-		.where(
+		.where(and(
+			eq(DISPLAY_TABLE.guildId, sql.placeholder("guildId")),
 			eq(DISPLAY_TABLE.displayChannelId, sql.placeholder("displayChannelId")),
-		)
+		))
 		.prepare();
 
-	// Members
+// Members
 
 	const selectMemberById = db
 		.select()
 		.from(MEMBER_TABLE)
-		.where(
+		.where(and(
+			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 			eq(MEMBER_TABLE.id, sql.placeholder("id")),
-		)
+		))
 		.prepare();
 
 	const selectMemberByQueueIdAndUserId = db
 		.select()
 		.from(MEMBER_TABLE)
 		.where(and(
+			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 			eq(MEMBER_TABLE.queueId, sql.placeholder("queueId")),
 			eq(MEMBER_TABLE.userId, sql.placeholder("userId")),
 		))
@@ -429,9 +427,10 @@ export namespace QueryUtils {
 	const selectNextMemberByQueue = db
 		.select()
 		.from(MEMBER_TABLE)
-		.where(
+		.where(and(
+			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 			eq(MEMBER_TABLE.queueId, sql.placeholder("queueId")),
-		)
+		))
 		.orderBy(MEMBER_TABLE.isPrioritized, MEMBER_TABLE.positionTime)
 		.prepare();
 
@@ -457,9 +456,10 @@ export namespace QueryUtils {
 	const selectManyMembersByQueueIdAndCount = db
 		.select()
 		.from(MEMBER_TABLE)
-		.where(
+		.where(and(
+			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 			eq(MEMBER_TABLE.queueId, sql.placeholder("queueId")),
-		)
+		))
 		.orderBy(MEMBER_TABLE.isPrioritized, MEMBER_TABLE.positionTime)
 		.limit(sql.placeholder("count"))
 		.prepare();
@@ -467,13 +467,14 @@ export namespace QueryUtils {
 	const selectManyMembersByQueueId = db
 		.select()
 		.from(MEMBER_TABLE)
-		.where(
+		.where(and(
+			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 			eq(MEMBER_TABLE.queueId, sql.placeholder("queueId")),
-		)
+		))
 		.orderBy(MEMBER_TABLE.isPrioritized, MEMBER_TABLE.positionTime)
 		.prepare();
 
-	// Schedules
+// Schedules
 
 	const selectScheduleById = db
 		.select()
@@ -494,27 +495,30 @@ export namespace QueryUtils {
 	const selectManySchedulesByQueueId = db
 		.select()
 		.from(SCHEDULE_TABLE)
-		.where(
+		.where(and(
+			eq(SCHEDULE_TABLE.guildId, sql.placeholder("guildId")),
 			eq(SCHEDULE_TABLE.queueId, sql.placeholder("queueId")),
-		)
+		))
 		.prepare();
 
-	// Whitelisted
+// Whitelisted
 
 	const selectWhitelistedById = db
 		.select()
 		.from(WHITELISTED_TABLE)
-		.where(
+		.where(and(
+			eq(WHITELISTED_TABLE.guildId, sql.placeholder("guildId")),
 			eq(WHITELISTED_TABLE.id, sql.placeholder("id")),
-		)
+		))
 		.prepare();
 
 	const selectWhitelistedByQueueIdAndSubjectId = db
 		.select()
 		.from(WHITELISTED_TABLE)
 		.where(and(
+			eq(WHITELISTED_TABLE.guildId, sql.placeholder("guildId")),
 			eq(WHITELISTED_TABLE.queueId, sql.placeholder("queueId")),
-			eq(WHITELISTED_TABLE.subjectId, sql.placeholder("subjectId"))
+			eq(WHITELISTED_TABLE.subjectId, sql.placeholder("subjectId")),
 		))
 		.prepare();
 
@@ -538,25 +542,28 @@ export namespace QueryUtils {
 	const selectManyWhitelistedByQueueId = db
 		.select()
 		.from(WHITELISTED_TABLE)
-		.where(
+		.where(and(
+			eq(WHITELISTED_TABLE.guildId, sql.placeholder("guildId")),
 			eq(WHITELISTED_TABLE.queueId, sql.placeholder("queueId")),
-		)
+		))
 		.prepare();
 
-	// Blacklisted
+// Blacklisted
 
 	const selectBlacklistedById = db
 		.select()
 		.from(BLACKLISTED_TABLE)
-		.where(
+		.where(and(
+			eq(BLACKLISTED_TABLE.guildId, sql.placeholder("guildId")),
 			eq(BLACKLISTED_TABLE.id, sql.placeholder("id")),
-		)
+		))
 		.prepare();
 
 	const selectBlacklistedByQueueIdAndSubjectId = db
 		.select()
 		.from(BLACKLISTED_TABLE)
 		.where(and(
+			eq(BLACKLISTED_TABLE.guildId, sql.placeholder("guildId")),
 			eq(BLACKLISTED_TABLE.queueId, sql.placeholder("queueId")),
 			eq(BLACKLISTED_TABLE.subjectId, sql.placeholder("subjectId")),
 		))
@@ -582,25 +589,28 @@ export namespace QueryUtils {
 	const selectManyBlacklistedByQueueId = db
 		.select()
 		.from(BLACKLISTED_TABLE)
-		.where(
+		.where(and(
+			eq(BLACKLISTED_TABLE.guildId, sql.placeholder("guildId")),
 			eq(BLACKLISTED_TABLE.queueId, sql.placeholder("queueId")),
-		)
+		))
 		.prepare();
 
-	// Prioritized
+// Prioritized
 
 	const selectPrioritizedById = db
 		.select()
 		.from(PRIORITIZED_TABLE)
-		.where(
+		.where(and(
+			eq(PRIORITIZED_TABLE.guildId, sql.placeholder("guildId")),
 			eq(PRIORITIZED_TABLE.id, sql.placeholder("id")),
-		)
+		))
 		.prepare();
 
 	const selectPrioritizedByQueueIdAndSubjectId = db
 		.select()
 		.from(PRIORITIZED_TABLE)
 		.where(and(
+			eq(PRIORITIZED_TABLE.guildId, sql.placeholder("guildId")),
 			eq(PRIORITIZED_TABLE.queueId, sql.placeholder("queueId")),
 			eq(PRIORITIZED_TABLE.subjectId, sql.placeholder("subjectId")),
 		))
@@ -626,20 +636,22 @@ export namespace QueryUtils {
 	const selectManyPrioritizedByQueueId = db
 		.select()
 		.from(PRIORITIZED_TABLE)
-		.where(
+		.where(and(
+			eq(PRIORITIZED_TABLE.guildId, sql.placeholder("guildId")),
 			eq(PRIORITIZED_TABLE.queueId, sql.placeholder("queueId")),
-		)
+		))
 		.orderBy(PRIORITIZED_TABLE.queueId)
 		.prepare();
 
-	// Admins
+// Admins
 
 	const selectAdminById = db
 		.select()
 		.from(ADMIN_TABLE)
-		.where(
+		.where(and(
+			eq(ADMIN_TABLE.guildId, sql.placeholder("guildId")),
 			eq(ADMIN_TABLE.id, sql.placeholder("id")),
-		)
+		))
 		.prepare();
 
 	const selectAdminByGuildIdAndSubjectId = db
@@ -654,9 +666,10 @@ export namespace QueryUtils {
 	const selectManyAdminsBySubjectId = db
 		.select()
 		.from(ADMIN_TABLE)
-		.where(
+		.where(and(
+			eq(ADMIN_TABLE.guildId, sql.placeholder("guildId")),
 			eq(ADMIN_TABLE.subjectId, sql.placeholder("subjectId")),
-		)
+		))
 		.prepare();
 
 	const selectManyAdminsByGuildId = db
@@ -667,20 +680,22 @@ export namespace QueryUtils {
 		)
 		.prepare();
 
-	// Archived Members
+// Archived Members
 
 	const selectArchivedMemberById = db
 		.select()
 		.from(ARCHIVED_MEMBER_TABLE)
-		.where(
+		.where(and(
+			eq(ARCHIVED_MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 			eq(ARCHIVED_MEMBER_TABLE.id, sql.placeholder("id")),
-		)
+		))
 		.prepare();
 
 	const selectArchivedMemberByQueueIdAndUserId = db
 		.select()
 		.from(ARCHIVED_MEMBER_TABLE)
 		.where(and(
+			eq(ARCHIVED_MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 			eq(ARCHIVED_MEMBER_TABLE.queueId, sql.placeholder("queueId")),
 			eq(ARCHIVED_MEMBER_TABLE.userId, sql.placeholder("userId")),
 		))
@@ -706,8 +721,9 @@ export namespace QueryUtils {
 	const selectManyArchivedMembersByQueueId = db
 		.select()
 		.from(ARCHIVED_MEMBER_TABLE)
-		.where(
+		.where(and(
+			eq(ARCHIVED_MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 			eq(ARCHIVED_MEMBER_TABLE.queueId, sql.placeholder("queueId")),
-		)
+		))
 		.prepare();
 }
