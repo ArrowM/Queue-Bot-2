@@ -150,7 +150,8 @@ async function flushCacheToDB() {
 }
 
 // Write pending guild updates to the database every minute
-setInterval(() => flushCacheToDB(), 60000);
+
+cron("* * * * *", async () => await flushCacheToDB());
 
 // Signal handlers for graceful shutdown
 process.on("SIGINT", async () => {
