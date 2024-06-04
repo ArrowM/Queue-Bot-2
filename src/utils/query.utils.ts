@@ -3,14 +3,14 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "../db/db.ts";
 import {
-	ADMINS_TABLE,
+	ADMIN_TABLE, ARCHIVED_MEMBER_TABLE,
 	BLACKLISTED_TABLE,
-	DISPLAYS_TABLE,
-	GUILDS_TABLE,
-	MEMBERS_TABLE,
+	DISPLAY_TABLE,
+	GUILD_TABLE,
+	MEMBER_TABLE,
 	PRIORITIZED_TABLE,
-	QUEUES_TABLE,
-	SCHEDULES_TABLE,
+	QUEUE_TABLE,
+	SCHEDULE_TABLE,
 	WHITELISTED_TABLE,
 } from "../db/schema.ts";
 
@@ -58,9 +58,9 @@ export namespace QueryUtils {
 
 	export function deleteGuild(by: { guildId: Snowflake }) {
 		return db
-			.delete(GUILDS_TABLE)
+			.delete(GUILD_TABLE)
 			.where(
-				eq(GUILDS_TABLE.guildId, by.guildId)
+				eq(GUILD_TABLE.guildId, by.guildId)
 			)
 			.returning().get();
 	}
@@ -169,15 +169,15 @@ export namespace QueryUtils {
 	export function selectAllSchedules() {
 		return db
 			.select()
-			.from(SCHEDULES_TABLE)
+			.from(SCHEDULE_TABLE)
 			.all();
 	}
 
 	export function deleteSchedule(by: { id: bigint }) {
 		return db
-			.delete(SCHEDULES_TABLE)
+			.delete(SCHEDULE_TABLE)
 			.where(
-				eq(SCHEDULES_TABLE.id, by.id),
+				eq(SCHEDULE_TABLE.id, by.id),
 			)
 			.returning().get();
 	}
@@ -295,6 +295,35 @@ export namespace QueryUtils {
 		}
 	}
 
+	// Archived Members
+
+	export function selectArchivedMember(by:
+		{ id: bigint } |
+		{ queueId: bigint, userId: Snowflake }
+	) {
+		if ("id" in by) {
+			return selectArchivedMemberById.get(by);
+		}
+		else if ("queueId" in by && "userId" in by) {
+			return selectArchivedMemberByQueueIdAndUserId.get(by);
+		}
+	}
+
+	export function selectManyArchivedMembers(by:
+		{ guildId: Snowflake, userId?: Snowflake } |
+		{ queueId: bigint }
+	) {
+		if ("guildId" in by && "userId" in by) {
+			return selectManyArchivedMembersByGuildIdAndUserId.all(by);
+		}
+		else if ("guildId" in by) {
+			return selectManyArchivedMembersByGuildId.all(by);
+		}
+		else if ("queueId" in by) {
+			return selectManyArchivedMembersByQueueId.all(by);
+		}
+	}
+
 	// ====================================================================
 	//                           Prepared Selects
 	// ====================================================================
@@ -303,9 +332,9 @@ export namespace QueryUtils {
 
 	const selectGuildById = db
 		.select()
-		.from(GUILDS_TABLE)
+		.from(GUILD_TABLE)
 		.where(
-			eq(GUILDS_TABLE.guildId, sql.placeholder("guildId")),
+			eq(GUILD_TABLE.guildId, sql.placeholder("guildId")),
 		)
 		.prepare();
 
@@ -313,17 +342,17 @@ export namespace QueryUtils {
 
 	const selectQueueById = db
 		.select()
-		.from(QUEUES_TABLE)
+		.from(QUEUE_TABLE)
 		.where(
-			eq(QUEUES_TABLE.id, sql.placeholder("id")),
+			eq(QUEUE_TABLE.id, sql.placeholder("id")),
 		)
 		.prepare();
 
 	const selectManyQueuesByGuildId = db
 		.select()
-		.from(QUEUES_TABLE)
+		.from(QUEUE_TABLE)
 		.where(
-			eq(QUEUES_TABLE.guildId, sql.placeholder("guildId")),
+			eq(QUEUE_TABLE.guildId, sql.placeholder("guildId")),
 		)
 		.prepare();
 
@@ -331,50 +360,50 @@ export namespace QueryUtils {
 
 	const selectDisplayById = db
 		.select()
-		.from(DISPLAYS_TABLE)
+		.from(DISPLAY_TABLE)
 		.where(
-			eq(DISPLAYS_TABLE.id, sql.placeholder("id")),
+			eq(DISPLAY_TABLE.id, sql.placeholder("id")),
 		)
 		.prepare();
 
 	const selectDisplayByLastMessageId = db
 		.select()
-		.from(DISPLAYS_TABLE)
+		.from(DISPLAY_TABLE)
 		.where(
-			eq(DISPLAYS_TABLE.lastMessageId, sql.placeholder("lastMessageId")),
+			eq(DISPLAY_TABLE.lastMessageId, sql.placeholder("lastMessageId")),
 		)
 		.prepare();
 
 	const selectDisplayByQueueIdAndDisplayChannelId = db
 		.select()
-		.from(DISPLAYS_TABLE)
+		.from(DISPLAY_TABLE)
 		.where(and(
-			eq(DISPLAYS_TABLE.queueId, sql.placeholder("queueId")),
-			eq(DISPLAYS_TABLE.displayChannelId, sql.placeholder("displayChannelId")),
+			eq(DISPLAY_TABLE.queueId, sql.placeholder("queueId")),
+			eq(DISPLAY_TABLE.displayChannelId, sql.placeholder("displayChannelId")),
 		))
 		.prepare();
 
 	const selectManyDisplaysByGuildId = db
 		.select()
-		.from(DISPLAYS_TABLE)
+		.from(DISPLAY_TABLE)
 		.where(
-			eq(DISPLAYS_TABLE.guildId, sql.placeholder("guildId")),
+			eq(DISPLAY_TABLE.guildId, sql.placeholder("guildId")),
 		)
 		.prepare();
 
 	const selectManyDisplaysByQueueId = db
 		.select()
-		.from(DISPLAYS_TABLE)
+		.from(DISPLAY_TABLE)
 		.where(
-			eq(DISPLAYS_TABLE.queueId, sql.placeholder("queueId")),
+			eq(DISPLAY_TABLE.queueId, sql.placeholder("queueId")),
 		)
 		.prepare();
 
 	const selectManyDisplaysByDisplayChannelId = db
 		.select()
-		.from(DISPLAYS_TABLE)
+		.from(DISPLAY_TABLE)
 		.where(
-			eq(DISPLAYS_TABLE.displayChannelId, sql.placeholder("displayChannelId")),
+			eq(DISPLAY_TABLE.displayChannelId, sql.placeholder("displayChannelId")),
 		)
 		.prepare();
 
@@ -382,91 +411,91 @@ export namespace QueryUtils {
 
 	const selectMemberById = db
 		.select()
-		.from(MEMBERS_TABLE)
+		.from(MEMBER_TABLE)
 		.where(
-			eq(MEMBERS_TABLE.id, sql.placeholder("id")),
+			eq(MEMBER_TABLE.id, sql.placeholder("id")),
 		)
 		.prepare();
 
 	const selectMemberByQueueIdAndUserId = db
 		.select()
-		.from(MEMBERS_TABLE)
+		.from(MEMBER_TABLE)
 		.where(and(
-			eq(MEMBERS_TABLE.queueId, sql.placeholder("queueId")),
-			eq(MEMBERS_TABLE.userId, sql.placeholder("userId")),
+			eq(MEMBER_TABLE.queueId, sql.placeholder("queueId")),
+			eq(MEMBER_TABLE.userId, sql.placeholder("userId")),
 		))
 		.prepare();
 
 	const selectNextMemberByQueue = db
 		.select()
-		.from(MEMBERS_TABLE)
+		.from(MEMBER_TABLE)
 		.where(
-			eq(MEMBERS_TABLE.queueId, sql.placeholder("queueId")),
+			eq(MEMBER_TABLE.queueId, sql.placeholder("queueId")),
 		)
-		.orderBy(MEMBERS_TABLE.isPrioritized, MEMBERS_TABLE.positionTime)
+		.orderBy(MEMBER_TABLE.isPrioritized, MEMBER_TABLE.positionTime)
 		.prepare();
 
 	const selectManyMembersByGuildIdAndUserId = db
 		.select()
-		.from(MEMBERS_TABLE)
+		.from(MEMBER_TABLE)
 		.where(and(
-			eq(MEMBERS_TABLE.guildId, sql.placeholder("guildId")),
-			eq(MEMBERS_TABLE.userId, sql.placeholder("userId")),
+			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
+			eq(MEMBER_TABLE.userId, sql.placeholder("userId")),
 		))
-		.orderBy(MEMBERS_TABLE.isPrioritized, MEMBERS_TABLE.positionTime)
+		.orderBy(MEMBER_TABLE.isPrioritized, MEMBER_TABLE.positionTime)
 		.prepare();
 
 	const selectManyMembersByGuildId = db
 		.select()
-		.from(MEMBERS_TABLE)
+		.from(MEMBER_TABLE)
 		.where(
-			eq(MEMBERS_TABLE.guildId, sql.placeholder("guildId")),
+			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 		)
-		.orderBy(MEMBERS_TABLE.isPrioritized, MEMBERS_TABLE.positionTime)
+		.orderBy(MEMBER_TABLE.isPrioritized, MEMBER_TABLE.positionTime)
 		.prepare();
 
 	const selectManyMembersByQueueIdAndCount = db
 		.select()
-		.from(MEMBERS_TABLE)
+		.from(MEMBER_TABLE)
 		.where(
-			eq(MEMBERS_TABLE.queueId, sql.placeholder("queueId")),
+			eq(MEMBER_TABLE.queueId, sql.placeholder("queueId")),
 		)
-		.orderBy(MEMBERS_TABLE.isPrioritized, MEMBERS_TABLE.positionTime)
+		.orderBy(MEMBER_TABLE.isPrioritized, MEMBER_TABLE.positionTime)
 		.limit(sql.placeholder("count"))
 		.prepare();
 
 	const selectManyMembersByQueueId = db
 		.select()
-		.from(MEMBERS_TABLE)
+		.from(MEMBER_TABLE)
 		.where(
-			eq(MEMBERS_TABLE.queueId, sql.placeholder("queueId")),
+			eq(MEMBER_TABLE.queueId, sql.placeholder("queueId")),
 		)
-		.orderBy(MEMBERS_TABLE.isPrioritized, MEMBERS_TABLE.positionTime)
+		.orderBy(MEMBER_TABLE.isPrioritized, MEMBER_TABLE.positionTime)
 		.prepare();
 
 	// Schedules
 
 	const selectScheduleById = db
 		.select()
-		.from(SCHEDULES_TABLE)
+		.from(SCHEDULE_TABLE)
 		.where(
-			eq(SCHEDULES_TABLE.id, sql.placeholder("id")),
+			eq(SCHEDULE_TABLE.id, sql.placeholder("id")),
 		)
 		.prepare();
 
 	const selectManySchedulesByGuildId = db
 		.select()
-		.from(SCHEDULES_TABLE)
+		.from(SCHEDULE_TABLE)
 		.where(
-			eq(SCHEDULES_TABLE.guildId, sql.placeholder("guildId")),
+			eq(SCHEDULE_TABLE.guildId, sql.placeholder("guildId")),
 		)
 		.prepare();
 
 	const selectManySchedulesByQueueId = db
 		.select()
-		.from(SCHEDULES_TABLE)
+		.from(SCHEDULE_TABLE)
 		.where(
-			eq(SCHEDULES_TABLE.queueId, sql.placeholder("queueId")),
+			eq(SCHEDULE_TABLE.queueId, sql.placeholder("queueId")),
 		)
 		.prepare();
 
@@ -607,34 +636,78 @@ export namespace QueryUtils {
 
 	const selectAdminById = db
 		.select()
-		.from(ADMINS_TABLE)
+		.from(ADMIN_TABLE)
 		.where(
-			eq(ADMINS_TABLE.id, sql.placeholder("id")),
+			eq(ADMIN_TABLE.id, sql.placeholder("id")),
 		)
 		.prepare();
 
 	const selectAdminByGuildIdAndSubjectId = db
 		.select()
-		.from(ADMINS_TABLE)
+		.from(ADMIN_TABLE)
 		.where(and(
-			eq(ADMINS_TABLE.guildId, sql.placeholder("guildId")),
-			eq(ADMINS_TABLE.subjectId, sql.placeholder("subjectId")),
+			eq(ADMIN_TABLE.guildId, sql.placeholder("guildId")),
+			eq(ADMIN_TABLE.subjectId, sql.placeholder("subjectId")),
 		))
 		.prepare();
 
 	const selectManyAdminsBySubjectId = db
 		.select()
-		.from(ADMINS_TABLE)
+		.from(ADMIN_TABLE)
 		.where(
-			eq(ADMINS_TABLE.subjectId, sql.placeholder("subjectId")),
+			eq(ADMIN_TABLE.subjectId, sql.placeholder("subjectId")),
 		)
 		.prepare();
 
 	const selectManyAdminsByGuildId = db
 		.select()
-		.from(ADMINS_TABLE)
+		.from(ADMIN_TABLE)
 		.where(
-			eq(ADMINS_TABLE.guildId, sql.placeholder("guildId")),
+			eq(ADMIN_TABLE.guildId, sql.placeholder("guildId")),
+		)
+		.prepare();
+
+	// Archived Members
+
+	const selectArchivedMemberById = db
+		.select()
+		.from(ARCHIVED_MEMBER_TABLE)
+		.where(
+			eq(ARCHIVED_MEMBER_TABLE.id, sql.placeholder("id")),
+		)
+		.prepare();
+
+	const selectArchivedMemberByQueueIdAndUserId = db
+		.select()
+		.from(ARCHIVED_MEMBER_TABLE)
+		.where(and(
+			eq(ARCHIVED_MEMBER_TABLE.queueId, sql.placeholder("queueId")),
+			eq(ARCHIVED_MEMBER_TABLE.userId, sql.placeholder("userId")),
+		))
+		.prepare();
+
+	const selectManyArchivedMembersByGuildIdAndUserId = db
+		.select()
+		.from(ARCHIVED_MEMBER_TABLE)
+		.where(and(
+			eq(ARCHIVED_MEMBER_TABLE.guildId, sql.placeholder("guildId")),
+			eq(ARCHIVED_MEMBER_TABLE.userId, sql.placeholder("userId")),
+		))
+		.prepare();
+
+	const selectManyArchivedMembersByGuildId = db
+		.select()
+		.from(ARCHIVED_MEMBER_TABLE)
+		.where(
+			eq(ARCHIVED_MEMBER_TABLE.guildId, sql.placeholder("guildId")),
+		)
+		.prepare();
+
+	const selectManyArchivedMembersByQueueId = db
+		.select()
+		.from(ARCHIVED_MEMBER_TABLE)
+		.where(
+			eq(ARCHIVED_MEMBER_TABLE.queueId, sql.placeholder("queueId")),
 		)
 		.prepare();
 }

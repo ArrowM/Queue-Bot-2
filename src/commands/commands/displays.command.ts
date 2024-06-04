@@ -81,7 +81,7 @@ export class DisplaysCommand extends AdminCommand {
 	static async displays_add(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
 		queues = queues ?? await DisplaysCommand.ADD_OPTIONS.queues.get(inter);
 
-		const { updatedQueues } = await ShowCommand.show(inter);
+		const { updatedQueues } = await ShowCommand.show(inter, queues);
 
 		await this.displays_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}

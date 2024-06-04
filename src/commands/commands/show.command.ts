@@ -1,11 +1,11 @@
 import { type Collection, italic, SlashCommandBuilder } from "discord.js";
 
+import type { DbQueue } from "../../db/schema.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
 import { EveryoneCommand } from "../../types/command.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { DisplayUtils } from "../../utils/display.utils.ts";
 import { DisplaysCommand } from "./displays.command.ts";
-import type { DbQueue } from "../../db/schema.ts";
 
 export class ShowCommand extends EveryoneCommand {
 	static readonly ID = "show";

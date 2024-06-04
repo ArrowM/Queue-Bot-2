@@ -3,7 +3,7 @@ import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import { findKey, isNil, omitBy } from "lodash-es";
 
 import { SelectMenuTransactor } from "../../core/select-menu-transactor.ts";
-import { type DbQueue, QUEUES_TABLE } from "../../db/schema.ts";
+import { type DbQueue, QUEUE_TABLE } from "../../db/schema.ts";
 import { AutopullToggleOption } from "../../options/options/autopull-toggle.option.ts";
 import { ButtonsToggleOption } from "../../options/options/buttons-toggle.option.ts";
 import { ColorOption } from "../../options/options/color.option.ts";
@@ -167,7 +167,7 @@ export class QueuesCommand extends AdminCommand {
 
 	static readonly SET_OPTIONS = {
 		queues: new QueuesOption({ required: true, description: "Queues to update" }),
-		autopullToggle: new AutopullToggleOption({ description: "Toggle automatic pulling of queue members (use with partialPullToggle and pullBatchSize)" }),
+		autopullToggle: new AutopullToggleOption({ description: "Toggle automatic pulling of queue members" }),
 		buttonsToggle: new ButtonsToggleOption({ description: "Toggle buttons beneath queue displays" }),
 		color: new ColorOption({ description: "Color of the queue" }),
 		gracePeriod: new GracePeriodOption({ description: "Grace period in seconds" }),
@@ -224,33 +224,32 @@ export class QueuesCommand extends AdminCommand {
 
 	static async queues_reset(inter: SlashInteraction) {
 		const queues = await QueuesCommand.RESET_OPTIONS.queues.get(inter);
-		const resettableSettings = [
-			ColorOption.ID,
+
+		const selectMenuOptions = [
 			AutopullToggleOption.ID,
 			ButtonsToggleOption.ID,
-			InlineToggleOption.ID,
-			LockToggleOption.ID,
-			NotificationsToggleOption.ID,
+			ColorOption.ID,
 			GracePeriodOption.ID,
 			HeaderOption.ID,
+			InlineToggleOption.ID,
+			LockToggleOption.ID,
 			LogChannelOption.ID,
 			LogLevelOption.ID,
 			NameOption.ID,
+			NotificationsToggleOption.ID,
 			PullBatchSizeOption.ID,
 			RoleOption.ID,
 			SizeOption.ID,
 			TimestampTypeOption.ID,
 			UpdateTypeOption.ID,
-		];
-
-		const selectMenuOptions = resettableSettings.map(prop => ({ name: prop, value: prop }));
+		].map(name => ({ name, value: name }));
 		const selectMenuTransactor = new SelectMenuTransactor(inter);
 		const settingsToReset = await selectMenuTransactor.sendAndReceive("Queue settings to reset", selectMenuOptions);
 
 		const updatedSettings = {} as any;
 		for (const setting of settingsToReset) {
-			const columnKey = findKey(QUEUES_TABLE, (column: SQLiteColumn) => column.name === setting);
-			updatedSettings[columnKey] = (QUEUES_TABLE as any)[columnKey]?.default;
+			const columnKey = findKey(QUEUE_TABLE, (column: SQLiteColumn) => column.name === setting);
+			updatedSettings[columnKey] = (QUEUE_TABLE as any)[columnKey]?.default;
 		}
 
 		const updatedQueues = queues.map((queue) => {

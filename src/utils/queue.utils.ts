@@ -7,11 +7,11 @@ import {
 } from "discord.js";
 import { compact, isNil } from "lodash-es";
 
-import { type DbQueue, QUEUES_TABLE } from "../db/schema.ts";
+import { type DbQueue, QUEUE_TABLE } from "../db/schema.ts";
 
 export namespace QueueUtils {
 	const QUEUE_HIDDEN_SETTINGS = ["id", "name", "guildId", "lastPullUserIds"];
-	const QUEUE_PRINT_SETTINGS = Object.keys(QUEUES_TABLE).filter(prop => !QUEUE_HIDDEN_SETTINGS.includes(prop));
+	const QUEUE_PRINT_SETTINGS = Object.keys(QUEUE_TABLE).filter(prop => !QUEUE_HIDDEN_SETTINGS.includes(prop));
 
 	type FormattingFunctions = Partial<Record<keyof DbQueue, (value: any) => string>>;
 	const formattingFunctions: FormattingFunctions = {
@@ -39,7 +39,7 @@ export namespace QueueUtils {
 
 	function formatSettingWithFallBack(queue: DbQueue, setting: string) {
 		const value = queue[setting as keyof DbQueue];
-		const dbQueueCol = QUEUES_TABLE[setting as keyof DbQueue];
+		const dbQueueCol = QUEUE_TABLE[setting as keyof DbQueue];
 		const defaultValue = dbQueueCol?.default;
 		const isDefaultValue = value == defaultValue;
 

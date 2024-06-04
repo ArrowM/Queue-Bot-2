@@ -5,9 +5,9 @@ import moize from "moize";
 
 import { db } from "../db/db.ts";
 import {
-	ADMINS_TABLE,
+	ADMIN_TABLE, ARCHIVED_MEMBER_TABLE,
 	BLACKLISTED_TABLE,
-	type DbAdmin,
+	type DbAdmin, type DbArchivedMember,
 	type DbBlacklisted,
 	type DbDisplay, type DbGuild,
 	type DbMember,
@@ -15,9 +15,9 @@ import {
 	type DbQueue,
 	type DbSchedule,
 	type DbWhitelisted,
-	DISPLAYS_TABLE, GUILDS_TABLE,
-	MEMBERS_TABLE,
-	type NewAdmin,
+	DISPLAY_TABLE, GUILD_TABLE,
+	MEMBER_TABLE,
+	type NewAdmin, type NewArchivedMember,
 	type NewBlacklisted,
 	type NewDisplay, type NewGuild,
 	type NewMember,
@@ -26,8 +26,8 @@ import {
 	type NewSchedule,
 	type NewWhitelisted,
 	PRIORITIZED_TABLE,
-	QUEUES_TABLE,
-	SCHEDULES_TABLE,
+	QUEUE_TABLE,
+	SCHEDULE_TABLE,
 	WHITELISTED_TABLE,
 } from "../db/schema.ts";
 import {
@@ -37,8 +37,10 @@ import {
 	ScheduleAlreadyExistsError,
 	WhitelistedAlreadyExistsError,
 } from "../utils/error.utils.ts";
+import { MemberUtils } from "../utils/member.utils.ts";
 import { toCollection } from "../utils/misc.utils.ts";
 import { QueryUtils } from "../utils/query.utils.ts";
+import deleteMembers = MemberUtils.deleteMembers;
 
 /**
  * The `Store` class is responsible for all database operations initiated by users, including insert, update, and delete operations.
@@ -87,6 +89,8 @@ export class Store {
 	dbBlacklisted = moize(() => toCollection<bigint, DbBlacklisted>("id", QueryUtils.selectManyBlacklisted({ guildId: this.guild.id })));
 	dbPrioritized = moize(() => toCollection<bigint, DbPrioritized>("id", QueryUtils.selectManyPrioritized({ guildId: this.guild.id })));
 	dbAdmins = moize(() => toCollection<bigint, DbAdmin>("id", QueryUtils.selectManyAdmins({ guildId: this.guild.id })));
+	// dbArchivedMembers is unordered
+	dbArchivedMembers = moize(() => toCollection<bigint, DbArchivedMember>("id", QueryUtils.selectManyArchivedMembers({ guildId: this.guild.id })));
 
 	// ====================================================================
 	//                           Discord.js
@@ -135,7 +139,7 @@ export class Store {
 	insertGuild(dbGuild: NewGuild) {
 		this.dbGuild.clear();
 		return db
-			.insert(GUILDS_TABLE)
+			.insert(GUILD_TABLE)
 			.values(dbGuild)
 			.returning().get();
 	}
@@ -146,7 +150,7 @@ export class Store {
 		this.dbQueues.clear();
 		try {
 			return db
-				.insert(QUEUES_TABLE)
+				.insert(QUEUE_TABLE)
 				.values(newQueue)
 				.returning().get();
 		}
@@ -161,24 +165,24 @@ export class Store {
 	insertDisplay(newDisplay: NewDisplay) {
 		this.dbDisplays.clear();
 		return db
-			.insert(DISPLAYS_TABLE)
+			.insert(DISPLAY_TABLE)
 			.values(newDisplay)
 			.onConflictDoUpdate({
-				target: [DISPLAYS_TABLE.queueId, DISPLAYS_TABLE.displayChannelId],
+				target: [DISPLAY_TABLE.queueId, DISPLAY_TABLE.displayChannelId],
 				set: newDisplay,
 			})
 			.returning().get();
 	}
 
-	// conflicts must be handled by the caller
+	// replace on conflict
 	insertMember(newMember: NewMember) {
 		this.incrementGuildStat("membersAdded");
 		this.dbMembers.clear();
 		return db
-			.insert(MEMBERS_TABLE)
+			.insert(MEMBER_TABLE)
 			.values(newMember)
 			.onConflictDoUpdate({
-				target: [MEMBERS_TABLE.queueId, MEMBERS_TABLE.userId],
+				target: [MEMBER_TABLE.queueId, MEMBER_TABLE.userId],
 				set: newMember,
 			})
 			.returning().get();
@@ -190,7 +194,7 @@ export class Store {
 		this.dbSchedules.clear();
 		try {
 			return db
-				.insert(SCHEDULES_TABLE)
+				.insert(SCHEDULE_TABLE)
 				.values(newSchedule)
 				.returning().get();
 		}
@@ -258,7 +262,7 @@ export class Store {
 		this.dbAdmins.clear();
 		try {
 			return db
-				.insert(ADMINS_TABLE)
+				.insert(ADMIN_TABLE)
 				.values(newAdmin)
 				.returning().get();
 		}
@@ -269,6 +273,20 @@ export class Store {
 		}
 	}
 
+	// replace on conflict
+	insertArchivedMember(newArchivedMember: NewArchivedMember) {
+		this.incrementGuildStat("archivedMembersAdded");
+		this.dbArchivedMembers.clear();
+		return db
+			.insert(ARCHIVED_MEMBER_TABLE)
+			.values({ ...newArchivedMember, archivedTime: BigInt(Date.now()) })
+			.onConflictDoUpdate({
+				target: [ARCHIVED_MEMBER_TABLE.queueId, ARCHIVED_MEMBER_TABLE.userId],
+				set: newArchivedMember,
+			})
+			.returning().get();
+	}
+
 	// ====================================================================
 	//                           Updates
 	// ====================================================================
@@ -276,10 +294,10 @@ export class Store {
 	incrementGuildStat(col: keyof DbGuild, by: number = 1) {
 		const prev = Number(get(this.dbGuild(), col));
 		return db
-			.update(GUILDS_TABLE)
+			.update(GUILD_TABLE)
 			.set({ [col]: prev + by })
 			.where(
-				eq(GUILDS_TABLE.guildId, this.guild.id),
+				eq(GUILD_TABLE.guildId, this.guild.id),
 			)
 			.returning().get();
 	}
@@ -287,10 +305,10 @@ export class Store {
 	updateQueue(queue: Partial<DbQueue> & { id: bigint }) {
 		this.dbQueues.clear();
 		return db
-			.update(QUEUES_TABLE)
+			.update(QUEUE_TABLE)
 			.set(queue)
 			.where(
-				eq(QUEUES_TABLE.id, queue.id),
+				eq(QUEUE_TABLE.id, queue.id),
 			)
 			.returning().get();
 	}
@@ -298,10 +316,10 @@ export class Store {
 	updateDisplay(display: Partial<DbDisplay> & { id: bigint }) {
 		this.dbDisplays.clear();
 		return db
-			.update(DISPLAYS_TABLE)
+			.update(DISPLAY_TABLE)
 			.set(display)
 			.where(and(
-				eq(DISPLAYS_TABLE.id, display.id),
+				eq(DISPLAY_TABLE.id, display.id),
 			))
 			.returning().get();
 	}
@@ -309,10 +327,10 @@ export class Store {
 	updateMember(member: Partial<DbMember> & { id: bigint }) {
 		this.dbMembers.clear();
 		return db
-			.update(MEMBERS_TABLE)
+			.update(MEMBER_TABLE)
 			.set(member)
 			.where(and(
-				eq(MEMBERS_TABLE.id, member.id),
+				eq(MEMBER_TABLE.id, member.id),
 			))
 			.returning().get();
 	}
@@ -320,10 +338,10 @@ export class Store {
 	updateSchedule(schedule: Partial<DbSchedule> & { id: bigint }) {
 		this.dbSchedules.clear();
 		return db
-			.update(SCHEDULES_TABLE)
+			.update(SCHEDULE_TABLE)
 			.set(schedule)
 			.where(
-				eq(SCHEDULES_TABLE.id, schedule.id),
+				eq(SCHEDULE_TABLE.id, schedule.id),
 			)
 			.returning().get();
 	}
@@ -358,14 +376,14 @@ export class Store {
 
 	deleteQueue(by: { id: bigint }) {
 		this.dbQueues.clear();
-		const cond = this.createCondition(QUEUES_TABLE, by);
-		return db.delete(QUEUES_TABLE).where(cond).returning().get();
+		const cond = this.createCondition(QUEUE_TABLE, by);
+		return db.delete(QUEUE_TABLE).where(cond).returning().get();
 	}
 
 	deleteManyQueues(by: { guildId: Snowflake }) {
 		this.dbQueues.clear();
-		const cond = this.createCondition(QUEUES_TABLE, by);
-		return db.delete(QUEUES_TABLE).where(cond).returning().all();
+		const cond = this.createCondition(QUEUE_TABLE, by);
+		return db.delete(QUEUE_TABLE).where(cond).returning().all();
 	}
 
 	deleteDisplay(by:
@@ -374,8 +392,8 @@ export class Store {
 		{ queueId: bigint, displayChannelId: Snowflake },
 	) {
 		this.dbDisplays.clear();
-		const cond = this.createCondition(DISPLAYS_TABLE, by);
-		return db.delete(DISPLAYS_TABLE).where(cond).returning().get();
+		const cond = this.createCondition(DISPLAY_TABLE, by);
+		return db.delete(DISPLAY_TABLE).where(cond).returning().get();
 	}
 
 	deleteManyDisplays(by:
@@ -384,8 +402,8 @@ export class Store {
 		{ displayChannelId: Snowflake }
 	) {
 		this.dbDisplays.clear();
-		const cond = this.createCondition(DISPLAYS_TABLE, by);
-		return db.delete(DISPLAYS_TABLE).where(cond).returning().all();
+		const cond = this.createCondition(DISPLAY_TABLE, by);
+		return db.delete(DISPLAY_TABLE).where(cond).returning().all();
 	}
 
 	deleteMember(by:
@@ -393,8 +411,10 @@ export class Store {
 		{ queueId: bigint, userId?: Snowflake },
 	) {
 		this.dbMembers.clear();
-		const cond = this.createCondition(MEMBERS_TABLE, by);
-		return db.delete(MEMBERS_TABLE).where(cond).returning().get();
+		const cond = this.createCondition(MEMBER_TABLE, by);
+		const deletedMember = db.delete(MEMBER_TABLE).where(cond).returning().get();
+		this.insertArchivedMember(deletedMember);
+		return deletedMember;
 	}
 
 	deleteManyMembers(by:
@@ -403,15 +423,17 @@ export class Store {
 	) {
 		this.dbMembers.clear();
 		const cond = ("count" in by)
-			? or(...QueryUtils.selectManyMembers(by).map(member => eq(MEMBERS_TABLE.id, member.id)))
-		  : this.createCondition(MEMBERS_TABLE, by);
-		return db.delete(MEMBERS_TABLE).where(cond).returning().all();
+			? or(...QueryUtils.selectManyMembers(by).map(member => eq(MEMBER_TABLE.id, member.id)))
+		  : this.createCondition(MEMBER_TABLE, by);
+		const deletedMembers = db.delete(MEMBER_TABLE).where(cond).returning().all();
+		deletedMembers.forEach(deletedMember => this.insertArchivedMember(deletedMember));
+		return deleteMembers;
 	}
 
 	deleteSchedule(by: { id: bigint }) {
 		this.dbSchedules.clear();
-		const cond = this.createCondition(SCHEDULES_TABLE, by);
-		return db.delete(SCHEDULES_TABLE).where(cond).returning().get();
+		const cond = this.createCondition(SCHEDULE_TABLE, by);
+		return db.delete(SCHEDULE_TABLE).where(cond).returning().get();
 	}
 
 	deleteManySchedules(by:
@@ -419,8 +441,8 @@ export class Store {
 		{ queueId: bigint }
 	) {
 		this.dbSchedules.clear();
-		const cond = this.createCondition(SCHEDULES_TABLE, by);
-		return db.delete(SCHEDULES_TABLE).where(cond).returning().all();
+		const cond = this.createCondition(SCHEDULE_TABLE, by);
+		return db.delete(SCHEDULE_TABLE).where(cond).returning().all();
 	}
 
 	deleteWhitelisted(by:
@@ -482,8 +504,8 @@ export class Store {
 		{ guildId: Snowflake, subjectId: Snowflake },
 	) {
 		this.dbAdmins.clear();
-		const cond = this.createCondition(ADMINS_TABLE, by);
-		return db.delete(ADMINS_TABLE).where(cond).returning().get();
+		const cond = this.createCondition(ADMIN_TABLE, by);
+		return db.delete(ADMIN_TABLE).where(cond).returning().get();
 	}
 
 	deleteManyAdmin(by:
@@ -491,7 +513,7 @@ export class Store {
 		{ guildId: Snowflake }
 	) {
 		this.dbAdmins.clear();
-		const cond = this.createCondition(ADMINS_TABLE, by);
-		return db.delete(ADMINS_TABLE).where(cond).returning().get();
+		const cond = this.createCondition(ADMIN_TABLE, by);
+		return db.delete(ADMIN_TABLE).where(cond).returning().get();
 	}
 }
