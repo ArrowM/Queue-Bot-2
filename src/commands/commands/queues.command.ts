@@ -5,7 +5,6 @@ import { findKey, isNil, omitBy } from "lodash-es";
 import { SelectMenuTransactor } from "../../core/select-menu-transactor.ts";
 import { type DbQueue, QUEUES_TABLE } from "../../db/schema.ts";
 import { AutopullToggleOption } from "../../options/options/autopull-toggle.option.ts";
-import { BlacklistToggleOption } from "../../options/options/blacklist-toggle.option.ts";
 import { ButtonsToggleOption } from "../../options/options/buttons-toggle.option.ts";
 import { ColorOption } from "../../options/options/color.option.ts";
 import { GracePeriodOption } from "../../options/options/grace-period.option.ts";
@@ -16,7 +15,6 @@ import { LogChannelOption } from "../../options/options/log-channel.option.ts";
 import { LogLevelOption } from "../../options/options/log-level.option.ts";
 import { NameOption } from "../../options/options/name.option.ts";
 import { NotificationsToggleOption } from "../../options/options/notifications-enable.option.ts";
-import { PartialPullToggleOption } from "../../options/options/partial-pull-enable.option.ts";
 import { PullBatchSizeOption } from "../../options/options/pull-batch-size.option.ts";
 import { QueueOption } from "../../options/options/queue.option.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
@@ -24,7 +22,6 @@ import { RoleOption } from "../../options/options/role.option.ts";
 import { SizeOption } from "../../options/options/size.option.ts";
 import { TimestampTypeOption } from "../../options/options/timestamp-type.option.ts";
 import { UpdateTypeOption } from "../../options/options/update-type.option.ts";
-import { WhitelistToggleOption } from "../../options/options/whitelist-toggle.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { DisplayUtils } from "../../utils/display.utils.ts";
@@ -118,22 +115,21 @@ export class QueuesCommand extends AdminCommand {
 
 	static readonly ADD_OPTIONS = {
 		name: new NameOption({ required: true, description: "Name of the queue" }),
+		autopullToggle: new AutopullToggleOption({ description: "Toggle automatic pulling of queue members" }),
+		buttonsToggle: new ButtonsToggleOption({ description: "Toggle buttons beneath queue displays" }),
 		color: new ColorOption({ description: "Color of the queue" }),
-		autopullToggle: new AutopullToggleOption({ description: "Toggle autopull" }),
-		buttonsToggle: new BlacklistToggleOption({ description: "Toggle buttons" }),
-		inlineToggle: new InlineToggleOption({ description: "Toggle inline" }),
-		lockToggle: new LockToggleOption({ description: "Toggle lock" }),
-		notificationsToggle: new NotificationsToggleOption({ description: "Toggle notifications" }),
-		partialPullToggle: new PartialPullToggleOption({ description: "Toggle partial pull" }),
 		gracePeriod: new GracePeriodOption({ description: "Grace period in seconds" }),
-		header: new HeaderOption({ description: "Header of the queue" }),
-		logChannel: new LogChannelOption({ description: "Log channel" }),
-		logLevel: new LogLevelOption({ description: "Log level" }),
-		pullBatchSize: new PullBatchSizeOption({ description: "Pull batch size" }),
-		role: new RoleOption({ description: "Role" }),
-		size: new SizeOption({ description: "Size of the queue" }),
-		timestampType: new TimestampTypeOption({ description: "Timestamp type" }),
-		updateType: new UpdateTypeOption({ description: "Update type" }),
+		header: new HeaderOption({ description: "Header of the queue display" }),
+		inlineToggle: new InlineToggleOption({ description: "Toggle inline display of queue members" }),
+		lockToggle: new LockToggleOption({ description: "Toggle queue locked status (prevents new joins)" }),
+		logChannel: new LogChannelOption({ description: "Channel to write logs to" }),
+		logLevel: new LogLevelOption({ description: "Level of logging" }),
+		notificationsToggle: new NotificationsToggleOption({ description: "Toggle whether users are DM-ed on pull" }),
+		pullBatchSize: new PullBatchSizeOption({ description: "How many queue members to include in a pull" }),
+		role: new RoleOption({ description: "Role to assign members of the queue" }),
+		size: new SizeOption({ description: "Limit the size of the queue" }),
+		timestampType: new TimestampTypeOption({ description: "How to display timestamps" }),
+		updateType: new UpdateTypeOption({ description: "How to update displays" }),
 	};
 
 	static async queues_add(inter: SlashInteraction) {
@@ -141,17 +137,16 @@ export class QueuesCommand extends AdminCommand {
 			guildId: inter.guildId,
 			name: QueuesCommand.ADD_OPTIONS.name.get(inter),
 			...omitBy({
-				color: QueuesCommand.ADD_OPTIONS.color.get(inter),
 				autopullToggle: QueuesCommand.ADD_OPTIONS.autopullToggle.get(inter),
 				buttonsToggle: QueuesCommand.ADD_OPTIONS.buttonsToggle.get(inter),
-				inlineToggle: QueuesCommand.ADD_OPTIONS.inlineToggle.get(inter),
-				lockToggle: QueuesCommand.ADD_OPTIONS.lockToggle.get(inter),
-				notificationsToggle: QueuesCommand.ADD_OPTIONS.notificationsToggle.get(inter),
-				partialPullToggle: QueuesCommand.ADD_OPTIONS.partialPullToggle.get(inter),
+				color: QueuesCommand.ADD_OPTIONS.color.get(inter),
 				gracePeriod: QueuesCommand.ADD_OPTIONS.gracePeriod.get(inter),
 				header: QueuesCommand.ADD_OPTIONS.header.get(inter),
+				inlineToggle: QueuesCommand.ADD_OPTIONS.inlineToggle.get(inter),
+				lockToggle: QueuesCommand.ADD_OPTIONS.lockToggle.get(inter),
 				logChannel: QueuesCommand.ADD_OPTIONS.logChannel.get(inter),
 				logLevel: QueuesCommand.ADD_OPTIONS.logLevel.get(inter),
+				notificationsToggle: QueuesCommand.ADD_OPTIONS.notificationsToggle.get(inter),
 				pullBatchSize: QueuesCommand.ADD_OPTIONS.pullBatchSize.get(inter),
 				role: QueuesCommand.ADD_OPTIONS.role.get(inter),
 				size: QueuesCommand.ADD_OPTIONS.size.get(inter),
@@ -172,44 +167,38 @@ export class QueuesCommand extends AdminCommand {
 
 	static readonly SET_OPTIONS = {
 		queues: new QueuesOption({ required: true, description: "Queues to update" }),
+		autopullToggle: new AutopullToggleOption({ description: "Toggle automatic pulling of queue members (use with partialPullToggle and pullBatchSize)" }),
+		buttonsToggle: new ButtonsToggleOption({ description: "Toggle buttons beneath queue displays" }),
 		color: new ColorOption({ description: "Color of the queue" }),
-		autopullToggle: new AutopullToggleOption({ description: "Toggle autopull" }),
-		blacklistToggle: new BlacklistToggleOption({ description: "Toggle blacklist" }),
-		buttonsToggle: new ButtonsToggleOption({ description: "Toggle buttons" }),
-		inlineToggle: new InlineToggleOption({ description: "Toggle inline" }),
-		lockToggle: new LockToggleOption({ description: "Toggle lock" }),
-		notificationsToggle: new NotificationsToggleOption({ description: "Toggle notifications" }),
-		enablePartialPull: new PartialPullToggleOption({ description: "Toggle partial pull" }),
-		whitelistToggle: new WhitelistToggleOption({ description: "Toggle whitelist" }),
 		gracePeriod: new GracePeriodOption({ description: "Grace period in seconds" }),
-		header: new HeaderOption({ description: "Header of the queue" }),
-		logChannel: new LogChannelOption({ description: "Log channel" }),
-		logLevel: new LogLevelOption({ description: "Log level" }),
+		header: new HeaderOption({ description: "Header of the queue display" }),
+		inlineToggle: new InlineToggleOption({ description: "Toggle inline display of queue members" }),
+		lockToggle: new LockToggleOption({ description: "Toggle queue locked status (prevents new joins)" }),
+		logChannel: new LogChannelOption({ description: "Channel to write logs to" }),
+		logLevel: new LogLevelOption({ description: "Level of logging" }),
 		name: new NameOption({ description: "Name of the queue" }),
-		pullBatchSize: new PullBatchSizeOption({ description: "Pull batch size" }),
-		role: new RoleOption({ description: "Role" }),
-		size: new SizeOption({ description: "Size of the queue" }),
-		timestampType: new TimestampTypeOption({ description: "Timestamp type" }),
-		updateType: new UpdateTypeOption({ description: "Update type" }),
+		notificationsToggle: new NotificationsToggleOption({ description: "Toggle whether users are DM-ed on pull" }),
+		pullBatchSize: new PullBatchSizeOption({ description: "How many queue members to include in a pull" }),
+		role: new RoleOption({ description: "Role to assign members of the queue" }),
+		size: new SizeOption({ description: "Limit the size of the queue" }),
+		timestampType: new TimestampTypeOption({ description: "How to display timestamps" }),
+		updateType: new UpdateTypeOption({ description: "How to update displays" }),
 	};
 
 	static async queues_set(inter: SlashInteraction) {
 		const queues = await QueuesCommand.SET_OPTIONS.queues.get(inter);
 		const update = omitBy({
-			color: QueuesCommand.SET_OPTIONS.color.get(inter),
 			autopullToggle: QueuesCommand.SET_OPTIONS.autopullToggle.get(inter),
-			blacklistToggle: QueuesCommand.SET_OPTIONS.blacklistToggle.get(inter),
 			buttonsToggle: QueuesCommand.SET_OPTIONS.buttonsToggle.get(inter),
-			inlineToggle: QueuesCommand.SET_OPTIONS.inlineToggle.get(inter),
-			lockToggle: QueuesCommand.SET_OPTIONS.lockToggle.get(inter),
-			notificationsToggle: QueuesCommand.SET_OPTIONS.notificationsToggle.get(inter),
-			enablePartialPull: QueuesCommand.SET_OPTIONS.enablePartialPull.get(inter),
-			whitelistToggle: QueuesCommand.SET_OPTIONS.whitelistToggle.get(inter),
+			color: QueuesCommand.SET_OPTIONS.color.get(inter),
 			gracePeriod: QueuesCommand.SET_OPTIONS.gracePeriod.get(inter),
 			header: QueuesCommand.SET_OPTIONS.header.get(inter),
+			inlineToggle: QueuesCommand.SET_OPTIONS.inlineToggle.get(inter),
+			lockToggle: QueuesCommand.SET_OPTIONS.lockToggle.get(inter),
 			logChannel: QueuesCommand.SET_OPTIONS.logChannel.get(inter),
 			logLevel: QueuesCommand.SET_OPTIONS.logLevel.get(inter),
 			name: QueuesCommand.SET_OPTIONS.name.get(inter),
+			notificationsToggle: QueuesCommand.SET_OPTIONS.notificationsToggle.get(inter),
 			pullBatchSize: QueuesCommand.SET_OPTIONS.pullBatchSize.get(inter),
 			role: QueuesCommand.SET_OPTIONS.role.get(inter),
 			size: QueuesCommand.SET_OPTIONS.size.get(inter),
@@ -238,13 +227,10 @@ export class QueuesCommand extends AdminCommand {
 		const resettableSettings = [
 			ColorOption.ID,
 			AutopullToggleOption.ID,
-			BlacklistToggleOption.ID,
 			ButtonsToggleOption.ID,
 			InlineToggleOption.ID,
 			LockToggleOption.ID,
 			NotificationsToggleOption.ID,
-			PartialPullToggleOption.ID,
-			WhitelistToggleOption.ID,
 			GracePeriodOption.ID,
 			HeaderOption.ID,
 			LogChannelOption.ID,

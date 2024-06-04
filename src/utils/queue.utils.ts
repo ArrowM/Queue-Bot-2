@@ -25,6 +25,18 @@ export namespace QueueUtils {
 		return compact(QUEUE_PRINT_SETTINGS.map(prop => formatSettingWithFallBack(queue, prop))).join("\n");
 	}
 
+	export function validateQueueProperties(queue: DbQueue) {
+		if (queue.gracePeriod < 0) {
+			throw new Error("Grace period must be a positive number.");
+		}
+		if (queue.pullBatchSize < 1) {
+			throw new Error("Pull batch size must be a positive number.");
+		}
+		if (queue.size < 1) {
+			throw new Error("Size must be a positive number.");
+		}
+	}
+
 	function formatSettingWithFallBack(queue: DbQueue, setting: string) {
 		const value = queue[setting as keyof DbQueue];
 		const dbQueueCol = QUEUES_TABLE[setting as keyof DbQueue];

@@ -2,7 +2,6 @@ import { Collection } from "discord.js";
 
 import type { Option } from "../types/option.types.ts";
 import { AutopullToggleOption } from "./options/autopull-toggle.option.ts";
-import { BlacklistToggleOption } from "./options/blacklist-toggle.option.ts";
 import { ButtonsToggleOption } from "./options/buttons-toggle.option.ts";
 import { ColorOption } from "./options/color.option.ts";
 import { CommandOption } from "./options/command.option.ts";
@@ -24,7 +23,6 @@ import { NameOption } from "./options/name.option.ts";
 import { NewDisplayChannelOption } from "./options/new-display-channel.option.ts";
 import { NotificationsToggleOption } from "./options/notifications-enable.option.ts";
 import { NumberOption } from "./options/number.option.ts";
-import { PartialPullToggleOption } from "./options/partial-pull-enable.option.ts";
 import { PullBatchSizeOption } from "./options/pull-batch-size.option.ts";
 import { QueueOption } from "./options/queue.option.ts";
 import { QueuesOption } from "./options/queues.option.ts";
@@ -36,11 +34,9 @@ import { SourceVoiceChannelOption } from "./options/source-voice-channel.option.
 import { TimestampTypeOption } from "./options/timestamp-type.option.ts";
 import { TimezoneOption } from "./options/timezone.option.ts";
 import { UpdateTypeOption } from "./options/update-type.option.ts";
-import { WhitelistToggleOption } from "./options/whitelist-toggle.option.ts";
 
 export const OPTIONS = new Collection<string, Option>([
 	[AutopullToggleOption.ID, new AutopullToggleOption()],
-	[BlacklistToggleOption.ID, new BlacklistToggleOption()],
 	[ButtonsToggleOption.ID, new ButtonsToggleOption()],
 	[ColorOption.ID, new ColorOption()],
 	[CommandOption.ID, new CommandOption()],
@@ -62,7 +58,6 @@ export const OPTIONS = new Collection<string, Option>([
 	[NewDisplayChannelOption.ID, new NewDisplayChannelOption()],
 	[NotificationsToggleOption.ID, new NotificationsToggleOption()],
 	[NumberOption.ID, new NumberOption()],
-	[PartialPullToggleOption.ID, new PartialPullToggleOption()],
 	[PullBatchSizeOption.ID, new PullBatchSizeOption()],
 	[QueueOption.ID, new QueueOption()],
 	[QueuesOption.ID, new QueuesOption()],
@@ -74,5 +69,4 @@ export const OPTIONS = new Collection<string, Option>([
 	[TimestampTypeOption.ID, new TimestampTypeOption()],
 	[TimezoneOption.ID, new TimezoneOption()],
 	[UpdateTypeOption.ID, new UpdateTypeOption()],
-	[WhitelistToggleOption.ID, new WhitelistToggleOption()],
 ]);

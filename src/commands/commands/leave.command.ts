@@ -31,6 +31,7 @@ export class LeaveCommand extends EveryoneCommand {
 			store: inter.store,
 			queues: [queue],
 			by: { userId: inter.member.id },
+			force: true,
 		});
 
 		await inter.respond(`Left '${queueMention(queue)}' queue.`);

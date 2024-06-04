@@ -62,7 +62,7 @@ export class MembersCommand extends AdminCommand {
 	};
 
 	static async members_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
-		await ShowCommand.show(inter);
+		await ShowCommand.show(inter, queues);
 	}
 
 	// ====================================================================
@@ -126,6 +126,7 @@ export class MembersCommand extends AdminCommand {
 			queues,
 			by: { userIds: members.map(member => member.userId) },
 			notification: { type: NotificationType.REMOVED_FROM_QUEUE, channelToLink: inter.channel },
+			force: true,
 		});
 
 

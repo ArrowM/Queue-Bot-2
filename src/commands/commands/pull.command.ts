@@ -35,11 +35,16 @@ export class PullCommand extends AdminCommand {
 		const count = PullCommand.PULL_OPTIONS.count.get(inter);
 		const members = await PullCommand.PULL_OPTIONS.members.get(inter);
 
+		if (count < 1) {
+			throw new Error("Count must be a positive number.");
+		}
+
 		const pulledMembers = MemberUtils.deleteMembers({
 			store: inter.store,
 			queues: queues,
 			by: { userIds: members?.map((member) => member.userId), count },
 			notification: { type: NotificationType.PULLED_FROM_QUEUE, channelToLink: inter.channel },
+			force: true,
 		});
 
 		await Promise.all([

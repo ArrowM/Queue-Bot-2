@@ -24,7 +24,7 @@ export namespace BlacklistUtils {
 			: [...store.dbQueues().values()],
 		).flat();
 		const by = (mentionable instanceof Role) ? { roleId: mentionable.id } : { userId: mentionable.id };
-		MemberUtils.deleteMembers({ store, queues: queuesToUpdate, by });
+		MemberUtils.deleteMembers({ store, queues: queuesToUpdate, by, force: true });
 		DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
 
 		return { insertedBlacklisted, updatedQueues: queuesToUpdate };

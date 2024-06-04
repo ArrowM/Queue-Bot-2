@@ -20,6 +20,7 @@ export class PullButton extends AdminButton {
 			store: inter.store,
 			queues: [queue],
 			notification: { type: NotificationType.PULLED_FROM_QUEUE, channelToLink: inter.channel },
+			force: true,
 		});
 
 		await Promise.all([

@@ -60,7 +60,6 @@ export const QUEUES_TABLE = sqliteTable("queues", ({
 	logLevel: text("log_level").$type<LogLevel>().notNull().default(LogLevel.Default),
 	memberDisplayType: text("member_display_type").$type<MemberDisplayType>().notNull().default(MemberDisplayType.Mention),
 	notificationsToggle: integer("notifications_toggle", { mode: "boolean" }).notNull().default(false),
-	partialPullToggle: integer("partial_pull_toggle", { mode: "boolean" }).notNull().default(true),
 	pullBatchSize: integer("pull_batch_size").notNull().default(1),
 	roleId: text("role_id").$type<Snowflake | null>(),
 	size: integer("size"),

@@ -92,7 +92,7 @@ export namespace ClientUtils {
 			"DEFAULT_COLOR",
 		].forEach(name => {
 			if (process.env[name] == null) {
-				throw new Error(`Required environment variable ${name} not set. Please edit .env file`);
+				throw new Error(`Required environment variable ${name} not set. Please edit .env file.`);
 			}
 		});
 		// color check

@@ -134,7 +134,6 @@ export namespace ScheduleUtils {
 				MemberUtils.deleteMembers({
 					store,
 					queues: [queue],
-					by: {},
 					notification: { type: NotificationType.PULLED_FROM_QUEUE },
 				});
 				break;

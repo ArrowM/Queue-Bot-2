@@ -34,7 +34,13 @@ export class MoveCommand extends AdminCommand {
 		const member = await MoveCommand.MOVE_OPTIONS.member.get(inter);
 		const position = MoveCommand.MOVE_OPTIONS.position.get(inter);
 
-		MemberUtils.moveMember(inter.store, queue, member, position);
+		// Validate position
+		const members = inter.store.dbMembers().filter(member => member.queueId === queue.id);
+		if (position < 1 || position > members.size) {
+			throw new Error("Invalid position.");
+		}
+
+		MemberUtils.moveMember(inter.store, queue, member, position - 1);
 
 		await Promise.all([
 			inter.deleteReply(),

@@ -1,10 +1,11 @@
-import { italic, SlashCommandBuilder } from "discord.js";
+import { type Collection, italic, SlashCommandBuilder } from "discord.js";
 
 import { QueuesOption } from "../../options/options/queues.option.ts";
 import { EveryoneCommand } from "../../types/command.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { DisplayUtils } from "../../utils/display.utils.ts";
 import { DisplaysCommand } from "./displays.command.ts";
+import type { DbQueue } from "../../db/schema.ts";
 
 export class ShowCommand extends EveryoneCommand {
 	static readonly ID = "show";
@@ -24,8 +25,8 @@ export class ShowCommand extends EveryoneCommand {
 	//                           /show
 	// ====================================================================
 
-	static async show(inter: SlashInteraction) {
-		const queues = await DisplaysCommand.GET_OPTIONS.queues.get(inter);
+	static async show(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
+		queues = queues ?? await DisplaysCommand.GET_OPTIONS.queues.get(inter);
 
 		const result = DisplayUtils.insertDisplays(inter.store, queues, inter.channel.id);
 

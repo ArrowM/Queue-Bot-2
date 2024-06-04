@@ -101,8 +101,9 @@ export namespace MemberUtils {
 		queues: DbQueue[] | Collection<bigint, DbQueue>,
 		by?: MemberDeleteBy,
 		notification?: NotificationOptions,
+		force?: boolean,
 	}) {
-		const { store, queues, by, notification } = options;
+		const { store, queues, by, notification, force } = options;
 		const deletedMembers: DbMember[] = [];
 		const membersToNotify: DbMember[] = [];
 
@@ -138,6 +139,10 @@ export namespace MemberUtils {
 			queues.forEach((queue: DbQueue) => {
 				const deleted: DbMember[] = [];
 				const numToPull = get(by, "count") ?? queue.pullBatchSize ?? 1;
+				const members = store.dbMembers().filter(member => member.queueId === queue.id);
+				if (!force && (members.size < numToPull)) {
+					throw new Error("Not enough members to pull (< pullBatchSize of queue).");
+				}
 				for (let i = 0; i < numToPull; i++) {
 					const member = store.deleteMember({ queueId: queue.id });
 					if (member) {
