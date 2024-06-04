@@ -3,8 +3,8 @@
   "main": "src/index.ts",
   "module": "src/index.ts",
   "scripts": {
-    "setup": "npm ci && drizzle-kit push",
-    "start": "drizzle-kit push && node --loader=ts-node/esm --no-warnings --enable-source-maps --env-file=.env src/index.ts ",
+    "setup": "npm ci",
+    "start": "drizzle-kit push && drizzle-kit push && node --loader=ts-node/esm --no-warnings --enable-source-maps --env-file=.env src/index.ts ",
     "dev": "node --loader=ts-node/esm --no-warnings --enable-source-maps --watch --env-file=.env src/index.ts",
     "lint": "eslint src --fix"
   },
