@@ -24,14 +24,14 @@ Admin commands are restricted to users with the **Administrator** permission and
 
 `/admins` - manage admin users and roles  
 `/blacklist` - manage blacklisted users and roles  
-`/clear` - clear a queue.
+`/clear` - clear a queue  
 `/displays` - manage display channels  
 `/members` - manage queue members  
-`/move` - change the position of a queue member
+`/move` - change the position of a queue member  
 `/prioritize` - manage prioritized users and roles  
 `/pull` - pull members from queue(s)  
 `/queues` - manage queues  
 `/schedules` - manage scheduled commands  
 `/shuffle` - shuffle queue(s)  
 `/voice` - manage voice integrations  
-`/whitelist` - manage whitelisted users and roles
+`/whitelist` - manage whitelisted users and roles  
