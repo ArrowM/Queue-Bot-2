@@ -13,7 +13,6 @@ import {
 	type GuildTextBasedChannel,
 	inlineCode,
 	type Message,
-	PermissionsBitField,
 	type Snowflake,
 	time,
 	type TimestampStylesString,
@@ -29,6 +28,8 @@ import { incrementGuildStat } from "../db/db.ts";
 import { type DbDisplay, type DbMember, type DbQueue } from "../db/schema.ts";
 import type { Button } from "../types/button.types.ts";
 import { ArchivedMemberReason, Color, DisplayUpdateType, MemberDisplayType, TimestampType } from "../types/db.types.ts";
+import type { CustomError } from "./error.utils.ts";
+import { InteractionUtils } from "./interaction.utils.ts";
 import { map } from "./misc.utils.ts";
 import {
 	commandMention,
@@ -51,17 +52,23 @@ export namespace DisplayUtils {
 		PENDING_QUEUE_IDS.clear();
 	}, 1500);
 
-	export function requestDisplayUpdate(store: Store, queueId: bigint, forceNew?: boolean) {
+	export function requestDisplayUpdate(store: Store, queueId: bigint, opts?: {
+		displayIds?: bigint[],
+		forceNew?: boolean
+	}) {
 		if (UPDATED_QUEUE_IDS.has(queueId)) {
 			PENDING_QUEUE_IDS.set(queueId, store);
 		}
 		else {
-			updateDisplays(store, queueId, forceNew);
+			updateDisplays(store, queueId, opts);
 		}
 	}
 
-	export function requestDisplaysUpdate(store: Store, queueIds: bigint[], forceNew?: boolean) {
-		return map(queueIds, id => requestDisplayUpdate(store, id, forceNew));
+	export function requestDisplaysUpdate(store: Store, queueIds: bigint[], opts?: {
+		displayIds?: bigint[],
+		forceNew?: boolean
+	}) {
+		return map(queueIds, id => requestDisplayUpdate(store, id, opts));
 	}
 
 	export function insertDisplays(store: Store, queues: DbQueue[] | Collection<bigint, DbQueue>, displayChannelId: Snowflake) {
@@ -76,11 +83,16 @@ export namespace DisplayUtils {
 		store.guild.members.cache.clear();
 
 		// update displays
-		const queuesToUpdate = insertedDisplays.map(display => display.queueId
-			? store.dbQueues().get(display.queueId)
-			: [...store.dbQueues().values()],
-		).flat();
-		DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id), true);
+		const queuesToUpdate = insertedDisplays
+			.map(display => store.dbQueues().get(display.queueId))
+			.flat();
+		DisplayUtils.requestDisplaysUpdate(
+			store,
+			queuesToUpdate.map(queue => queue.id),
+			{
+				displayIds: insertedDisplays.map(display => display.id),
+				forceNew: true,
+			});
 
 		return { insertedDisplays, updatedQueues: queuesToUpdate };
 	}
@@ -92,10 +104,9 @@ export namespace DisplayUtils {
 		);
 
 		// update displays
-		const queuesToUpdate = deletedDisplays.map(display => display.queueId
-			? store.dbQueues().get(display.queueId)
-			: [...store.dbQueues().values()],
-		).flat();
+		const queuesToUpdate = deletedDisplays
+			.map(display => store.dbQueues().get(display.queueId))
+			.flat();
 		deletedDisplays.forEach(display => store.deleteDisplay(display));
 		requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
 
@@ -120,12 +131,15 @@ export namespace DisplayUtils {
 		return `${idxStr}${timeStr}${prioStr}${nameStr}${msgStr}\n`;
 	}
 
-	async function updateDisplays(store: Store, queueId: bigint, forceNew = false) {
+	async function updateDisplays(store: Store, queueId: bigint, opts?: { displayIds?: bigint[], forceNew?: boolean }) {
 		try {
 			UPDATED_QUEUE_IDS.set(queueId, store);
 
 			const queue = store.dbQueues().get(queueId);
-			const displays = store.dbDisplays().filter(display => queue.id === display.queueId);
+			let displays = store.dbDisplays().filter(display => queue.id === display.queueId);
+			if (opts?.displayIds) {
+				displays = displays.filter(display => opts.displayIds.includes(display.id));
+			}
 
 			const embedBuilders = await generateQueueDisplay(store, queue);
 
@@ -134,10 +148,13 @@ export namespace DisplayUtils {
 			await Promise.all(displays.map(async (display) => {
 				try {
 					const jsChannel = await store.jsChannel(display.displayChannelId) as GuildTextBasedChannel;
-					const perms = jsChannel?.permissionsFor(await jsChannel.guild.members.fetchMe());
-					const canSend = perms?.has(PermissionsBitField.Flags.SendMessages) && perms?.has(PermissionsBitField.Flags.EmbedLinks);
-					if (!canSend) {
-						throw new Error(`Missing permissions to send messages or embed links in ${jsChannel}.`);
+					try {
+						await InteractionUtils.verifyCanSendMessages(jsChannel);
+					} catch (e) {
+						if (store.initiator) {
+							await store.initiator.send({ embeds: (e as CustomError).extraEmbeds });
+						}
+						return;
 					}
 
 					let lastMessage: Message;
@@ -186,7 +203,7 @@ export namespace DisplayUtils {
 						await newDisplay();
 					}
 
-					if (queue.updateType === DisplayUpdateType.New || forceNew) {
+					if (queue.updateType === DisplayUpdateType.New || opts?.forceNew) {
 						await newDisplay();
 					}
 					else if (queue.updateType === DisplayUpdateType.Edit) {
@@ -218,9 +235,9 @@ export namespace DisplayUtils {
 					.setTitle("Failed to display queue")
 					.setColor(Color.Red)
 					.setDescription(
-						`Hey ${store.initiator}, I just tried to display the '${queueMention(queue)}' queue in ${channelMention(display.displayChannelId)}, but something went wrong.\n` +
-						(isPermissionError ? bold(`It looks like a permission issue, please check the bot's perms in ${channelMention(display.displayChannelId)}.\n`) : "") +
-						`Error:${codeBlock(message)}`,
+						`Hey ${store.initiator}, I just tried to display the '${queueMention(queue)}' queue in ${channelMention(display.displayChannelId)}, but something went wrong. ` +
+						(isPermissionError ? bold(`It looks like a permission issue, please check the bot's perms in ${channelMention(display.displayChannelId)}. `) : "") +
+						`Here's the error:${codeBlock(message)}`,
 					);
 				if (!isPermissionError) {
 					embed.setFooter({ text: "This error has been logged and will be investigated by the developers." });
@@ -373,7 +390,7 @@ export namespace DisplayUtils {
 		}
 
 		if (members.some(m => m.isPrioritized)) {
-			descriptionParts.push("Priority users are marked with a ✨.");
+			descriptionParts.push("Prioritized users are marked with a ✨.");
 		}
 
 		if (schedules.size) {

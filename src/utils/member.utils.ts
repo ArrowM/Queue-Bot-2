@@ -63,7 +63,7 @@ export namespace MemberUtils {
 			}
 		}
 
-		const prioritized = store.dbPrioritized().filter(priority => priority.queueId === queue.id);
+		const prioritized = store.dbPrioritized().filter(prioritized => prioritized.queueId === queue.id);
 		const isPrioritized = isPrioritizedByUser(prioritized, jsMember) || isPrioritizedByRole(prioritized, jsMember);
 
 		const member = store.insertMember({
@@ -262,13 +262,13 @@ export namespace MemberUtils {
 		return { position, member };
 	}
 
-	function isPrioritizedByUser(prioritized: Collection<bigint, DbPrioritized>, jsMember: GuildMember) {
-		return prioritized.some(priority => priority.subjectId === jsMember.id);
+	function isPrioritizedByUser(prioritizeds: Collection<bigint, DbPrioritized>, jsMember: GuildMember) {
+		return prioritizeds.some(prioritized => prioritized.subjectId === jsMember.id);
 	}
 
-	function isPrioritizedByRole(prioritized: Collection<bigint, DbPrioritized>, jsMember: GuildMember) {
+	function isPrioritizedByRole(prioritizeds: Collection<bigint, DbPrioritized>, jsMember: GuildMember) {
 		return Array.isArray(jsMember.roles)
-			? jsMember.roles.some(roleId => prioritized.some(priority => priority.subjectId === roleId))
-			: jsMember.roles.cache.some(role => prioritized.some(priority => priority.subjectId === role.id));
+			? jsMember.roles.some(roleId => prioritizeds.some(prioritized => prioritized.subjectId === roleId))
+			: jsMember.roles.cache.some(role => prioritizeds.some(prioritized => prioritized.subjectId === role.id));
 	}
 }

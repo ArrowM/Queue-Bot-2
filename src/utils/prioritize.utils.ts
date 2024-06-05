@@ -18,10 +18,9 @@ export namespace PrioritizeUtils {
 		}));
 
 		// re-evaluate prioritized & update displays
-		const queuesToUpdate = map(insertedPrioritized, priority => priority.queueId
-			? store.dbQueues().get(priority.queueId)
-			: [...store.dbQueues().values()],
-		).flat();
+		const queuesToUpdate = insertedPrioritized
+			.map(prioritized => store.dbQueues().get(prioritized.queueId))
+			.flat();
 
 		reEvaluatePrioritized(store, queuesToUpdate)
 			.then(() =>
@@ -36,10 +35,9 @@ export namespace PrioritizeUtils {
 		const deletedPrioritized = prioritizedIds.map(id => store.deletePrioritized({ id }));
 
 		// re-evaluate prioritized & update displays
-		const queuesToUpdate = deletedPrioritized.map(display => display.queueId
-			? store.dbQueues().get(display.queueId)
-			: [...store.dbQueues().values()],
-		).flat();
+		const queuesToUpdate = deletedPrioritized
+			.map(display => store.dbQueues().get(display.queueId))
+			.flat();
 
 		reEvaluatePrioritized(store, queuesToUpdate)
 			.then(() =>

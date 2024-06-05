@@ -20,10 +20,9 @@ export namespace BlacklistUtils {
 		}));
 
 		// re-evaluate blacklisted & update displays
-		const queuesToUpdate = map(insertedBlacklisted, blacklisted => blacklisted.queueId
-			? store.dbQueues().get(blacklisted.queueId)
-			: [...store.dbQueues().values()],
-		).flat();
+		const queuesToUpdate = insertedBlacklisted
+			.map(blacklisted => store.dbQueues().get(blacklisted.queueId))
+			.flat();
 		const by = (mentionable instanceof Role) ? { roleId: mentionable.id } : { userId: mentionable.id };
 		MemberUtils.deleteMembers({ store, queues: queuesToUpdate, reason: ArchivedMemberReason.Kicked, by, force: true });
 		DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));

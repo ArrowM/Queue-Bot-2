@@ -48,10 +48,9 @@ export namespace ScheduleUtils {
 		});
 
 		// update displays
-		const queuesToUpdate = insertedSchedules.map(schedule => schedule.queueId
-			? store.dbQueues().get(schedule.queueId)
-			: [...store.dbQueues().values()],
-		).flat();
+		const queuesToUpdate = insertedSchedules
+			.map(schedule => store.dbQueues().get(schedule.queueId))
+			.flat();
 		DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
 
 		return { insertedSchedules, updatedQueues: queuesToUpdate };
@@ -74,10 +73,9 @@ export namespace ScheduleUtils {
 		});
 
 		// update displays
-		const queuesToUpdate = updatedSchedules.map(schedule => schedule.queueId
-			? store.dbQueues().get(schedule.queueId)
-			: [...store.dbQueues().values()],
-		).flat();
+		const queuesToUpdate = updatedSchedules
+			.map(schedule => store.dbQueues().get(schedule.queueId))
+			.flat();
 		DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
 
 		return { updatedSchedules, updatedQueues: queuesToUpdate };
@@ -102,10 +100,9 @@ export namespace ScheduleUtils {
 		});
 
 		// update displays
-		const queuesToUpdate = deletedSchedules.map(schedule => schedule.queueId
-			? store.dbQueues().get(schedule.queueId)
-			: [...store.dbQueues().values()],
-		).flat();
+		const queuesToUpdate = deletedSchedules
+			.map(schedule => store.dbQueues().get(schedule.queueId))
+			.flat();
 		DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
 
 		return { deletedSchedules, updatedQueues: queuesToUpdate };
@@ -143,7 +140,7 @@ export namespace ScheduleUtils {
 			});
 			break;
 		case ScheduleCommand.Show:
-			DisplayUtils.requestDisplayUpdate(store, queue.id, true);
+			DisplayUtils.requestDisplayUpdate(store, queue.id, { forceNew: true });
 			break;
 		case ScheduleCommand.Shuffle:
 			MemberUtils.shuffleMembers(store, queue);

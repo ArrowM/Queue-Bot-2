@@ -1,14 +1,21 @@
 import {
 	ActionRowBuilder,
+	bold,
 	ButtonBuilder,
 	ButtonStyle,
 	ComponentType,
+	EmbedBuilder,
+	type GuildTextBasedChannel,
+	inlineCode,
 	type Interaction,
 	type InteractionReplyOptions,
 	MessagePayload,
+	PermissionsBitField,
 } from "discord.js";
 
+import { Color } from "../types/db.types.ts";
 import type { AnyInteraction, SlashInteraction } from "../types/interaction.types.ts";
+import { CustomError } from "./error.utils.ts";
 
 export namespace InteractionUtils {
 	export async function respond(inter: AnyInteraction, response: (InteractionReplyOptions | string | MessagePayload)) {
@@ -77,6 +84,27 @@ export namespace InteractionUtils {
 	export function verifyCommandIsFromGuild(inter: Interaction) {
 		if (!inter.guild) {
 			throw new Error("This command can only be used in a guild.");
+		}
+	}
+
+	export async function verifyCanSendMessages(jsChannel: GuildTextBasedChannel) {
+		function throwError(permissionName: string) {
+			throw new CustomError("Missing Permissions",
+				[
+					new EmbedBuilder()
+						.setTitle(`⚠️ I am missing the ${inlineCode(permissionName)} permission in ${jsChannel} ⚠️ ️️️️`)
+						.setDescription(`Please open the '${bold(jsChannel.guild.name)}' server, hover over ${jsChannel}, click the gear, click 'Permissions', and ensure I have the ${inlineCode(permissionName)} permission.`)
+						.setColor(Color.Red)],
+			);
+		}
+
+		const me = await jsChannel.guild.members.fetchMe();
+		const perms = jsChannel?.permissionsFor(me);
+		if (!perms?.has(PermissionsBitField.Flags.ViewChannel)) {
+			throwError("View Channel");
+		}
+		if (!perms?.has(PermissionsBitField.Flags.SendMessages)) {
+			throwError("Send Messages");
 		}
 	}
 }
