@@ -88,15 +88,19 @@ export class QueueAlreadyExistsError extends CustomError {
 export class ScheduleAlreadyExistsError extends CustomError {
 	message = "Schedule already exists.";
 }
+
 export class WhitelistedAlreadyExistsError extends CustomError {
 	message = "Whitelisted already exists.";
 }
+
 export class BlacklistedAlreadyExistsError extends CustomError {
 	message = "Blacklisted already exists.";
 }
+
 export class PrioritizedAlreadyExistsError extends CustomError {
 	message = "Prioritized already exists.";
 }
+
 export class AdminAlreadyExistsError extends CustomError {
 	message = "Admin already exists.";
 }

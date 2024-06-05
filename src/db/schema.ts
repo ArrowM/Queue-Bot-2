@@ -46,37 +46,37 @@ export type NewGuild = typeof GUILD_TABLE.$inferInsert;
 export type DbGuild = typeof GUILD_TABLE.$inferSelect;
 
 export const QUEUE_TABLE = sqliteTable("queue", ({
-	id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
+		id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
 
-	name: text("name").notNull(),
-	guildId: text("guild_id").$type<Snowflake>().notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
+		name: text("name").notNull(),
+		guildId: text("guild_id").$type<Snowflake>().notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
 
-	// configurable queue properties
-	autopullToggle: integer("autopull_toggle", { mode: "boolean" }).notNull().default(false),
-	buttonsToggle: integer("buttons_toggle", { mode: "boolean" }).notNull().default(true),
-	color: text("color").$type<ColorResolvable>().notNull().default(get(Color, process.env.DEFAULT_COLOR) as ColorResolvable),
-	gracePeriod: integer("grace_period").notNull().default(0),
-	header: text("header"),
-	inlineToggle: integer("inline_toggle", { mode: "boolean" }).notNull().default(false),
-	lockToggle: integer("lock_toggle", { mode: "boolean" }).notNull().default(false),
-	logChannelId: text("log_channel_id").$type<Snowflake | null>(),
-	logLevel: text("log_level").$type<LogLevel>().notNull().default(LogLevel.Default),
-	memberDisplayType: text("member_display_type").$type<MemberDisplayType>().notNull().default(MemberDisplayType.Mention),
-	notificationsToggle: integer("notifications_toggle", { mode: "boolean" }).notNull().default(false),
-	pullBatchSize: integer("pull_batch_size").notNull().default(1),
-	roleId: text("role_id").$type<Snowflake | null>(),
-	size: integer("size"),
-	timestampType: text("time_display_type").$type<TimestampType>().default(TimestampType.Off),
-	updateType: text("update_type").$type<DisplayUpdateType>().notNull().default(DisplayUpdateType.Edit),
+		// configurable queue properties
+		autopullToggle: integer("autopull_toggle", { mode: "boolean" }).notNull().default(false),
+		buttonsToggle: integer("buttons_toggle", { mode: "boolean" }).notNull().default(true),
+		color: text("color").$type<ColorResolvable>().notNull().default(get(Color, process.env.DEFAULT_COLOR) as ColorResolvable),
+		gracePeriod: integer("grace_period").notNull().default(0),
+		header: text("header"),
+		inlineToggle: integer("inline_toggle", { mode: "boolean" }).notNull().default(false),
+		lockToggle: integer("lock_toggle", { mode: "boolean" }).notNull().default(false),
+		logChannelId: text("log_channel_id").$type<Snowflake | null>(),
+		logLevel: text("log_level").$type<LogLevel>().notNull().default(LogLevel.Default),
+		memberDisplayType: text("member_display_type").$type<MemberDisplayType>().notNull().default(MemberDisplayType.Mention),
+		notificationsToggle: integer("notifications_toggle", { mode: "boolean" }).notNull().default(false),
+		pullBatchSize: integer("pull_batch_size").notNull().default(1),
+		roleId: text("role_id").$type<Snowflake | null>(),
+		size: integer("size"),
+		timestampType: text("time_display_type").$type<TimestampType>().default(TimestampType.Off),
+		updateType: text("update_type").$type<DisplayUpdateType>().notNull().default(DisplayUpdateType.Edit),
 
-	// voice integration
-	sourceVoiceChannelId: text("source_voice_channel_id").$type<Snowflake | null>(),
-	destinationVoiceChannelId: text("destination_voice_channel_id").$type<Snowflake | null>(),
-}),
-(table) => ({
-	unq: unique().on(table.name, table.guildId),
-	guildIdIndex: index("queue_guild_id_index").on(table.guildId),
-}));
+		// voice integration
+		sourceVoiceChannelId: text("source_voice_channel_id").$type<Snowflake | null>(),
+		destinationVoiceChannelId: text("destination_voice_channel_id").$type<Snowflake | null>(),
+	}),
+	(table) => ({
+		unq: unique().on(table.name, table.guildId),
+		guildIdIndex: index("queue_guild_id_index").on(table.guildId),
+	}));
 
 export const QUEUE_RELATIONS = relations(QUEUE_TABLE, ({ one, many }) => ({
 	guilds: one(GUILD_TABLE, {
@@ -96,17 +96,17 @@ export type DbQueue = typeof QUEUE_TABLE.$inferSelect;
 
 
 export const DISPLAY_TABLE = sqliteTable("display", ({
-	id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
+		id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
 
-	guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
-	queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
-	displayChannelId: text("display_channel_id").notNull(),
-	lastMessageId: text("last_message_id").$type<Snowflake | null>(),
-}),
-(table) => ({
-	unq: unique().on(table.queueId, table.displayChannelId),
-	guildIdIndex: index("display_guild_id_index").on(table.guildId),
-}));
+		guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
+		queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
+		displayChannelId: text("display_channel_id").notNull(),
+		lastMessageId: text("last_message_id").$type<Snowflake | null>(),
+	}),
+	(table) => ({
+		unq: unique().on(table.queueId, table.displayChannelId),
+		guildIdIndex: index("display_guild_id_index").on(table.guildId),
+	}));
 
 export const DISPLAY_RELATIONS = relations(DISPLAY_TABLE, ({ many }) => ({
 	guilds: many(GUILD_TABLE),
@@ -118,21 +118,21 @@ export type DbDisplay = typeof DISPLAY_TABLE.$inferSelect;
 
 
 export const MEMBER_TABLE = sqliteTable("member", ({
-	id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
+		id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
 
-	guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
-	queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
-	userId: text("user_id").$type<Snowflake>().notNull(),
-	message: text("message"),
-	positionTime: integer("position_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
-	joinTime: integer("join_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
-	isPrioritized: integer("is_prioritized", { mode: "boolean" }).notNull().default(false),
-}),
-(table) => ({
-	unq: unique().on(table.queueId, table.userId),
-	guildIdIndex: index("member_guild_id_index").on(table.guildId),
-	positionTimeIndex: index("member_position_time_index").on(table.positionTime),
-}));
+		guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
+		queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
+		userId: text("user_id").$type<Snowflake>().notNull(),
+		message: text("message"),
+		positionTime: integer("position_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
+		joinTime: integer("join_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
+		isPrioritized: integer("is_prioritized", { mode: "boolean" }).notNull().default(false),
+	}),
+	(table) => ({
+		unq: unique().on(table.queueId, table.userId),
+		guildIdIndex: index("member_guild_id_index").on(table.guildId),
+		positionTimeIndex: index("member_position_time_index").on(table.positionTime),
+	}));
 
 export const MEMBER_RELATIONS = relations(MEMBER_TABLE, ({ one }) => ({
 	guilds: one(GUILD_TABLE, {
@@ -150,19 +150,19 @@ export type DbMember = typeof MEMBER_TABLE.$inferSelect;
 
 
 export const SCHEDULE_TABLE = sqliteTable("schedule", ({
-	id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
+		id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
 
-	guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
-	queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
-	command: text("command").notNull().$type<ScheduleCommand | null>(),
-	cron: text("cron").notNull(),
-	timezone: text("timezone").notNull(),
-	reason: text("reason"),
-}),
-(table) => ({
-	unq: unique().on(table.queueId, table.command, table.cron, table.timezone),
-	guildIdIndex: index("schedule_guild_id_index").on(table.guildId),
-}));
+		guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
+		queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
+		command: text("command").notNull().$type<ScheduleCommand | null>(),
+		cron: text("cron").notNull(),
+		timezone: text("timezone").notNull(),
+		reason: text("reason"),
+	}),
+	(table) => ({
+		unq: unique().on(table.queueId, table.command, table.cron, table.timezone),
+		guildIdIndex: index("schedule_guild_id_index").on(table.guildId),
+	}));
 
 export const SCHEDULE_RELATIONS = relations(SCHEDULE_TABLE, ({ one }) => ({
 	guilds: one(GUILD_TABLE, {
@@ -180,18 +180,18 @@ export type DbSchedule = typeof SCHEDULE_TABLE.$inferSelect;
 
 
 export const BLACKLISTED_TABLE = sqliteTable("blacklisted", ({
-	id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
+		id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
 
-	guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
-	queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
-	subjectId: text("subject_id").$type<Snowflake>().notNull(),
-	isRole: integer("is_role", { mode: "boolean" }).notNull(),
-	reason: text("reason"),
-}),
-(table) => ({
-	unq: unique().on(table.queueId, table.subjectId),
-	guildIdIndex: index("blacklisted_guild_id_index").on(table.guildId),
-}));
+		guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
+		queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
+		subjectId: text("subject_id").$type<Snowflake>().notNull(),
+		isRole: integer("is_role", { mode: "boolean" }).notNull(),
+		reason: text("reason"),
+	}),
+	(table) => ({
+		unq: unique().on(table.queueId, table.subjectId),
+		guildIdIndex: index("blacklisted_guild_id_index").on(table.guildId),
+	}));
 
 export const BLACKLISTED_RELATIONS = relations(BLACKLISTED_TABLE, ({ one }) => ({
 	guilds: one(GUILD_TABLE, {
@@ -209,18 +209,18 @@ export type DbBlacklisted = typeof BLACKLISTED_TABLE.$inferSelect;
 
 
 export const WHITELISTED_TABLE = sqliteTable("whitelisted", ({
-	id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
+		id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
 
-	guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
-	queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
-	subjectId: text("subject_id").$type<Snowflake>().notNull(),
-	isRole: integer("is_role", { mode: "boolean" }).notNull(),
-	reason: text("reason"),
-}),
-(table) => ({
-	unq: unique().on(table.queueId, table.subjectId),
-	guildIdIndex: index("whitelisted_guild_id_index").on(table.guildId),
-}));
+		guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
+		queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
+		subjectId: text("subject_id").$type<Snowflake>().notNull(),
+		isRole: integer("is_role", { mode: "boolean" }).notNull(),
+		reason: text("reason"),
+	}),
+	(table) => ({
+		unq: unique().on(table.queueId, table.subjectId),
+		guildIdIndex: index("whitelisted_guild_id_index").on(table.guildId),
+	}));
 
 export const WHITELISTED_RELATIONS = relations(WHITELISTED_TABLE, ({ one }) => ({
 	guilds: one(GUILD_TABLE, {
@@ -238,18 +238,18 @@ export type DbWhitelisted = typeof WHITELISTED_TABLE.$inferSelect;
 
 
 export const PRIORITIZED_TABLE = sqliteTable("prioritized", ({
-	id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
+		id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
 
-	guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
-	queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
-	subjectId: text("subject_id").$type<Snowflake>().notNull(),
-	isRole: integer("is_role", { mode: "boolean" }).notNull(),
-	reason: text("reason"),
-}),
-(table) => ({
-	unq: unique().on(table.guildId, table.subjectId),
-	guildIdIndex: index("prioritized_guild_id_index").on(table.guildId),
-}));
+		guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
+		queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
+		subjectId: text("subject_id").$type<Snowflake>().notNull(),
+		isRole: integer("is_role", { mode: "boolean" }).notNull(),
+		reason: text("reason"),
+	}),
+	(table) => ({
+		unq: unique().on(table.guildId, table.subjectId),
+		guildIdIndex: index("prioritized_guild_id_index").on(table.guildId),
+	}));
 
 export const PRIORITIZED_RELATIONS = relations(PRIORITIZED_TABLE, ({ one }) => ({
 	guilds: one(GUILD_TABLE, {
@@ -267,16 +267,16 @@ export type DbPrioritized = typeof PRIORITIZED_TABLE.$inferSelect;
 
 
 export const ADMIN_TABLE = sqliteTable("admin", ({
-	id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
+		id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
 
-	guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
-	subjectId: text("subject_id").$type<Snowflake>().notNull(),
-	isRole: integer("is_role", { mode: "boolean" }).notNull(),
-}),
-(table) => ({
-	unq: unique().on(table.guildId, table.subjectId),
-	guildIdIndex: index("admin_guild_id_index").on(table.guildId),
-}));
+		guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
+		subjectId: text("subject_id").$type<Snowflake>().notNull(),
+		isRole: integer("is_role", { mode: "boolean" }).notNull(),
+	}),
+	(table) => ({
+		unq: unique().on(table.guildId, table.subjectId),
+		guildIdIndex: index("admin_guild_id_index").on(table.guildId),
+	}));
 
 export const ADMIN_RELATIONS = relations(ADMIN_TABLE, ({ one }) => ({
 	guilds: one(GUILD_TABLE, {
@@ -289,20 +289,20 @@ export type NewAdmin = typeof ADMIN_TABLE.$inferInsert;
 export type DbAdmin = typeof ADMIN_TABLE.$inferSelect;
 
 export const ARCHIVED_MEMBER_TABLE = sqliteTable("archived_member", ({
-	id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
+		id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
 
-	guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
-	queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
-	userId: text("user_id").$type<Snowflake>().notNull(),
-	message: text("message"),
-	positionTime: integer("position_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
-	joinTime: integer("join_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
-	archivedTime: integer("archived_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
-	reason: text("text").$type<ArchivedMemberReason>().notNull(),
-}),
-(table) => ({
-	unq: unique().on(table.queueId, table.userId),
-}));
+		guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
+		queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
+		userId: text("user_id").$type<Snowflake>().notNull(),
+		message: text("message"),
+		positionTime: integer("position_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
+		joinTime: integer("join_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
+		archivedTime: integer("archived_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
+		reason: text("text").$type<ArchivedMemberReason>().notNull(),
+	}),
+	(table) => ({
+		unq: unique().on(table.queueId, table.userId),
+	}));
 
 export const ARCHIVED_MEMBER_RELATIONS = relations(ARCHIVED_MEMBER_TABLE, ({ one }) => ({
 	guilds: one(GUILD_TABLE, {

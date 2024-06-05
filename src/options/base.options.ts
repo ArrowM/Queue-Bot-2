@@ -49,6 +49,7 @@ abstract class BaseOptions<BuilderType extends ApplicationCommandOptionBase = an
 	}
 
 	abstract addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void;
+
 	protected abstract getUncached(inter: AutocompleteInteraction | SlashInteraction): unknown;
 
 	get(inter: AutocompleteInteraction | SlashInteraction): unknown {
@@ -104,6 +105,7 @@ export abstract class CustomOption extends BaseOptions<SlashCommandStringOption>
 	}
 
 	abstract getAutocompletions(options: AutoCompleteOptions): Promise<UIOption[]>;
+
 	protected abstract getUncached(inter: AutocompleteInteraction | SlashInteraction): Promise<unknown>;
 }
 

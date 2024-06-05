@@ -27,7 +27,7 @@ export class Parser<T extends AutocompleteInteraction | SlashInteraction> {
 
 	getScopedMembers(queues: Collection<bigint, DbQueue>) {
 		return this.inter.store.dbMembers().filter(member =>
-			queues.has(member.queueId)
+			queues.has(member.queueId),
 		);
 	}
 

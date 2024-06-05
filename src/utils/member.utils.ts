@@ -9,12 +9,7 @@ import type { NotificationOptions } from "../types/notification.types.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
 import { BlacklistUtils } from "./blacklist.utils.ts";
 import { DisplayUtils } from "./display.utils.ts";
-import {
-	NotOnQueueWhitelistError,
-	OnQueueBlacklistError,
-	QueueFullError,
-	QueueLockedError,
-} from "./error.utils.ts";
+import { NotOnQueueWhitelistError, OnQueueBlacklistError, QueueFullError, QueueLockedError } from "./error.utils.ts";
 import { find, map } from "./misc.utils.ts";
 import { NotificationUtils } from "./notification.utils.ts";
 import { QueryUtils } from "./query.utils.ts";
@@ -48,7 +43,7 @@ export namespace MemberUtils {
 		jsMember: GuildMember,
 		message?: string,
 		force?: boolean,
-	 }) {
+	}) {
 		const { store, queue, jsMember, message, force } = options;
 		if (!force) {
 			if (queue.lockToggle) {
@@ -177,14 +172,14 @@ export namespace MemberUtils {
 			members.splice(originalPosition, 1);
 			members.splice(newPosition, 0, member);
 			members.forEach((member, i) =>
-				store.updateMember({ ...member, positionTime: positions[i] })
+				store.updateMember({ ...member, positionTime: positions[i] }),
 			);
 		}
 		else if (originalPosition < newPosition) {
 			members.splice(originalPosition, 1);
 			members.splice(newPosition - 1, 0, member);
 			members.forEach((member, i) =>
-				store.updateMember({ ...member, positionTime: positions[i] })
+				store.updateMember({ ...member, positionTime: positions[i] }),
 			);
 		}
 
@@ -235,7 +230,7 @@ export namespace MemberUtils {
 				new EmbedBuilder()
 					.setTitle(queueMention(queue))
 					.setColor(queue.color)
-					.setDescription(description)
+					.setDescription(description),
 			);
 		}
 		return embeds;

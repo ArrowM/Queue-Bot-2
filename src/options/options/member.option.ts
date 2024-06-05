@@ -37,8 +37,7 @@ export class MemberOption extends CustomOption {
 			else {
 				throw new MemberNotFoundError();
 			}
-		}
-		catch {
+		} catch {
 			throw new MemberNotFoundError();
 		}
 	}

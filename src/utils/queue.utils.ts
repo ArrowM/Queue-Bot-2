@@ -1,10 +1,4 @@
-import {
-	bold,
-	channelMention,
-	inlineCode,
-	roleMention,
-	strikethrough,
-} from "discord.js";
+import { bold, channelMention, inlineCode, roleMention, strikethrough } from "discord.js";
 import { compact, isNil } from "lodash-es";
 
 import { type DbQueue, QUEUE_TABLE } from "../db/schema.ts";

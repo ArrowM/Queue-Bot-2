@@ -7,8 +7,7 @@ export namespace ClientHandler {
 	export function handleGuildCreate(guild: Guild) {
 		try {
 			new Store(guild);
-		}
-		catch {
+		} catch {
 			// ignore
 		}
 	}
@@ -16,8 +15,7 @@ export namespace ClientHandler {
 	export function handleGuildDelete(guild: Guild) {
 		try {
 			QueryUtils.deleteGuild({ guildId: guild.id });
-		}
-		catch {
+		} catch {
 			// ignore
 		}
 	}

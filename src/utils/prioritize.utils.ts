@@ -25,7 +25,7 @@ export namespace PrioritizeUtils {
 
 		reEvaluatePrioritized(store, queuesToUpdate)
 			.then(() =>
-				DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id))
+				DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id)),
 			);
 
 		return { insertedPrioritized, updatedQueues: queuesToUpdate };
@@ -43,7 +43,7 @@ export namespace PrioritizeUtils {
 
 		reEvaluatePrioritized(store, queuesToUpdate)
 			.then(() =>
-				DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id))
+				DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id)),
 			);
 
 		return { deletedPrioritized, updatedQueues: queuesToUpdate };

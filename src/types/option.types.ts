@@ -38,6 +38,8 @@ export interface Option {
 	required?: boolean;
 
 	addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void;
+
 	get(inter: AutocompleteInteraction | SlashInteraction): unknown;
+
 	getAutocompletions?(options: AutoCompleteOptions): Promise<unknown[]>;
 }

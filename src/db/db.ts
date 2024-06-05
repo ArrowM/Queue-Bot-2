@@ -39,8 +39,7 @@ cron("0 */3 * * *", async () => {
 		await deleteDeadGuilds();
 		logStats();
 		backup();
-	}
-	catch (e) {
+	} catch (e) {
 		const { message, stack } = e as Error;
 		console.error("Database backup failed:");
 		console.error(`Error: ${message}`);
@@ -71,7 +70,7 @@ function deleteOldArchivedMembers() {
 	const oneMonthAgo = BigInt(subMonths(new Date(), 1).getTime());
 	db.delete(ARCHIVED_MEMBER_TABLE)
 		.where(
-			lt(ARCHIVED_MEMBER_TABLE.archivedTime, oneMonthAgo)
+			lt(ARCHIVED_MEMBER_TABLE.archivedTime, oneMonthAgo),
 		)
 		.run();
 }
@@ -83,7 +82,7 @@ async function deleteDeadGuilds() {
 		const oldGuilds = db.select()
 			.from(GUILD_TABLE)
 			.where(
-				lt(ARCHIVED_MEMBER_TABLE.archivedTime, oneMonthAgo)
+				lt(ARCHIVED_MEMBER_TABLE.archivedTime, oneMonthAgo),
 			)
 			.all();
 		for (const guild of oldGuilds) {
@@ -91,7 +90,7 @@ async function deleteDeadGuilds() {
 			if (jsGuild == null) {
 				db.delete(GUILD_TABLE)
 					.where(
-						eq(GUILD_TABLE.guildId, guild.guildId)
+						eq(GUILD_TABLE.guildId, guild.guildId),
 					)
 					.run();
 				console.log(`Deleted dead guild: ${guild.guildId}`);
@@ -162,17 +161,16 @@ async function flushPendingGuildUpdatesToDB() {
 					db.run(
 						sql`UPDATE guild
                 SET ${sql.raw(columnName)} = ${sql.raw(columnName)} + ${value}
-                WHERE ${sql.raw(GUILD_TABLE.guildId.name)} = ${guildId};`
+                WHERE ${sql.raw(GUILD_TABLE.guildId.name)} = ${guildId};`,
 					);
 				}
 				db.update(GUILD_TABLE)
 					.set({ lastUpdateTime: BigInt(new Date().getTime()) })
 					.where(
-						eq(GUILD_TABLE.guildId, guildId)
+						eq(GUILD_TABLE.guildId, guildId),
 					)
 					.run();
-			}
-			catch (e) {
+			} catch (e) {
 				const { message, stack } = e as Error;
 				console.error("Failed to flush guild updates to db:");
 				console.error(`Error: ${message}`);
@@ -187,8 +185,7 @@ async function flushPendingGuildUpdatesToDB() {
 cron("*/5 * * * *", async () => {
 	try {
 		await flushPendingGuildUpdatesToDB();
-	}
-	catch (e) {
+	} catch (e) {
 		const { message, stack } = e as Error;
 		console.error("Failed to write pending guild updates to the database:");
 		console.error(`Error: ${message}`);

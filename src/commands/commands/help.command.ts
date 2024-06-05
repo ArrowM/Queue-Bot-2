@@ -18,17 +18,17 @@ export class HelpCommand extends EveryoneCommand {
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName("setup")
-				.setDescription("Get help with setup")
+				.setDescription("Get help with setup"),
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName("general")
-				.setDescription("Get help with general tasks like joining and leaving queues")
+				.setDescription("Get help with general tasks like joining and leaving queues"),
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName("admin")
-				.setDescription("Get help with admin tasks like managing queues")
+				.setDescription("Get help with admin tasks like managing queues"),
 		);
 
 	// ====================================================================
@@ -43,22 +43,22 @@ export class HelpCommand extends EveryoneCommand {
 					.setColor(Color.Indigo)
 					.setDescription("Hello there! I'm Queue Bot, and I'm here to help you manage your queues. Here's how to get started with me:")
 					.addFields({
-						name: "1. Create a Queue",
-						value: "Create a queue by typing `/queues add`. You can create as many queues as you want.",
-					},
-					{
-						name: "2. Add Members",
-						value: `Members can join by clicking the 'Join' button beneath queue displays, ${commandMention("join")}, or by entering an integrated voice channel. ` +
-						`Admins may also enqueue users with ${commandMention("members", "add")}.`,
-					},
-					{
-						name: "3. Pull Members",
-						value: `Members can be pulled from a queue by admins by clicking the 'Pull' button queue displays or with ${commandMention("pull")}.`,
-					},
-					{
-						name: "4. Explore other commands",
-						value: `${commandMention("help", "general")} explains how to join and leave queues. ${commandMention("help", "admin")} explains how admins can manage queues.`,
-					}),
+							name: "1. Create a Queue",
+							value: "Create a queue by typing `/queues add`. You can create as many queues as you want.",
+						},
+						{
+							name: "2. Add Members",
+							value: `Members can join by clicking the 'Join' button beneath queue displays, ${commandMention("join")}, or by entering an integrated voice channel. ` +
+								`Admins may also enqueue users with ${commandMention("members", "add")}.`,
+						},
+						{
+							name: "3. Pull Members",
+							value: `Members can be pulled from a queue by admins by clicking the 'Pull' button queue displays or with ${commandMention("pull")}.`,
+						},
+						{
+							name: "4. Explore other commands",
+							value: `${commandMention("help", "general")} explains how to join and leave queues. ${commandMention("help", "admin")} explains how admins can manage queues.`,
+						}),
 			],
 		});
 	}
@@ -75,25 +75,25 @@ export class HelpCommand extends EveryoneCommand {
 					.setColor(Color.Indigo)
 					.setDescription("The basic queues commands available to everyone:")
 					.addFields({
-						name: commandMention("help"),
-						value: "Get helpful info",
-					},
-					{
-						name: commandMention("join"),
-						value: "Join a queue",
-					},
-					{
-						name: commandMention("leave"),
-						value: "Leave a queue",
-					},
-					{
-						name: commandMention("positions"),
-						value: "Get your positions in all queues",
-					},
-					{
-						name: commandMention("show"),
-						value: "Show queue(s)",
-					}),
+							name: commandMention("help"),
+							value: "Get helpful info",
+						},
+						{
+							name: commandMention("join"),
+							value: "Join a queue",
+						},
+						{
+							name: commandMention("leave"),
+							value: "Leave a queue",
+						},
+						{
+							name: commandMention("positions"),
+							value: "Get your positions in all queues",
+						},
+						{
+							name: commandMention("show"),
+							value: "Show queue(s)",
+						}),
 			],
 		});
 	}
@@ -110,53 +110,53 @@ export class HelpCommand extends EveryoneCommand {
 					.setColor(Color.Indigo)
 					.setDescription("The queue commands available to admins:")
 					.addFields({
-						name: commandMention("admins", "add"),
-						value: "Manage admin users and roles",
-					},
-					{
-						name: commandMention("blacklist", "add"),
-						value: "Blacklist a user or role from a queue",
-					},
-					{
-						name: commandMention("displays", "add"),
-						value: "Manage display channels",
-					},
-					{
-						name: commandMention("clear"),
-						value: "Clear a queue",
-					},
-					{
-						name: commandMention("members", "add"),
-						value: "Manage queue members",
-					},
-					{
-						name: commandMention("move"),
-						value: "Move a member in a queue",
-					},
-					{
-						name: commandMention("prioritize", "add"),
-						value: "Manage prioritized users and roles",
-					},
-					{
-						name: commandMention("pull"),
-						value: "Pull members from queue(s)",
-					},
-					{
-						name: commandMention("queues", "add"),
-						value: "Manage queues",
-					},
-					{
-						name: commandMention("shuffle"),
-						value: "Shuffle a queue",
-					},
-					{
-						name: commandMention("voice", "add"),
-						value: "Manage voice channel settings",
-					},
-					{
-						name: commandMention("whitelist", "add"),
-						value: "Whitelist a user or role in a queue",
-					}),
+							name: commandMention("admins", "add"),
+							value: "Manage admin users and roles",
+						},
+						{
+							name: commandMention("blacklist", "add"),
+							value: "Blacklist a user or role from a queue",
+						},
+						{
+							name: commandMention("displays", "add"),
+							value: "Manage display channels",
+						},
+						{
+							name: commandMention("clear"),
+							value: "Clear a queue",
+						},
+						{
+							name: commandMention("members", "add"),
+							value: "Manage queue members",
+						},
+						{
+							name: commandMention("move"),
+							value: "Move a member in a queue",
+						},
+						{
+							name: commandMention("prioritize", "add"),
+							value: "Manage prioritized users and roles",
+						},
+						{
+							name: commandMention("pull"),
+							value: "Pull members from queue(s)",
+						},
+						{
+							name: commandMention("queues", "add"),
+							value: "Manage queues",
+						},
+						{
+							name: commandMention("shuffle"),
+							value: "Shuffle a queue",
+						},
+						{
+							name: commandMention("voice", "add"),
+							value: "Manage voice channel settings",
+						},
+						{
+							name: commandMention("whitelist", "add"),
+							value: "Whitelist a user or role in a queue",
+						}),
 			],
 		});
 	}

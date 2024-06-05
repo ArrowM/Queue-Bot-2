@@ -4,14 +4,17 @@ import {
 	type APIEmbedField,
 	bold,
 	ButtonBuilder,
-	channelMention, codeBlock, type Collection,
+	channelMention,
+	codeBlock,
+	type Collection,
 	EmbedBuilder,
 	type GuildBasedChannel,
 	type GuildMember,
 	type GuildTextBasedChannel,
 	inlineCode,
 	type Message,
-	PermissionsBitField, type Snowflake,
+	PermissionsBitField,
+	type Snowflake,
 	time,
 	type TimestampStylesString,
 } from "discord.js";
@@ -22,6 +25,7 @@ import { LeaveButton } from "../buttons/buttons/leave.button.ts";
 import { MyPositionsButton } from "../buttons/buttons/my-positions.button.ts";
 import { PullButton } from "../buttons/buttons/pull.button.ts";
 import type { Store } from "../core/store.ts";
+import { incrementGuildStat } from "../db/db.ts";
 import { type DbDisplay, type DbMember, type DbQueue } from "../db/schema.ts";
 import type { Button } from "../types/button.types.ts";
 import { ArchivedMemberReason, Color, DisplayUpdateType, MemberDisplayType, TimestampType } from "../types/db.types.ts";
@@ -31,9 +35,9 @@ import {
 	convertSecondsToMinutesAndSeconds,
 	ERROR_HEADER_LINE,
 	queueMemberMention,
-	queueMention, scheduleMention,
+	queueMention,
+	scheduleMention,
 } from "./string.utils.ts";
-import { incrementGuildStat } from "../db/db.ts";
 
 export namespace DisplayUtils {
 	const UPDATED_QUEUE_IDS = new Map<bigint, Store>();
@@ -41,7 +45,7 @@ export namespace DisplayUtils {
 
 	setInterval(() => {
 		PENDING_QUEUE_IDS.forEach((store, queueId) =>
-			updateDisplays(store, queueId)
+			updateDisplays(store, queueId),
 		);
 		UPDATED_QUEUE_IDS.clear();
 		PENDING_QUEUE_IDS.clear();
@@ -74,7 +78,7 @@ export namespace DisplayUtils {
 		// update displays
 		const queuesToUpdate = insertedDisplays.map(display => display.queueId
 			? store.dbQueues().get(display.queueId)
-			: [...store.dbQueues().values()]
+			: [...store.dbQueues().values()],
 		).flat();
 		DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id), true);
 
@@ -84,13 +88,13 @@ export namespace DisplayUtils {
 	export function deleteDisplays(store: Store, displayIds: bigint[]) {
 		// delete from db
 		const deletedDisplays = displayIds.map(displayId =>
-			store.deleteDisplay({ id: displayId })
+			store.deleteDisplay({ id: displayId }),
 		);
 
 		// update displays
 		const queuesToUpdate = deletedDisplays.map(display => display.queueId
 			? store.dbQueues().get(display.queueId)
-			: [...store.dbQueues().values()]
+			: [...store.dbQueues().values()],
 		).flat();
 		deletedDisplays.forEach(display => store.deleteDisplay(display));
 		requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
@@ -191,15 +195,13 @@ export namespace DisplayUtils {
 					else if (queue.updateType === DisplayUpdateType.Replace) {
 						await replaceDisplay();
 					}
-				}
-				catch (e: any) {
+				} catch (e: any) {
 					await handleFailedDisplayUpdate(store, queue, display, e);
 				}
 			}));
 
 			incrementGuildStat(store.guild.id, "displaysSent", displays.size);
-		}
-		catch (e: any) {
+		} catch (e: any) {
 			const { message, stack } = e as Error;
 			console.error("Failed to update displays:");
 			console.error(`Error: ${message}`);
@@ -218,7 +220,7 @@ export namespace DisplayUtils {
 					.setDescription(
 						`Hey ${store.initiator}, I just tried to display the '${queueMention(queue)}' queue in ${channelMention(display.displayChannelId)}, but something went wrong.\n` +
 						(isPermissionError ? bold(`It looks like a permission issue, please check the bot's perms in ${channelMention(display.displayChannelId)}.\n`) : "") +
-						`Error:${codeBlock(message)}`
+						`Error:${codeBlock(message)}`,
 					);
 				if (!isPermissionError) {
 					embed.setFooter({ text: "This error has been logged and will be investigated by the developers." });
@@ -231,8 +233,7 @@ export namespace DisplayUtils {
 				console.error(`Error: ${message}`);
 				console.error(`Stack Trace: ${stack}`);
 			}
-		}
-		catch (handlingError) {
+		} catch (handlingError) {
 			const { message: handlingMessage, stack: handlingStack } = handlingError as Error;
 			console.error("An error occurred during handleFailedDisplayUpdate:");
 			console.error(`Error: ${handlingMessage}`);
@@ -289,7 +290,7 @@ export namespace DisplayUtils {
 		 * 	  Discord.js does not automatically split messages for us, so we need to do it manually.
 		 */
 
-		// Build embeds
+			// Build embeds
 		const description = await buildDescription(store, queue, sourceVoiceChannel, destinationVoiceChannel);
 		const sizeStr = `size: ${memberDisplayLines.length}${queue.size ? ` / ${queue.size}` : ""}`;
 		const embedBuilders: EmbedBuilder[] = [];

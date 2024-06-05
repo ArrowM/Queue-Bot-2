@@ -35,6 +35,7 @@ import {
 	SCHEDULE_TABLE,
 	WHITELISTED_TABLE,
 } from "../db/schema.ts";
+import { ArchivedMemberReason } from "../types/db.types.ts";
 import {
 	AdminAlreadyExistsError,
 	BlacklistedAlreadyExistsError,
@@ -47,7 +48,6 @@ import { MemberUtils } from "../utils/member.utils.ts";
 import { toCollection } from "../utils/misc.utils.ts";
 import { QueryUtils } from "../utils/query.utils.ts";
 import deleteMembers = MemberUtils.deleteMembers;
-import { ArchivedMemberReason } from "../types/db.types.ts";
 
 /**
  * The `Store` class is responsible for all database operations initiated by users, including insert, update, and delete operations.
@@ -87,8 +87,7 @@ export class Store {
 	async jsChannel(channelId: Snowflake) {
 		try {
 			return await this.guild.channels.fetch(channelId);
-		}
-		catch (_e) {
+		} catch (_e) {
 			const e = _e as DiscordAPIError;
 			if (e.status == 404) {
 				this.deleteManyDisplays({ displayChannelId: channelId });
@@ -99,8 +98,7 @@ export class Store {
 	async jsMember(userId: Snowflake) {
 		try {
 			return await this.guild.members.fetch(userId);
-		}
-		catch (_e) {
+		} catch (_e) {
 			const e = _e as DiscordAPIError;
 			if (e.status == 404) {
 				this.deleteManyMembers({ userId }, ArchivedMemberReason.NotFound);
@@ -141,8 +139,7 @@ export class Store {
 				.insert(QUEUE_TABLE)
 				.values(newQueue)
 				.returning().get();
-		}
-		catch (e) {
+		} catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
 				throw new QueueAlreadyExistsError();
 			}
@@ -185,8 +182,7 @@ export class Store {
 				.insert(SCHEDULE_TABLE)
 				.values(newSchedule)
 				.returning().get();
-		}
-		catch (e) {
+		} catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
 				throw new ScheduleAlreadyExistsError();
 			}
@@ -202,8 +198,7 @@ export class Store {
 				.insert(WHITELISTED_TABLE)
 				.values(newWhitelisted)
 				.returning().get();
-		}
-		catch (e) {
+		} catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
 				throw new WhitelistedAlreadyExistsError();
 			}
@@ -219,8 +214,7 @@ export class Store {
 				.insert(BLACKLISTED_TABLE)
 				.values(newBlacklisted)
 				.returning().get();
-		}
-		catch (e) {
+		} catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
 				throw new BlacklistedAlreadyExistsError();
 			}
@@ -236,8 +230,7 @@ export class Store {
 				.insert(PRIORITIZED_TABLE)
 				.values(newPrioritized)
 				.returning().get();
-		}
-		catch (e) {
+		} catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
 				throw new PrioritizedAlreadyExistsError();
 			}
@@ -253,8 +246,7 @@ export class Store {
 				.insert(ADMIN_TABLE)
 				.values(newAdmin)
 				.returning().get();
-		}
-		catch (e) {
+		} catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
 				throw new AdminAlreadyExistsError();
 			}
@@ -367,7 +359,7 @@ export class Store {
 
 	deleteManyQueues() {
 		this.dbQueues.clear();
-		const cond = this.createCondition(QUEUE_TABLE, { });
+		const cond = this.createCondition(QUEUE_TABLE, {});
 		return db.delete(QUEUE_TABLE).where(cond).returning().all();
 	}
 
@@ -391,9 +383,9 @@ export class Store {
 	}
 
 	deleteMember(by:
-		{ id: bigint } |
-		{ queueId: bigint, userId?: Snowflake },
-	reason: ArchivedMemberReason,
+			{ id: bigint } |
+			{ queueId: bigint, userId?: Snowflake },
+		reason: ArchivedMemberReason,
 	) {
 		this.dbMembers.clear();
 		const cond = this.createCondition(MEMBER_TABLE, by);
@@ -407,9 +399,9 @@ export class Store {
 	}
 
 	deleteManyMembers(by:
-		{ userId?: Snowflake } |
-		{ queueId: bigint, count?: number },
-	reason: ArchivedMemberReason,
+			{ userId?: Snowflake } |
+			{ queueId: bigint, count?: number },
+		reason: ArchivedMemberReason,
 	) {
 		this.dbMembers.clear();
 		const cond = ("count" in by)
@@ -421,7 +413,7 @@ export class Store {
 		const deletedMembers = db.delete(MEMBER_TABLE).where(cond).returning().all();
 
 		deletedMembers.forEach(deletedMember =>
-			this.insertArchivedMember({ ...deletedMember, reason })
+			this.insertArchivedMember({ ...deletedMember, reason }),
 		);
 
 		return deleteMembers;
@@ -435,7 +427,7 @@ export class Store {
 
 	deleteManySchedules() {
 		this.dbSchedules.clear();
-		const cond = this.createCondition(SCHEDULE_TABLE, { });
+		const cond = this.createCondition(SCHEDULE_TABLE, {});
 		return db.delete(SCHEDULE_TABLE).where(cond).returning().all();
 	}
 
@@ -504,7 +496,7 @@ export class Store {
 
 	deleteManyAdmins() {
 		this.dbAdmins.clear();
-		const cond = this.createCondition(ADMIN_TABLE, { });
+		const cond = this.createCondition(ADMIN_TABLE, {});
 		return db.delete(ADMIN_TABLE).where(cond).returning().get();
 	}
 }

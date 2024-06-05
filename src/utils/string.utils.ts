@@ -82,15 +82,15 @@ export function describeTable<T>(options: {
 		let queue;
 		try {
 			queue = store.dbQueues().get(BigInt(queueId));
+		} catch {
 		}
-		catch { }
 
 		const embed = new EmbedBuilder()
 			.setTitle(`${tableName} of ${queue ? `the '${queueMention(queue)}' queue` : "all queues"}`)
 			.setColor(color)
 			.setDescription(queueEntries.length
 				? queueEntries.map(mentionFn).sort().join("\n")
-				: `No ${tableName.toLowerCase()}.`
+				: `No ${tableName.toLowerCase()}.`,
 			);
 
 		embeds.push(embed);
@@ -99,7 +99,7 @@ export function describeTable<T>(options: {
 	return embeds;
 }
 
-export function describeUserOrRoleTable<T extends { isRole: boolean, subjectId: Snowflake, reason?: string}>(options: {
+export function describeUserOrRoleTable<T extends { isRole: boolean, subjectId: Snowflake, reason?: string }>(options: {
 	store: Store,
 	tableName: string,
 	color: Color,
@@ -112,8 +112,8 @@ export function describeUserOrRoleTable<T extends { isRole: boolean, subjectId: 
 		let queue;
 		try {
 			queue = store.dbQueues().get(BigInt(queueId));
+		} catch {
 		}
-		catch { }
 
 		const embed = new EmbedBuilder()
 			.setTitle(`${tableName} of ${queue ? `the '${queueMention(queue)}' queue` : "all queues"}`)
@@ -121,8 +121,8 @@ export function describeUserOrRoleTable<T extends { isRole: boolean, subjectId: 
 			.setDescription(
 				concat(
 					roles.map(entry => `- ${roleMention(entry.subjectId)}${entry.reason ? ` - ${entry.reason}` : ""}`).sort(),
-					members.map(entry => `- ${userMention(entry.subjectId)}${entry.reason ? ` - ${entry.reason}` : ""}`).sort()
-				).join("\n")
+					members.map(entry => `- ${userMention(entry.subjectId)}${entry.reason ? ` - ${entry.reason}` : ""}`).sort(),
+				).join("\n"),
 			);
 
 		embeds.push(embed);

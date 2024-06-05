@@ -27,15 +27,14 @@ export class ClearCommand extends AdminCommand {
 	static async clear(inter: SlashInteraction) {
 		const queues = await ClearCommand.CLEAR_OPTIONS.queues.get(inter);
 
-		if (
-			!await inter.promptConfirmOrCancel(`Are you sure you want to shuffle the '${queuesMention(queues)}' queues?`)
-		) return;
+		const confirmed = await inter.promptConfirmOrCancel(`Are you sure you want to shuffle the '${queuesMention(queues)}' queues?`);
+		if (!confirmed) return;
 
 		queues.forEach(queue => MemberUtils.clearMembers(inter.store, queue));
 
 		await Promise.all([
 			inter.deleteReply(),
-			inter.channel.send( `Cleared the ${queuesMention(queues)} queues.` ),
+			inter.channel.send(`Cleared the ${queuesMention(queues)} queues.`),
 		]);
 	}
 }

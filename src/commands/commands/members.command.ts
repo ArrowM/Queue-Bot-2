@@ -83,7 +83,10 @@ export class MembersCommand extends AdminCommand {
 		const insertedMembers = await MemberUtils.insertMentionable(inter.store, mentionable, queues);
 
 		if (insertedMembers.length) {
-			NotificationUtils.notify(inter.store, insertedMembers, { type: NotificationType.ADDED_TO_QUEUE, channelToLink: inter.channel });
+			NotificationUtils.notify(inter.store, insertedMembers, {
+				type: NotificationType.ADDED_TO_QUEUE,
+				channelToLink: inter.channel,
+			});
 		}
 
 		const updatedQueues = insertedMembers.map(inserted => inter.store.dbQueues().get(inserted.queueId));

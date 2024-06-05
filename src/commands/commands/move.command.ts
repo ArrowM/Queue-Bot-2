@@ -44,7 +44,7 @@ export class MoveCommand extends AdminCommand {
 
 		await Promise.all([
 			inter.deleteReply(),
-			inter.channel.send( `Moved ${member.toString()} to position ${position} in the '${queueMention(queue)}' queue.` ),
+			inter.channel.send(`Moved ${member.toString()} to position ${position} in the '${queueMention(queue)}' queue.`),
 		]);
 	}
 }

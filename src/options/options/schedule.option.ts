@@ -38,8 +38,7 @@ export class ScheduleOption extends CustomOption {
 			else {
 				throw new ScheduleNotFoundError();
 			}
-		}
-		catch {
+		} catch {
 			throw new ScheduleNotFoundError();
 		}
 	}

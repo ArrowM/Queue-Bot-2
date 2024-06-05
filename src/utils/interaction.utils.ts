@@ -61,11 +61,9 @@ export namespace InteractionUtils {
 				filter: i => i.user.id === inter.user.id,
 				time: 60_000,
 			});
-		}
-		catch {
+		} catch {
 			// nothing
-		}
-		finally {
+		} finally {
 			// Cleanup messages
 			await Promise.all([
 				confirmation.deleteReply(),

@@ -16,15 +16,14 @@ export class ClearButton extends AdminButton {
 	async handle(inter: ButtonInteraction) {
 		const { queue } = await ButtonUtils.getButtonContext(inter);
 
-		if (
-			!await inter.promptConfirmOrCancel(`Are you sure you want to clear the '${queueMention(queue)}'?`)
-		) return;
+		const confirmed = await inter.promptConfirmOrCancel(`Are you sure you want to clear the '${queueMention(queue)}'?`);
+		if (!confirmed) return;
 
 		MemberUtils.clearMembers(inter.store, queue);
 
 		await Promise.all([
 			inter.deleteReply(),
-			inter.channel.send( `Cleared the '${queueMention(queue)}' queue.` ),
+			inter.channel.send(`Cleared the '${queueMention(queue)}' queue.`),
 		]);
 	}
 }

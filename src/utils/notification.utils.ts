@@ -25,7 +25,7 @@ export namespace NotificationUtils {
 
 			notificationPromises.push(
 				store.jsMember(userId).then(member =>
-					member.user.send(message).catch(() => null)
+					member.user.send(message).catch(() => null),
 				),
 			);
 		}

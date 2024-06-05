@@ -31,7 +31,7 @@ export class ShuffleCommand extends AdminCommand {
 
 		await Promise.all([
 			inter.deleteReply(),
-			inter.channel.send( `Shuffled the '${queuesMention(queues)}' queues.` ),
+			inter.channel.send(`Shuffled the '${queuesMention(queues)}' queues.`),
 		]);
 	}
 }

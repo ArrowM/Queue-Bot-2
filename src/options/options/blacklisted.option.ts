@@ -37,8 +37,7 @@ export class BlacklistedOption extends CustomOption {
 			else {
 				throw new BlacklistedNotFoundError();
 			}
-		}
-		catch {
+		} catch {
 			throw new BlacklistedNotFoundError();
 		}
 	}
