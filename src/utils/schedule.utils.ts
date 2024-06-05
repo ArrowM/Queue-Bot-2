@@ -114,40 +114,39 @@ export namespace ScheduleUtils {
 	function registerWithCronLibrary(schedule: DbSchedule) {
 		scheduleIdToScheduleTask.set(
 			schedule.id,
-			cron(
-				schedule.cron,
-				() => executeScheduledCommand(schedule.id),
-				{ timezone: schedule.timezone },
-			),
+			cron(schedule.cron, async () => {
+				try {
+					await executeScheduledCommand(schedule.id);
+				}
+				catch (e) {
+					console.error("Failed to execute scheduled command:");
+					console.error(`Error: ${(e as Error).message}`);
+					console.error(`Stack Trace: ${(e as Error).stack}`);
+				}
+			}, { timezone: schedule.timezone }),
 		);
 	}
 
 	async function executeScheduledCommand(scheduleId: bigint) {
-		try {
-			const { store, queue, schedule } = await getScheduleContext(scheduleId);
+		const { store, queue, schedule } = await getScheduleContext(scheduleId);
 
-			switch (schedule.command) {
-			case ScheduleCommand.Clear:
-				MemberUtils.clearMembers(store, queue);
-				break;
-			case ScheduleCommand.Pull:
-				MemberUtils.deleteMembers({
-					store,
-					queues: [queue],
-					reason: ArchivedMemberReason.Pulled,
-					notification: { type: NotificationType.PULLED_FROM_QUEUE },
-				});
-				break;
-			case ScheduleCommand.Show:
-				DisplayUtils.requestDisplayUpdate(store, queue.id, true);
-				break;
-			case ScheduleCommand.Shuffle:
-				MemberUtils.shuffleMembers(store, queue);
-			}
-		}
-		catch (e) {
-			// TODO disable error log
-			console.error(e);
+		switch (schedule.command) {
+		case ScheduleCommand.Clear:
+			MemberUtils.clearMembers(store, queue);
+			break;
+		case ScheduleCommand.Pull:
+			MemberUtils.deleteMembers({
+				store,
+				queues: [queue],
+				reason: ArchivedMemberReason.Pulled,
+				notification: { type: NotificationType.PULLED_FROM_QUEUE },
+			});
+			break;
+		case ScheduleCommand.Show:
+			DisplayUtils.requestDisplayUpdate(store, queue.id, true);
+			break;
+		case ScheduleCommand.Shuffle:
+			MemberUtils.shuffleMembers(store, queue);
 		}
 	}
 

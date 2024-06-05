@@ -40,7 +40,8 @@ export class InteractionHandler implements Handler {
 		if (error.message === "Unknown interaction") return;
 		try {
 			// TODO disable error log
-			console.error(error.stack);
+			console.error(`Error: ${(error as Error).message}`);
+			console.error(`Stack Trace: ${(error as Error).stack}`);
 
 			const embeds: EmbedBuilder[] = [];
 			embeds.push(

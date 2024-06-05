@@ -31,11 +31,18 @@ export const db = drizzle(Database(DB_FILEPATH).defaultSafeIntegers(), { schema 
 
 // Database schedule (every 3 hours)
 cron("0 */3 * * *", async () => {
-	deleteOldBackups();
-	deleteOldArchivedMembers();
-	await deleteDeadGuilds();
-	logStats();
-	backup();
+	try {
+		deleteOldBackups();
+		deleteOldArchivedMembers();
+		await deleteDeadGuilds();
+		logStats();
+		backup();
+	}
+	catch (e) {
+		console.error("Database schedule failed:");
+		console.error(`Error: ${(e as Error).message}`);
+		console.error(`Stack Trace: ${(e as Error).stack}`);
+	}
 });
 
 // Delete backups older than 2 days
@@ -152,7 +159,8 @@ async function flushCacheToDB() {
 					.run();
 			}
 			catch (e) {
-				console.error(`${(e as Error).message}\n${(e as Error).stack}`);
+				console.error(`Error: ${(e as Error).message}`);
+				console.error(`Stack Trace: ${(e as Error).stack}`);
 			}
 		}
 	});
@@ -161,7 +169,16 @@ async function flushCacheToDB() {
 
 // Write pending guild updates to the database every minute
 
-cron("* * * * *", async () => await flushCacheToDB());
+cron("* * * * *", async () => {
+	try {
+		await flushCacheToDB();
+	}
+	catch (e) {
+		console.error("Failed to write pending guild updates to the database:");
+		console.error(`Error: ${(e as Error).message}`);
+		console.error(`Stack Trace: ${(e as Error).stack}`);
+	}
+});
 
 // Signal handlers for graceful shutdown
 process.on("SIGINT", async () => {

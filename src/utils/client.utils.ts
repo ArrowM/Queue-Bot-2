@@ -68,7 +68,8 @@ export namespace ClientUtils {
 
 		}
 		catch (e) {
-			console.error(`${(e as Error).message}\n${(e as Error).stack}`);
+			console.error(`Error: ${(e as Error).message}`);
+			console.error(`Stack Trace: ${(e as Error).stack}`);
 		}
 	}
 
