@@ -3,7 +3,11 @@ import { EmbedBuilder } from "discord.js";
 import { commandMention } from "./string.utils.ts";
 
 export class CustomError extends Error {
-	constructor(public message = "Unknown Error", public extraEmbeds?: EmbedBuilder[]) {
+	constructor(
+		public message = "Unknown Error",
+		public extraEmbeds?: EmbedBuilder[],
+		public log = false,
+	) {
 		super(message);
 	}
 }
@@ -77,10 +81,6 @@ export class OnQueueBlacklistError extends CustomError {
 	message = "Failed to join queue you are on the queue blacklist.";
 }
 
-export class AlreadyInQueueError extends CustomError {
-	message = "You are already in queue.";
-}
-
 export class QueueAlreadyExistsError extends CustomError {
 	message = "Queue already exists.";
 }
@@ -104,7 +104,7 @@ export class AdminAlreadyExistsError extends CustomError {
 export class AdminAccessError extends CustomError {
 	message = "Missing Queue Bot admin access.";
 	extraEmbeds = [
-		new EmbedBuilder().setDescription(`Server admins may grant admin access ${commandMention("admins", "add")}.`),
+		new EmbedBuilder().setDescription(`Other admins may grant admin access ${commandMention("admins", "add")}.`),
 	];
 }
 

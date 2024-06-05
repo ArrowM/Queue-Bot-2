@@ -68,8 +68,10 @@ export namespace ClientUtils {
 
 		}
 		catch (e) {
-			console.error(`Error: ${(e as Error).message}`);
-			console.error(`Stack Trace: ${(e as Error).stack}`);
+			const { message, stack } = e as Error;
+			console.error("Failed to start bot:");
+			console.error(`Error: ${message}`);
+			console.error(`Stack Trace: ${stack}`);
 		}
 	}
 

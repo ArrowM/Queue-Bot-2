@@ -86,7 +86,7 @@ export function describeTable<T>(options: {
 		catch { }
 
 		const embed = new EmbedBuilder()
-			.setTitle(`${tableName} of ${queue ? `'${queueMention(queue)}'` : "all queues"}`)
+			.setTitle(`${tableName} of ${queue ? `the '${queueMention(queue)}' queue` : "all queues"}`)
 			.setColor(color)
 			.setDescription(queueEntries.length
 				? queueEntries.map(mentionFn).sort().join("\n")
@@ -116,12 +116,12 @@ export function describeUserOrRoleTable<T extends { isRole: boolean, subjectId: 
 		catch { }
 
 		const embed = new EmbedBuilder()
-			.setTitle(`${tableName} of ${queue ? `'${queueMention(queue)}'` : "all queues"}`)
+			.setTitle(`${tableName} of ${queue ? `the '${queueMention(queue)}' queue` : "all queues"}`)
 			.setColor(color)
 			.setDescription(
 				concat(
 					roles.map(entry => `- ${roleMention(entry.subjectId)}${entry.reason ? ` - ${entry.reason}` : ""}`).sort(),
-					members.map(entry => `- ${userMention(entry.subjectId)}${entry.reason ? ` - ${entry.reason}` : ""}}`).sort()
+					members.map(entry => `- ${userMention(entry.subjectId)}${entry.reason ? ` - ${entry.reason}` : ""}`).sort()
 				).join("\n")
 			);
 

@@ -4,7 +4,7 @@ import {
 	type APIEmbedField,
 	bold,
 	ButtonBuilder,
-	channelMention, type Collection,
+	channelMention, codeBlock, type Collection,
 	EmbedBuilder,
 	type GuildBasedChannel,
 	type GuildMember,
@@ -22,9 +22,9 @@ import { LeaveButton } from "../buttons/buttons/leave.button.ts";
 import { MyPositionsButton } from "../buttons/buttons/my-positions.button.ts";
 import { PullButton } from "../buttons/buttons/pull.button.ts";
 import type { Store } from "../core/store.ts";
-import { type DbMember, type DbQueue } from "../db/schema.ts";
+import { type DbDisplay, type DbMember, type DbQueue } from "../db/schema.ts";
 import type { Button } from "../types/button.types.ts";
-import { ArchivedMemberReason, DisplayUpdateType, MemberDisplayType, TimestampType } from "../types/db.types.ts";
+import { ArchivedMemberReason, Color, DisplayUpdateType, MemberDisplayType, TimestampType } from "../types/db.types.ts";
 import { map } from "./misc.utils.ts";
 import {
 	commandMention,
@@ -33,6 +33,7 @@ import {
 	queueMemberMention,
 	queueMention, scheduleMention,
 } from "./string.utils.ts";
+import { incrementGuildStat } from "../db/db.ts";
 
 export namespace DisplayUtils {
 	const UPDATED_QUEUE_IDS = new Map<bigint, Store>();
@@ -192,16 +193,50 @@ export namespace DisplayUtils {
 					}
 				}
 				catch (e: any) {
-					// TODO disable error log
-					console.error(e);
+					await handleFailedDisplayUpdate(store, queue, display, e);
 				}
 			}));
 
-			store.incrementGuildStat("displaysSent", displays.size);
+			incrementGuildStat(store.guild.id, "displaysSent", displays.size);
 		}
 		catch (e: any) {
-			// TODO disable error log
-			console.error(e);
+			const { message, stack } = e as Error;
+			console.error("Failed to update displays:");
+			console.error(`Error: ${message}`);
+			console.error(`Stack Trace: ${stack}`);
+		}
+	}
+
+	async function handleFailedDisplayUpdate(store: Store, queue: DbQueue, display: DbDisplay, e: Error) {
+		try {
+			const { message, stack } = e as Error;
+			const isPermissionError = /access|permission/i.test(message);
+			if (store.initiator) {
+				const embed = new EmbedBuilder()
+					.setTitle("Failed to display queue")
+					.setColor(Color.Red)
+					.setDescription(
+						`Hey ${store.initiator}, I just tried to display the '${queueMention(queue)}' queue in ${channelMention(display.displayChannelId)}, but something went wrong.\n` +
+						(isPermissionError ? bold(`It looks like a permission issue, please check the bot's perms in ${channelMention(display.displayChannelId)}.\n`) : "") +
+						`Error:${codeBlock(message)}`
+					);
+				if (!isPermissionError) {
+					embed.setFooter({ text: "This error has been logged and will be investigated by the developers." });
+				}
+				await store.initiator.send({ embeds: [embed] });
+			}
+
+			if (!isPermissionError) {
+				console.error("Failed to update displays:");
+				console.error(`Error: ${message}`);
+				console.error(`Stack Trace: ${stack}`);
+			}
+		}
+		catch (handlingError) {
+			const { message: handlingMessage, stack: handlingStack } = handlingError as Error;
+			console.error("An error occurred during handleFailedDisplayUpdate:");
+			console.error(`Error: ${handlingMessage}`);
+			console.error(`Stack Trace: ${handlingStack}`);
 		}
 	}
 
@@ -325,10 +360,10 @@ export namespace DisplayUtils {
 				);
 			}
 			else if (queue.buttonsToggle) {
-				descriptionParts.push(`Use ${commandMention("join")}, ${commandMention("leave")}, or the buttons below.`);
+				descriptionParts.push(`${commandMention("join")}, ${commandMention("leave")}, or click the buttons below.`);
 			}
 			else {
-				descriptionParts.push(`Use ${commandMention("join")} or ${commandMention("leave")}.`);
+				descriptionParts.push(`${commandMention("join")} or ${commandMention("leave")}.`);
 			}
 
 			if (gracePeriod) {

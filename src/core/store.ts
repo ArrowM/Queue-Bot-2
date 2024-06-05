@@ -3,7 +3,7 @@ import { and, eq, isNull, or } from "drizzle-orm";
 import { compact, isNil } from "lodash-es";
 import moize from "moize";
 
-import { db, PENDING_GUILD_UPDATES } from "../db/db.ts";
+import { db, incrementGuildStat } from "../db/db.ts";
 import {
 	ADMIN_TABLE,
 	ARCHIVED_MEMBER_TABLE,
@@ -47,26 +47,18 @@ import { MemberUtils } from "../utils/member.utils.ts";
 import { toCollection } from "../utils/misc.utils.ts";
 import { QueryUtils } from "../utils/query.utils.ts";
 import deleteMembers = MemberUtils.deleteMembers;
-import { ArchivedMemberReason, type GuildStat } from "../types/db.types.ts";
+import { ArchivedMemberReason } from "../types/db.types.ts";
 
 /**
  * The `Store` class is responsible for all database operations initiated by users, including insert, update, and delete operations.
  * Select queries are encapsulated in `query.utils.ts` to promote code reusability across different parts of the application.
+ *
+ * ⚠️ IMPORTANT ⚠️: Queries must be written to include guildId!
  */
 export class Store {
 
-	/**
-	 * ====================================================================
-	 *                         ⚠️ IMPORTANT ⚠️
-	 * ====================================================================
-	 *
-	 * Queries must be written to include guildId!
-	 */
-
-
-	constructor(public guild: Guild) {
-		const dbGuild = this.dbGuild();
-		if (!dbGuild) {
+	constructor(public guild: Guild, public initiator?: GuildMember) {
+		if (!this.dbGuild()) {
 			this.insertGuild({ guildId: guild.id });
 		}
 	}
@@ -132,17 +124,6 @@ export class Store {
 	//                           Inserts
 	// ====================================================================
 
-	// Increment a stat for a guild
-	incrementGuildStat(stat: GuildStat, by = 1) {
-		if (!PENDING_GUILD_UPDATES[this.guild.id]) {
-			PENDING_GUILD_UPDATES[this.guild.id] = {};
-		}
-		if (!PENDING_GUILD_UPDATES[this.guild.id][stat]) {
-			PENDING_GUILD_UPDATES[this.guild.id][stat] = 0;
-		}
-		PENDING_GUILD_UPDATES[this.guild.id][stat]! += by;
-	}
-
 	insertGuild(dbGuild: NewGuild) {
 		this.dbGuild.clear();
 		return db
@@ -153,7 +134,7 @@ export class Store {
 
 	// throws error on conflict
 	insertQueue(newQueue: NewQueue) {
-		this.incrementGuildStat("queuesAdded");
+		incrementGuildStat(this.guild.id, "queuesAdded");
 		this.dbQueues.clear();
 		try {
 			return db
@@ -183,7 +164,7 @@ export class Store {
 
 	// replace on conflict
 	insertMember(newMember: NewMember) {
-		this.incrementGuildStat("membersAdded");
+		incrementGuildStat(this.guild.id, "membersAdded");
 		this.dbMembers.clear();
 		return db
 			.insert(MEMBER_TABLE)
@@ -197,7 +178,7 @@ export class Store {
 
 	// throws error on conflict
 	insertSchedule(newSchedule: NewSchedule) {
-		this.incrementGuildStat("schedulesAdded");
+		incrementGuildStat(this.guild.id, "schedulesAdded");
 		this.dbSchedules.clear();
 		try {
 			return db
@@ -214,7 +195,7 @@ export class Store {
 
 	// throws error on conflict
 	insertWhitelisted(newWhitelisted: NewWhitelisted) {
-		this.incrementGuildStat("whitelistedAdded");
+		incrementGuildStat(this.guild.id, "whitelistedAdded");
 		this.dbWhitelisted.clear();
 		try {
 			return db
@@ -231,7 +212,7 @@ export class Store {
 
 	// throws error on conflict
 	insertBlacklisted(newBlacklisted: NewBlacklisted) {
-		this.incrementGuildStat("blacklistedAdded");
+		incrementGuildStat(this.guild.id, "blacklistedAdded");
 		this.dbBlacklisted.clear();
 		try {
 			return db
@@ -248,7 +229,7 @@ export class Store {
 
 	// throws error on conflict
 	insertPrioritized(newPrioritized: NewPrioritized) {
-		this.incrementGuildStat("prioritizedAdded");
+		incrementGuildStat(this.guild.id, "prioritizedAdded");
 		this.dbPrioritized.clear();
 		try {
 			return db
@@ -265,7 +246,7 @@ export class Store {
 
 	// throws error on conflict
 	insertAdmin(newAdmin: NewAdmin) {
-		this.incrementGuildStat("adminsAdded");
+		incrementGuildStat(this.guild.id, "adminsAdded");
 		this.dbAdmins.clear();
 		try {
 			return db
@@ -282,7 +263,7 @@ export class Store {
 
 	// replace on conflict
 	insertArchivedMember(newArchivedMember: NewArchivedMember) {
-		this.incrementGuildStat("archivedMembersAdded");
+		incrementGuildStat(this.guild.id, "archivedMembersAdded");
 		this.dbArchivedMembers.clear();
 		return db
 			.insert(ARCHIVED_MEMBER_TABLE)

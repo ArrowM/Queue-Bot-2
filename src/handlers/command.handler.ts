@@ -6,6 +6,7 @@ import type { Handler } from "../types/handler.types.ts";
 import type { AnyInteraction, SlashInteraction } from "../types/interaction.types.ts";
 import { AdminUtils } from "../utils/admin.utils.ts";
 import { InteractionUtils } from "../utils/interaction.utils.ts";
+import { incrementGuildStat } from "../db/db.ts";
 
 export class CommandHandler implements Handler {
 	private readonly inter: SlashInteraction;
@@ -28,7 +29,7 @@ export class CommandHandler implements Handler {
 			if (command.adminOnly) AdminUtils.verifyIsAdmin(this.inter.store, this.inter.member);
 
 			if (fullCommandName in command) {
-				this.inter.store.incrementGuildStat("commandsReceived");
+				incrementGuildStat(this.inter.guildId, "commandsReceived");
 				await (command as any)[fullCommandName](this.inter);
 			}
 			else {

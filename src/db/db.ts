@@ -2,6 +2,7 @@ import * as fs from "node:fs";
 
 import Database from "better-sqlite3";
 import { subDays, subMonths } from "date-fns";
+import type { Snowflake } from "discord.js";
 import { count, eq, lt, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { get } from "lodash-es";
@@ -29,9 +30,10 @@ const DB_BACKUP_DIRECTORY = "db/backups";
 
 export const db = drizzle(Database(DB_FILEPATH).defaultSafeIntegers(), { schema });
 
-// Database schedule (every 3 hours)
+// Database backup (every 3 hours)
 cron("0 */3 * * *", async () => {
 	try {
+		backupPrep();
 		deleteOldBackups();
 		deleteOldArchivedMembers();
 		await deleteDeadGuilds();
@@ -39,11 +41,18 @@ cron("0 */3 * * *", async () => {
 		backup();
 	}
 	catch (e) {
-		console.error("Database schedule failed:");
-		console.error(`Error: ${(e as Error).message}`);
-		console.error(`Stack Trace: ${(e as Error).stack}`);
+		const { message, stack } = e as Error;
+		console.error("Database backup failed:");
+		console.error(`Error: ${message}`);
+		console.error(`Stack Trace: ${stack}`);
 	}
 });
+
+function backupPrep() {
+	if (!fs.existsSync(DB_BACKUP_DIRECTORY)) {
+		fs.mkdirSync(DB_BACKUP_DIRECTORY);
+	}
+}
 
 // Delete backups older than 2 days
 function deleteOldBackups() {
@@ -112,11 +121,6 @@ function backup() {
 	const dateStr = new Date().toLocaleString("en-US", { hour12: false }).replace(/\D/g, "_");
 	const backupFilepath = `${DB_BACKUP_DIRECTORY}/main_${dateStr}.sqlite`;
 
-	// Ensure the backup directory exists
-	if (!fs.existsSync(DB_BACKUP_DIRECTORY)) {
-		fs.mkdirSync(DB_BACKUP_DIRECTORY);
-	}
-
 	// Copy the SQLite database file to the backup location
 	fs.copyFile(DB_FILEPATH, backupFilepath, (err) => {
 		if (err) {
@@ -128,14 +132,24 @@ function backup() {
 	});
 }
 
-
 // ====================================================================
 //                           Db Guild Updates
 // ====================================================================
 
-export let PENDING_GUILD_UPDATES: PendingGuildUpdates = {};
+let PENDING_GUILD_UPDATES: PendingGuildUpdates = {};
 
-async function flushCacheToDB() {
+// Increment a stat for a guild
+export function incrementGuildStat(guildId: Snowflake, stat: GuildStat, by = 1) {
+	if (!PENDING_GUILD_UPDATES[guildId]) {
+		PENDING_GUILD_UPDATES[guildId] = {};
+	}
+	if (!PENDING_GUILD_UPDATES[guildId][stat]) {
+		PENDING_GUILD_UPDATES[guildId][stat] = 0;
+	}
+	PENDING_GUILD_UPDATES[guildId][stat]! += by;
+}
+
+async function flushPendingGuildUpdatesToDB() {
 	// Start a transaction
 	db.transaction(() => {
 		for (const guildId in PENDING_GUILD_UPDATES) {
@@ -159,41 +173,43 @@ async function flushCacheToDB() {
 					.run();
 			}
 			catch (e) {
-				console.error(`Error: ${(e as Error).message}`);
-				console.error(`Stack Trace: ${(e as Error).stack}`);
+				const { message, stack } = e as Error;
+				console.error("Failed to flush guild updates to db:");
+				console.error(`Error: ${message}`);
+				console.error(`Stack Trace: ${stack}`);
 			}
 		}
 	});
 	PENDING_GUILD_UPDATES = {};
 }
 
-// Write pending guild updates to the database every minute
-
-cron("* * * * *", async () => {
+// Write pending guild updates to the database every 5 minutes
+cron("*/5 * * * *", async () => {
 	try {
-		await flushCacheToDB();
+		await flushPendingGuildUpdatesToDB();
 	}
 	catch (e) {
+		const { message, stack } = e as Error;
 		console.error("Failed to write pending guild updates to the database:");
-		console.error(`Error: ${(e as Error).message}`);
-		console.error(`Stack Trace: ${(e as Error).stack}`);
+		console.error(`Error: ${message}`);
+		console.error(`Stack Trace: ${stack}`);
 	}
 });
 
 // Signal handlers for graceful shutdown
 process.on("SIGINT", async () => {
-	await flushCacheToDB();
+	await flushPendingGuildUpdatesToDB();
 	process.exit(0);
 });
 process.on("SIGTERM", async () => {
-	await flushCacheToDB();
+	await flushPendingGuildUpdatesToDB();
 	process.exit(0);
 });
 process.on("uncaughtException", async () => {
-	await flushCacheToDB();
+	await flushPendingGuildUpdatesToDB();
 	process.exit(1);
 });
 process.on("unhandledRejection", async () => {
-	await flushCacheToDB();
+	await flushPendingGuildUpdatesToDB();
 	process.exit(1);
 });

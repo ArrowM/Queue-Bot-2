@@ -20,16 +20,10 @@ import {
  * `QueryUtils` is responsible for handling all database read operations, including select queries.
  * These operations do not modify the database but are used to retrieve data.
  * All database write operations (insert, update, delete) are handled in `store.ts` to ensure they update the cache.
+ *
+ * ⚠️ IMPORTANT ⚠️: Queries must be written to include guildId!
  */
 export namespace QueryUtils {
-
-	/**
-	 * ====================================================================
-	 *                         ⚠️ IMPORTANT ⚠️
-	 * ====================================================================
-	 *
-	 * Queries must be written to include guildId!
-	 */
 
 	// ====================================================================
 	//                           Queries

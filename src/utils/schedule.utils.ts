@@ -119,9 +119,10 @@ export namespace ScheduleUtils {
 					await executeScheduledCommand(schedule.id);
 				}
 				catch (e) {
+					const { message, stack } = e as Error;
 					console.error("Failed to execute scheduled command:");
-					console.error(`Error: ${(e as Error).message}`);
-					console.error(`Stack Trace: ${(e as Error).stack}`);
+					console.error(`Error: ${message}`);
+					console.error(`Stack Trace: ${stack}`);
 				}
 			}, { timezone: schedule.timezone }),
 		);
@@ -162,7 +163,8 @@ export namespace ScheduleUtils {
 		}
 
 		try {
-			store = new Store(await ClientUtils.getGuild(schedule.guildId));
+			const guild = await ClientUtils.getGuild(schedule.guildId);
+			store = new Store(guild);
 		}
 		catch (e) {
 			QueryUtils.deleteGuild({ guildId: schedule.guildId });

@@ -19,7 +19,7 @@ export class JoinButton extends EveryoneButton {
 		await MemberUtils.insertJsMember({ store: inter.store, queue, jsMember: inter.member });
 
 		await inter.respond({
-			content: `Joined '${queueMention(queue)}' queue.`,
+			content: `Joined the '${queueMention(queue)}' queue.`,
 			embeds: [await MemberUtils.getMemberPositionString(inter.store, queue, inter.member.id)],
 		});
 	}

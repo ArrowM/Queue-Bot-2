@@ -5,6 +5,7 @@ import type { Handler } from "../types/handler.types.ts";
 import type { AnyInteraction, ButtonInteraction } from "../types/interaction.types.ts";
 import { AdminUtils } from "../utils/admin.utils.ts";
 import { InteractionUtils } from "../utils/interaction.utils.ts";
+import { incrementGuildStat } from "../db/db.ts";
 
 export class ButtonHandler implements Handler {
 	private readonly inter: ButtonInteraction;
@@ -19,7 +20,7 @@ export class ButtonHandler implements Handler {
 		const button = BUTTONS.get(this.inter.customId);
 		if (button) {
 			if (button.adminOnly) AdminUtils.verifyIsAdmin(this.inter.store, this.inter.member);
-			this.inter.store.incrementGuildStat("buttonsReceived");
+			incrementGuildStat(this.inter.guildId, "buttonsReceived");
 			await button.handle(this.inter);
 		}
 	}

@@ -34,7 +34,7 @@ export class JoinCommand extends EveryoneCommand {
 		await MemberUtils.insertJsMember({ store: inter.store, queue, jsMember: inter.member, message });
 
 		await inter.respond({
-			content: `Joined '${queueMention(queue)}' queue.`,
+			content: `Joined the '${queueMention(queue)}' queue.`,
 			embeds: [await MemberUtils.getMemberPositionString(inter.store, queue, inter.member.id)],
 		});
 	}
