@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "bbfad40a-3284-45c3-a185-cb2652b487f6",
+  "id": "f729bf2c-6cc9-4e46-8ca6-42af6873acb5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "admin": {
@@ -126,6 +126,13 @@
         "archived_time": {
           "name": "archived_time",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "text": {
+          "name": "text",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false

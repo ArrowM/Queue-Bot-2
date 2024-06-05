@@ -15,6 +15,7 @@ CREATE TABLE `archived_member` (
 	`position_time` integer NOT NULL,
 	`join_time` integer NOT NULL,
 	`archived_time` integer NOT NULL,
+	`text` text NOT NULL,
 	FOREIGN KEY (`guild_id`) REFERENCES `guild`(`guild_id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`queue_id`) REFERENCES `queue`(`id`) ON UPDATE no action ON DELETE cascade
 );

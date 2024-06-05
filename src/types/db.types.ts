@@ -58,4 +58,11 @@ export enum TimestampType {
 	Relative = "R",
 }
 
+export enum ArchivedMemberReason {
+	Left = "left",
+	Kicked = "kicked",
+	Pulled = "pulled",
+	NotFound = "not found",
+}
+
 export type GuildStat = keyof Omit<DbGuild, "guildId" | "joinTime" | "lastUpdateTime">;

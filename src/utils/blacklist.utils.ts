@@ -2,6 +2,7 @@ import { type Collection, type GuildMember, Role } from "discord.js";
 
 import type { Store } from "../core/store.ts";
 import type { DbBlacklisted, DbQueue } from "../db/schema.ts";
+import { ArchivedMemberReason } from "../types/db.types.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
 import { DisplayUtils } from "./display.utils.ts";
 import { MemberUtils } from "./member.utils.ts";
@@ -24,7 +25,7 @@ export namespace BlacklistUtils {
 			: [...store.dbQueues().values()],
 		).flat();
 		const by = (mentionable instanceof Role) ? { roleId: mentionable.id } : { userId: mentionable.id };
-		MemberUtils.deleteMembers({ store, queues: queuesToUpdate, by, force: true });
+		MemberUtils.deleteMembers({ store, queues: queuesToUpdate, reason: ArchivedMemberReason.Kicked, by, force: true });
 		DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
 
 		return { insertedBlacklisted, updatedQueues: queuesToUpdate };

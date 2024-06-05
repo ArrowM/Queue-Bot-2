@@ -24,7 +24,7 @@ import { PullButton } from "../buttons/buttons/pull.button.ts";
 import type { Store } from "../core/store.ts";
 import { type DbMember, type DbQueue } from "../db/schema.ts";
 import type { Button } from "../types/button.types.ts";
-import { DisplayUpdateType, MemberDisplayType, TimestampType } from "../types/db.types.ts";
+import { ArchivedMemberReason, DisplayUpdateType, MemberDisplayType, TimestampType } from "../types/db.types.ts";
 import { map } from "./misc.utils.ts";
 import {
 	commandMention,
@@ -240,7 +240,7 @@ export namespace DisplayUtils {
 			const jsMember = memberDisplayType === MemberDisplayType.Mention ? jsMembers.get(member.userId) : null;
 
 			if (memberDisplayType === MemberDisplayType.Mention && !jsMember) {
-				store.deleteMember({ queueId: member.queueId, userId: member.userId });
+				store.deleteMember({ queueId: member.queueId, userId: member.userId }, ArchivedMemberReason.NotFound);
 			}
 			else {
 				memberDisplayLines.push(createMemberDisplayLine(queue, member, jsMember, position + 1, rightPadding));

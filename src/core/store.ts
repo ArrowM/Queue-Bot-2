@@ -47,7 +47,7 @@ import { MemberUtils } from "../utils/member.utils.ts";
 import { toCollection } from "../utils/misc.utils.ts";
 import { QueryUtils } from "../utils/query.utils.ts";
 import deleteMembers = MemberUtils.deleteMembers;
-import type { GuildStat } from "../types/db.types.ts";
+import { ArchivedMemberReason, type GuildStat } from "../types/db.types.ts";
 
 /**
  * The `Store` class is responsible for all database operations initiated by users, including insert, update, and delete operations.
@@ -111,7 +111,7 @@ export class Store {
 		catch (_e) {
 			const e = _e as DiscordAPIError;
 			if (e.status == 404) {
-				this.deleteManyMembers({ userId });
+				this.deleteManyMembers({ userId }, ArchivedMemberReason.NotFound);
 			}
 		}
 	}
@@ -412,17 +412,23 @@ export class Store {
 	deleteMember(by:
 		{ id: bigint } |
 		{ queueId: bigint, userId?: Snowflake },
+	reason: ArchivedMemberReason,
 	) {
 		this.dbMembers.clear();
 		const cond = this.createCondition(MEMBER_TABLE, by);
 		const deletedMember = db.delete(MEMBER_TABLE).where(cond).returning().get();
-		this.insertArchivedMember(deletedMember);
+
+		if (deletedMember) {
+			this.insertArchivedMember({ ...deletedMember, reason });
+		}
+
 		return deletedMember;
 	}
 
 	deleteManyMembers(by:
 		{ userId?: Snowflake } |
 		{ queueId: bigint, count?: number },
+	reason: ArchivedMemberReason,
 	) {
 		this.dbMembers.clear();
 		const cond = ("count" in by)
@@ -432,7 +438,11 @@ export class Store {
 			}).map(member => eq(MEMBER_TABLE.id, member.id)))
 			: this.createCondition(MEMBER_TABLE, by);
 		const deletedMembers = db.delete(MEMBER_TABLE).where(cond).returning().all();
-		deletedMembers.forEach(deletedMember => this.insertArchivedMember(deletedMember));
+
+		deletedMembers.forEach(deletedMember =>
+			this.insertArchivedMember({ ...deletedMember, reason })
+		);
+
 		return deleteMembers;
 	}
 

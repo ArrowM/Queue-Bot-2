@@ -52,7 +52,7 @@ export function queueMemberMention(jsMember: GuildMember, memberDisplayType: Mem
 export function scheduleMention(schedule: DbSchedule) {
 	let humanReadableSchedule = cronstrue.toString(schedule.cron);
 	humanReadableSchedule = humanReadableSchedule.charAt(0).toLowerCase() + humanReadableSchedule.slice(1);
-	return `will ${schedule.command} ${humanReadableSchedule} (${schedule.timezone})`;
+	return `will ${schedule.command} ${humanReadableSchedule} (${schedule.timezone})${schedule.reason ? ` - ${schedule.reason}` : ""}`;
 }
 
 export function convertSecondsToMinutesAndSeconds(secondsIn: number) {
@@ -99,7 +99,7 @@ export function describeTable<T>(options: {
 	return embeds;
 }
 
-export function describeUserOrRoleTable<T extends { isRole: boolean, subjectId: Snowflake }>(options: {
+export function describeUserOrRoleTable<T extends { isRole: boolean, subjectId: Snowflake, reason?: string}>(options: {
 	store: Store,
 	tableName: string,
 	color: Color,
@@ -120,8 +120,8 @@ export function describeUserOrRoleTable<T extends { isRole: boolean, subjectId: 
 			.setColor(color)
 			.setDescription(
 				concat(
-					roles.map(entry => `- ${roleMention(entry.subjectId)}`).sort(),
-					members.map(entry => `- ${userMention(entry.subjectId)}}`).sort()
+					roles.map(entry => `- ${roleMention(entry.subjectId)}${entry.reason ? ` - ${entry.reason}` : ""}`).sort(),
+					members.map(entry => `- ${userMention(entry.subjectId)}${entry.reason ? ` - ${entry.reason}` : ""}}`).sort()
 				).join("\n")
 			);
 

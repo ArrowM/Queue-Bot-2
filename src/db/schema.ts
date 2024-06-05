@@ -4,6 +4,7 @@ import { index, integer, sqliteTable, text, unique } from "drizzle-orm/sqlite-co
 import { get } from "lodash-es";
 
 import {
+	ArchivedMemberReason,
 	Color,
 	DisplayUpdateType,
 	LogLevel,
@@ -297,6 +298,7 @@ export const ARCHIVED_MEMBER_TABLE = sqliteTable("archived_member", ({
 	positionTime: integer("position_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
 	joinTime: integer("join_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
 	archivedTime: integer("archived_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
+	reason: text("text").$type<ArchivedMemberReason>().notNull(),
 }),
 (table) => ({
 	unq: unique().on(table.queueId, table.userId),

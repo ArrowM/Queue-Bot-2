@@ -81,9 +81,9 @@ export class WhitelistCommand extends AdminCommand {
 	};
 
 	static async whitelist_add(inter: SlashInteraction) {
+		const queues = await WhitelistCommand.ADD_OPTIONS.queues.get(inter);
 		const mentionable = WhitelistCommand.ADD_OPTIONS.mentionable.get(inter);
 		const reason = WhitelistCommand.ADD_OPTIONS.reason.get(inter);
-		const queues = await WhitelistCommand.ADD_OPTIONS.queues.get(inter);
 
 		const insertedWhitedListed = WhitelistUtils.insertWhitelisted(inter.store, queues, mentionable, reason);
 

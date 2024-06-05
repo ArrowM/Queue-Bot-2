@@ -1,8 +1,9 @@
 import { Collection, EmbedBuilder, GuildMember, Role, type Snowflake, userMention } from "discord.js";
-import { get, groupBy } from "lodash-es";
+import { groupBy, isNil } from "lodash-es";
 
 import type { Store } from "../core/store.ts";
 import { type DbMember, type DbPrioritized, type DbQueue } from "../db/schema.ts";
+import { ArchivedMemberReason } from "../types/db.types.ts";
 import type { MemberDeleteBy } from "../types/member.types.ts";
 import type { NotificationOptions } from "../types/notification.types.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
@@ -99,20 +100,23 @@ export namespace MemberUtils {
 	export function deleteMembers(options: {
 		store: Store,
 		queues: DbQueue[] | Collection<bigint, DbQueue>,
+		reason: ArchivedMemberReason,
 		by?: MemberDeleteBy,
 		notification?: NotificationOptions,
 		force?: boolean,
 	}) {
-		const { store, queues, by, notification, force } = options;
+		const { store, queues, reason, by, notification, force } = options;
 		const deletedMembers: DbMember[] = [];
 		const membersToNotify: DbMember[] = [];
+		// @ts-ignore
+		const { userId, userIds, roleId, count } = by;
 
-		if (by && ("userId" in by || "userIds" in by)) {
-			const userIds = ("userId" in by) ? [by.userId] : by.userIds;
+		if (!isNil(userId) || !isNil(userIds)) {
+			const ids: Snowflake[] = !isNil(userId) ? [userId] : userIds;
 			queues.forEach((queue: DbQueue) => {
 				const deleted: DbMember[] = [];
-				userIds.forEach(userId => {
-					const member = store.deleteMember({ queueId: queue.id, userId });
+				ids.forEach(userId => {
+					const member = store.deleteMember({ queueId: queue.id, userId }, reason);
 					if (member) deleted.push(member);
 				});
 				deletedMembers.push(...deleted);
@@ -121,11 +125,11 @@ export namespace MemberUtils {
 				}
 			});
 		}
-		else if (by && "roleId" in by) {
-			const jsMembers = store.guild.roles.cache.get(by.roleId).members;
+		else if (!isNil(roleId)) {
+			const jsMembers = store.guild.roles.cache.get(roleId).members;
 			queues.forEach((queue: DbQueue) => {
 				jsMembers.forEach(jsMember => {
-					const member = store.deleteMember({ queueId: queue.id, userId: jsMember.id });
+					const member = store.deleteMember({ queueId: queue.id, userId: jsMember.id }, reason);
 					if (member) {
 						deletedMembers.push(member);
 						if (queue.notificationsToggle) {
@@ -138,13 +142,13 @@ export namespace MemberUtils {
 		else {
 			queues.forEach((queue: DbQueue) => {
 				const deleted: DbMember[] = [];
-				const numToPull = get(by, "count") ?? queue.pullBatchSize ?? 1;
+				const numToPull = count ?? queue.pullBatchSize ?? 1;
 				const members = store.dbMembers().filter(member => member.queueId === queue.id);
 				if (!force && (members.size < numToPull)) {
 					throw new Error("Not enough members to pull (< pullBatchSize of queue).");
 				}
 				for (let i = 0; i < numToPull; i++) {
-					const member = store.deleteMember({ queueId: queue.id });
+					const member = store.deleteMember({ queueId: queue.id }, reason);
 					if (member) {
 						deletedMembers.push(member);
 						if (queue.notificationsToggle) {
@@ -190,7 +194,7 @@ export namespace MemberUtils {
 	}
 
 	export function clearMembers(store: Store, queue: DbQueue) {
-		const members = store.deleteManyMembers({ queueId: queue.id });
+		const members = store.deleteManyMembers({ queueId: queue.id }, ArchivedMemberReason.Kicked);
 		DisplayUtils.requestDisplayUpdate(store, queue.id);
 		return members;
 	}

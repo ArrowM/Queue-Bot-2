@@ -6,6 +6,7 @@ import { MentionableOption } from "../../options/options/mentionable.option.ts";
 import { MessageOption } from "../../options/options/message.option.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
+import { ArchivedMemberReason } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { NotificationType } from "../../types/notification.types.ts";
 import { MemberUtils } from "../../utils/member.utils.ts";
@@ -124,6 +125,7 @@ export class MembersCommand extends AdminCommand {
 		const deletedMembers = MemberUtils.deleteMembers({
 			store: inter.store,
 			queues,
+			reason: ArchivedMemberReason.Kicked,
 			by: { userIds: members.map(member => member.userId) },
 			notification: { type: NotificationType.REMOVED_FROM_QUEUE, channelToLink: inter.channel },
 			force: true,

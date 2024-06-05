@@ -26,13 +26,13 @@ export namespace QueueUtils {
 	}
 
 	export function validateQueueProperties(queue: DbQueue) {
-		if (queue.gracePeriod < 0) {
+		if (queue.gracePeriod && queue.gracePeriod < 0) {
 			throw new Error("Grace period must be a positive number.");
 		}
-		if (queue.pullBatchSize < 1) {
+		if (queue.pullBatchSize && queue.pullBatchSize < 1) {
 			throw new Error("Pull batch size must be a positive number.");
 		}
-		if (queue.size < 1) {
+		if (queue.size && queue.size < 1) {
 			throw new Error("Size must be a positive number.");
 		}
 	}

@@ -2,6 +2,7 @@ import { SlashCommandBuilder } from "discord.js";
 
 import { QueueOption } from "../../options/options/queue.option.ts";
 import { EveryoneCommand } from "../../types/command.types.ts";
+import { ArchivedMemberReason } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { MemberUtils } from "../../utils/member.utils.ts";
 import { queueMention } from "../../utils/string.utils.ts";
@@ -30,6 +31,7 @@ export class LeaveCommand extends EveryoneCommand {
 		MemberUtils.deleteMembers({
 			store: inter.store,
 			queues: [queue],
+			reason: ArchivedMemberReason.Left,
 			by: { userId: inter.member.id },
 			force: true,
 		});

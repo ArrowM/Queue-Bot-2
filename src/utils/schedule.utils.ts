@@ -3,7 +3,7 @@ import { schedule as cron, type ScheduledTask, validate } from "node-cron";
 
 import { Store } from "../core/store.ts";
 import { type DbQueue, type DbSchedule, type NewSchedule } from "../db/schema.ts";
-import { ScheduleCommand } from "../types/db.types.ts";
+import { ArchivedMemberReason, ScheduleCommand } from "../types/db.types.ts";
 import { TIMEZONES } from "../types/misc.types.ts";
 import { NotificationType } from "../types/notification.types.ts";
 import { ClientUtils } from "./client.utils.ts";
@@ -134,6 +134,7 @@ export namespace ScheduleUtils {
 				MemberUtils.deleteMembers({
 					store,
 					queues: [queue],
+					reason: ArchivedMemberReason.Pulled,
 					notification: { type: NotificationType.PULLED_FROM_QUEUE },
 				});
 				break;

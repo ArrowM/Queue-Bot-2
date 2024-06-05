@@ -4,6 +4,7 @@ import { MembersOption } from "../../options/options/members.option.ts";
 import { NumberOption } from "../../options/options/number.option.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
+import { ArchivedMemberReason } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { NotificationType } from "../../types/notification.types.ts";
 import { MemberUtils } from "../../utils/member.utils.ts";
@@ -35,13 +36,14 @@ export class PullCommand extends AdminCommand {
 		const count = PullCommand.PULL_OPTIONS.count.get(inter);
 		const members = await PullCommand.PULL_OPTIONS.members.get(inter);
 
-		if (count < 1) {
+		if (count && count < 1) {
 			throw new Error("Count must be a positive number.");
 		}
 
 		const pulledMembers = MemberUtils.deleteMembers({
 			store: inter.store,
 			queues: queues,
+			reason: ArchivedMemberReason.Pulled,
 			by: { userIds: members?.map((member) => member.userId), count },
 			notification: { type: NotificationType.PULLED_FROM_QUEUE, channelToLink: inter.channel },
 			force: true,

@@ -75,15 +75,15 @@ export class PrioritizeCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly ADD_OPTIONS = {
+		queues: new QueuesOption({ required: true, description: "Queue(s) to prioritize in" }),
 		mentionable: new MentionableOption({ required: true, description: "User or role to prioritize" }),
 		reason: new ReasonOption({ description: "Reason for the priority" }),
-		queues: new QueuesOption({ description: "Prioritize in specific queue(s)" }),
 	};
 
 	static async prioritize_add(inter: SlashInteraction) {
+		const queues = await PrioritizeCommand.ADD_OPTIONS.queues.get(inter);
 		const mentionable = PrioritizeCommand.ADD_OPTIONS.mentionable.get(inter);
 		const reason = PrioritizeCommand.ADD_OPTIONS.reason.get(inter);
-		const queues = await PrioritizeCommand.ADD_OPTIONS.queues.get(inter);
 
 		const { updatedQueues } = PrioritizeUtils.insertPrioritized(inter.store, queues, mentionable, reason);
 
