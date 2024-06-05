@@ -11,7 +11,7 @@ import {
 	type DbAdmin,
 	type DbArchivedMember,
 	type DbBlacklisted,
-	type DbDisplay, type DbGuild,
+	type DbDisplay,
 	type DbMember,
 	type DbPrioritized,
 	type DbQueue,
@@ -47,6 +47,7 @@ import { MemberUtils } from "../utils/member.utils.ts";
 import { toCollection } from "../utils/misc.utils.ts";
 import { QueryUtils } from "../utils/query.utils.ts";
 import deleteMembers = MemberUtils.deleteMembers;
+import type { GuildStat } from "../types/db.types.ts";
 
 /**
  * The `Store` class is responsible for all database operations initiated by users, including insert, update, and delete operations.
@@ -132,7 +133,7 @@ export class Store {
 	// ====================================================================
 
 	// Increment a stat for a guild
-	incrementGuildStat(stat: keyof Omit<DbGuild, "guildId" | "joinTime" | "lastUpdateTime">, by = 1) {
+	incrementGuildStat(stat: GuildStat, by = 1) {
 		if (!PENDING_GUILD_UPDATES[this.guild.id]) {
 			PENDING_GUILD_UPDATES[this.guild.id] = {};
 		}

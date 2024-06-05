@@ -4,19 +4,24 @@ import Database from "better-sqlite3";
 import { subDays, subMonths } from "date-fns";
 import { count, eq, lt, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
+import { get } from "lodash-es";
 import { schedule as cron } from "node-cron";
 
+import type { GuildStat } from "../types/db.types.ts";
 import type { PendingGuildUpdates } from "../types/misc.types.ts";
 import { ClientUtils } from "../utils/client.utils.ts";
 import * as schema from "./schema.ts";
 import {
 	ADMIN_TABLE,
-	ARCHIVED_MEMBER_TABLE, BLACKLISTED_TABLE,
+	ARCHIVED_MEMBER_TABLE,
+	BLACKLISTED_TABLE,
 	DISPLAY_TABLE,
 	GUILD_TABLE,
-	MEMBER_TABLE, PRIORITIZED_TABLE,
+	MEMBER_TABLE,
+	PRIORITIZED_TABLE,
 	QUEUE_TABLE,
-	SCHEDULE_TABLE, WHITELISTED_TABLE,
+	SCHEDULE_TABLE,
+	WHITELISTED_TABLE,
 } from "./schema.ts";
 
 const DB_FILEPATH = "db/main.sqlite";
@@ -127,23 +132,28 @@ async function flushCacheToDB() {
 	// Start a transaction
 	db.transaction(() => {
 		for (const guildId in PENDING_GUILD_UPDATES) {
-			const updates = PENDING_GUILD_UPDATES[guildId];
-			for (const stat in updates) {
-				// @ts-ignore
-				const value = updates[stat] as number;
+			try {
+				const updates = PENDING_GUILD_UPDATES[guildId];
+				for (const stat in updates) {
+					const column = get(GUILD_TABLE, stat);
+					const value = updates[stat as GuildStat] as number;
+					const columnName = column.name;
+					db.run(
+						sql`UPDATE guild
+                SET ${sql.raw(columnName)} = ${sql.raw(columnName)} + ${value}
+                WHERE ${sql.raw(GUILD_TABLE.guildId.name)} = ${guildId};`
+					);
+				}
 				db.update(GUILD_TABLE)
-					.set({ [stat]: sql.raw(`${stat} + ${value}`) })
+					.set({ lastUpdateTime: BigInt(new Date().getTime()) })
 					.where(
 						eq(GUILD_TABLE.guildId, guildId)
 					)
 					.run();
 			}
-			db.update(GUILD_TABLE)
-				.set({ lastUpdateTime: BigInt(new Date().getTime()) })
-				.where(
-					eq(GUILD_TABLE.guildId, guildId)
-				)
-				.run();
+			catch (e) {
+				console.error(`${(e as Error).message}\n${(e as Error).stack}`);
+			}
 		}
 	});
 	PENDING_GUILD_UPDATES = {};

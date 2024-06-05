@@ -1,3 +1,5 @@
+import type { DbGuild } from "../db/schema.ts";
+
 export enum LogLevel {
 	Default = "default",
 	Everything = "everything",
@@ -55,3 +57,5 @@ export enum TimestampType {
 	DateAndTime = "f",
 	Relative = "R",
 }
+
+export type GuildStat = keyof Omit<DbGuild, "guildId" | "joinTime" | "lastUpdateTime">;

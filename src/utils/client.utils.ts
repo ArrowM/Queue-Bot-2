@@ -1,3 +1,5 @@
+import * as fs from "node:fs";
+
 import {
 	ActivityType,
 	ApplicationCommand,
@@ -9,6 +11,7 @@ import {
 	REST,
 	Routes,
 	type Snowflake,
+	TextChannel,
 } from "discord.js";
 import AutoPoster from "topgg-autoposter";
 
@@ -16,6 +19,7 @@ import { COMMANDS } from "../commands/commands.loader.ts";
 import { ClientHandler } from "../handlers/client.handler.ts";
 import { InteractionHandler } from "../handlers/interaction.handler.ts";
 import { Color } from "../types/db.types.ts";
+import { QueryUtils } from "./query.utils.ts";
 import { ScheduleUtils } from "./schedule.utils.ts";
 
 export namespace ClientUtils {
@@ -26,40 +30,46 @@ export namespace ClientUtils {
 	let LIVE_COMMANDS: Collection<Snowflake, ApplicationCommand<{ guild: GuildResolvable }>>;
 
 	export async function start() {
-		console.time("READY");
-		checkRequiredEnvironmentVariables();
+		try {
+			console.time("READY");
+			checkRequiredEnvironmentVariables();
 
-		console.time("Logged in");
-		await CLIENT.login(process.env.TOKEN);
-		console.timeEnd("Logged in");
+			console.time("Logged in");
+			await CLIENT.login(process.env.TOKEN);
+			console.timeEnd("Logged in");
 
-		// Repeat Events
+			// Repeat Events
 
-		CLIENT.on(Events.InteractionCreate, inter => new InteractionHandler(inter).handle());
-		CLIENT.on(Events.GuildCreate, ClientHandler.handleGuildCreate);
-		CLIENT.on(Events.GuildDelete, ClientHandler.handleGuildDelete);
+			CLIENT.on(Events.InteractionCreate, inter => new InteractionHandler(inter).handle());
+			CLIENT.on(Events.GuildCreate, ClientHandler.handleGuildCreate);
+			CLIENT.on(Events.GuildDelete, ClientHandler.handleGuildDelete);
 
-		// Startup Events
+			// Startup Events
 
-		CLIENT.user.setActivity({ name: "ready to /help", type: ActivityType.Custom });
+			CLIENT.user.setActivity({ name: "ready to /help", type: ActivityType.Custom });
 
-		// Startup Functions
+			// Startup Functions
 
-		await registerCommands();
+			await registerCommands();
 
-		ScheduleUtils.loadSchedules();
+			ScheduleUtils.loadSchedules();
 
-		// Top.gg AutoPoster
+			// Top.gg AutoPoster
 
-		if (process.env.TOP_GG_TOKEN) {
-			console.time("Linked Top.gg AutoPoster");
-			AutoPoster(process.env.TOP_GG_TOKEN, CLIENT).on("error", () => null);
-			console.timeEnd("Linked Top.gg AutoPoster");
+			if (process.env.TOP_GG_TOKEN) {
+				console.time("Linked Top.gg AutoPoster");
+				AutoPoster(process.env.TOP_GG_TOKEN, CLIENT).on("error", () => null);
+				console.timeEnd("Linked Top.gg AutoPoster");
+			}
+
+			console.timeEnd("READY");
+
+			await checkPatchNotes();
+
 		}
-
-		console.timeEnd("READY");
-
-
+		catch (e) {
+			console.error(`${(e as Error).message}\n${(e as Error).stack}`);
+		}
 	}
 
 	export async function registerCommands() {
@@ -100,6 +110,24 @@ export namespace ClientUtils {
 		// color check
 		if (!Object.keys(Color).includes(process.env.DEFAULT_COLOR as string)) {
 			throw new Error(`Invalid DEFAULT_COLOR value. Please edit .env file\nOptions: [${Object.keys(Color).join(", ")}]`);
+		}
+	}
+
+	async function checkPatchNotes() {
+		// Check if any patch notes have not been read
+		const dbPatchNotes = QueryUtils.selectAllPatchNotes();
+		const unreadFileNames = fs.readdirSync("./patch-notes")
+			.filter(fileNames => !dbPatchNotes.some(dbPatchNote => dbPatchNote.fileName == fileNames));
+		if (unreadFileNames.length === 0) return;
+
+		// Use dynamic import to load the .ts file
+		const patchNotesChannelId = process.env.PATCH_NOTES_CHANNEL_ID;
+		if (!patchNotesChannelId) return;
+		const patchNoteChannel = CLIENT.channels.cache.get(patchNotesChannelId) as TextChannel;
+		for (const fileName of unreadFileNames) {
+			const { embeds } = await import(`../../patch-notes/${fileName}`);
+			await patchNoteChannel.send({ embeds });
+			QueryUtils.insertPatchNotes({ fileName });
 		}
 	}
 }

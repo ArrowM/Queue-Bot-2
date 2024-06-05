@@ -315,3 +315,11 @@ export const ARCHIVED_MEMBER_RELATIONS = relations(ARCHIVED_MEMBER_TABLE, ({ one
 
 export type NewArchivedMember = typeof ARCHIVED_MEMBER_TABLE.$inferInsert;
 export type DbArchivedMember = typeof ARCHIVED_MEMBER_TABLE.$inferSelect;
+
+export const PATCH_NOTE_TABLE = sqliteTable("patch_note", ({
+	id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
+	fileName: text("file_name").notNull(),
+}));
+
+export type NewPatchNote = typeof PATCH_NOTE_TABLE.$inferInsert;
+export type DbPatchNote = typeof PATCH_NOTE_TABLE.$inferSelect;

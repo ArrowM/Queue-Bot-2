@@ -8,7 +8,8 @@ import {
 	BLACKLISTED_TABLE,
 	DISPLAY_TABLE,
 	GUILD_TABLE,
-	MEMBER_TABLE,
+	MEMBER_TABLE, type NewPatchNote,
+	PATCH_NOTE_TABLE,
 	PRIORITIZED_TABLE,
 	QUEUE_TABLE,
 	SCHEDULE_TABLE,
@@ -312,6 +313,22 @@ export namespace QueryUtils {
 		else if ("queueId" in by) {
 			return selectManyArchivedMembersByQueueId.all(by);
 		}
+	}
+
+// Patch Notes
+
+	export function selectAllPatchNotes() {
+		return db
+			.select()
+			.from(PATCH_NOTE_TABLE)
+			.all();
+	}
+
+	export function insertPatchNotes(patchNote: NewPatchNote) {
+		return db
+			.insert(PATCH_NOTE_TABLE)
+			.values(patchNote)
+			.returning().get();
 	}
 
 // ====================================================================
