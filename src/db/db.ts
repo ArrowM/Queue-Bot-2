@@ -82,7 +82,7 @@ async function deleteDeadGuilds() {
 		const oldGuilds = db.select()
 			.from(GUILD_TABLE)
 			.where(
-				lt(ARCHIVED_MEMBER_TABLE.archivedTime, oneMonthAgo),
+				lt(GUILD_TABLE.lastUpdateTime, oneMonthAgo),
 			)
 			.all();
 		for (const guild of oldGuilds) {
