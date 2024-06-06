@@ -94,9 +94,9 @@ export class Store {
 		try {
 			return await this.guild.channels.fetch(channelId);
 		}
-		catch (_e) {
-			const e = _e as DiscordAPIError;
-			if (e.status == 404) {
+		catch (e) {
+			const { status } = e as DiscordAPIError;
+			if (status == 404) {
 				this.deleteManyDisplays({ displayChannelId: channelId });
 			}
 		}
@@ -112,9 +112,9 @@ export class Store {
 		try {
 			return await this.guild.members.fetch(userId);
 		}
-		catch (_e) {
-			const e = _e as DiscordAPIError;
-			if (e.status == 404) {
+		catch (e) {
+			const { status } = e as DiscordAPIError;
+			if (status == 404) {
 				this.deleteManyMembers({ userId }, ArchivedMemberReason.NotFound);
 			}
 		}
@@ -130,9 +130,9 @@ export class Store {
 		try {
 			return await this.guild.roles.fetch(roleId);
 		}
-		catch (_e) {
-			const e = _e as DiscordAPIError;
-			if (e.status == 404) {
+		catch (e) {
+			const { status } = e as DiscordAPIError;
+			if (status == 404) {
 				this.deleteManyWhitelisted({ subjectId: roleId });
 				this.deleteManyBlacklisted({ subjectId: roleId });
 				this.deleteManyPrioritized({ subjectId: roleId });
