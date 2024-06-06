@@ -51,7 +51,7 @@ export class PrioritizeCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly GET_OPTIONS = {
-		queues: new QueuesOption({ description: "Get prioritized entries of specific queue(s)" }),
+		queues: new QueuesOption({ required: true, description: "Get prioritized entries of specific queue(s)" }),
 	};
 
 	static async prioritize_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
@@ -64,7 +64,7 @@ export class PrioritizeCommand extends AdminCommand {
 
 		const embeds = describeUserOrRoleTable({
 			store: inter.store,
-			tableName: "Prioritized",
+			tableName: "Prioritized members and roles",
 			color: Color.Gold,
 			mentionables: prioritized,
 		});
@@ -87,8 +87,9 @@ export class PrioritizeCommand extends AdminCommand {
 		const queues = await PrioritizeCommand.ADD_OPTIONS.queues.get(inter);
 		const mentionable = PrioritizeCommand.ADD_OPTIONS.mentionable.get(inter);
 		const reason = PrioritizeCommand.ADD_OPTIONS.reason.get(inter);
+		const priorityOrder = PrioritizeCommand.ADD_OPTIONS.priorityOrder.get(inter);
 
-		const { updatedQueues } = PriorityUtils.insertPrioritized(inter.store, queues, mentionable, reason);
+		const { updatedQueues } = PriorityUtils.insertPrioritized(inter.store, queues, mentionable, reason, priorityOrder);
 
 		await this.prioritize_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}

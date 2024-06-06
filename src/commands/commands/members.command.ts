@@ -71,14 +71,14 @@ export class MembersCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly ADD_OPTIONS = {
+		queues: new QueuesOption({ required: true, description: "Add to specific queue(s)" }),
 		mentionable: new MentionableOption({ required: true, description: "User or role to add" }),
-		queues: new QueuesOption({ description: "Add to specific queue(s)" }),
 	};
 
 	static async members_add(inter: SlashInteraction) {
-		const mentionable = MembersCommand.ADD_OPTIONS.mentionable.get(inter);
 		const queues = await MembersCommand.ADD_OPTIONS.queues.get(inter)
 			?? inter.store.dbQueues();
+		const mentionable = MembersCommand.ADD_OPTIONS.mentionable.get(inter);
 
 		const insertedMembers = await MemberUtils.insertMentionable(inter.store, mentionable, queues);
 
@@ -98,17 +98,19 @@ export class MembersCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly SET_OPTIONS = {
+		queues: new QueuesOption({ required: true, description: "Add to specific queue(s)" }),
 		members: new MembersOption({ required: true, description: "Members to update" }),
 		message: new MessageOption({ description: "New message of the member" }),
 	};
 
 	static async members_set(inter: SlashInteraction) {
+		const queues = await MembersCommand.SET_OPTIONS.queues.get(inter);
 		const members = await MembersCommand.SET_OPTIONS.members.get(inter);
 		const message = MembersCommand.SET_OPTIONS.message.get(inter);
 
 		const updatedMembers = MemberUtils.updateMembers(inter.store, members, message);
 
-		const updatedQueues = updatedMembers.map(updated => inter.store.dbQueues().get(updated.queueId));
+		const updatedQueues = updatedMembers.map(updated => queues.get(updated.queueId));
 		await MembersCommand.members_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
@@ -125,7 +127,7 @@ export class MembersCommand extends AdminCommand {
 		const queues = await MembersCommand.DELETE_OPTIONS.queues.get(inter);
 		const members = await MembersCommand.DELETE_OPTIONS.members.get(inter);
 
-		const deletedMembers = await MemberUtils.deleteMembers({
+		const deletedMembers = MemberUtils.deleteMembers({
 			store: inter.store,
 			queues,
 			reason: ArchivedMemberReason.Kicked,

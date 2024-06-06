@@ -49,7 +49,7 @@ export class WhitelistCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly GET_OPTIONS = {
-		queues: new QueuesOption({ description: "Get whitelist entries of specific queue(s)" }),
+		queues: new QueuesOption({ required: true, description: "Get whitelist entries of specific queue(s)" }),
 	};
 
 	static async whitelist_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
@@ -62,7 +62,7 @@ export class WhitelistCommand extends AdminCommand {
 
 		const embeds = describeUserOrRoleTable({
 			store: inter.store,
-			tableName: "Whitelisted",
+			tableName: "Whitelisted members and roles",
 			color: Color.White,
 			mentionables: whitelisted,
 		});

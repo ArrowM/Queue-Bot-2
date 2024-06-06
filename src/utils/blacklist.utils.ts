@@ -1,4 +1,5 @@
 import { type Collection, type GuildMember, Role } from "discord.js";
+import { uniq } from "lodash-es";
 
 import type { Store } from "../core/store.ts";
 import type { DbBlacklisted, DbQueue } from "../db/schema.ts";
@@ -19,13 +20,12 @@ export namespace BlacklistUtils {
 			reason,
 		}));
 
-		// re-evaluate blacklisted & update displays
-		const queuesToUpdate = insertedBlacklisted
-			.map(blacklisted => store.dbQueues().get(blacklisted.queueId))
-			.flat();
+		const queuesToUpdate = uniq(
+			insertedBlacklisted.map(blacklisted => store.dbQueues().get(blacklisted.queueId))
+		);
 		const by = (mentionable instanceof Role) ? { roleId: mentionable.id } : { userId: mentionable.id };
-		MemberUtils.deleteMembers({ store, queues: queuesToUpdate, reason: ArchivedMemberReason.Kicked, by, force: true });
-		DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
+		MemberUtils.deleteMembers({ store, queues, reason: ArchivedMemberReason.Kicked, by, force: true });
+		DisplayUtils.requestDisplaysUpdate(store, map(queuesToUpdate, queue => queue.id));
 
 		return { insertedBlacklisted, updatedQueues: queuesToUpdate };
 	}

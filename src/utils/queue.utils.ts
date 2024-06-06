@@ -21,7 +21,7 @@ export namespace QueueUtils {
 		return compact(QUEUE_PRINT_SETTINGS.map(prop => formatSettingWithFallBack(queue, prop))).join("\n");
 	}
 
-	export function validateQueueProperties(queue: DbQueue) {
+	export function validateQueueProperties(queue: Partial<DbQueue>) {
 		if (queue.gracePeriod && queue.gracePeriod < 0) {
 			throw new Error("Grace period must be a positive number.");
 		}

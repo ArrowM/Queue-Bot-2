@@ -82,7 +82,7 @@ export class QueuesCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly GET_OPTIONS = {
-		queues: new QueuesOption({ description: "Get specific queue(s)" }),
+		queues: new QueuesOption({ required: true, description: "Get specific queue(s)" }),
 	};
 
 	static async queues_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
@@ -155,6 +155,8 @@ export class QueuesCommand extends AdminCommand {
 			}, isNil),
 		};
 
+		QueueUtils.validateQueueProperties(queue);
+
 		const insertedQueue = inter.store.insertQueue(queue);
 
 		const role = get(queue, "role") as Role;
@@ -211,6 +213,8 @@ export class QueuesCommand extends AdminCommand {
 			timestampType: QueuesCommand.SET_OPTIONS.timestampType.get(inter),
 			updateType: QueuesCommand.SET_OPTIONS.updateType.get(inter),
 		}, isNil);
+
+		QueueUtils.validateQueueProperties(update);
 
 		const updatedQueues = queues.map(queue =>
 			inter.store.updateQueue({ id: queue.id, ...update }),

@@ -18,7 +18,7 @@ import {
 	time,
 	type TimestampStylesString,
 } from "discord.js";
-import { isNil } from "lodash-es";
+import { isNil, uniq } from "lodash-es";
 
 import { BUTTONS } from "../buttons/buttons.loader.ts";
 import { JoinButton } from "../buttons/buttons/join.button.ts";
@@ -70,7 +70,7 @@ export namespace DisplayUtils {
 		displayIds?: bigint[],
 		forceNew?: boolean
 	}) {
-		return map(queueIds, id => requestDisplayUpdate(store, id, opts));
+		return uniq(queueIds).map(id => requestDisplayUpdate(store, id, opts));
 	}
 
 	export function insertDisplays(store: Store, queues: DbQueue[] | Collection<bigint, DbQueue>, displayChannelId: Snowflake) {
@@ -85,12 +85,12 @@ export namespace DisplayUtils {
 		store.guild.members.cache.clear();
 
 		// update displays
-		const queuesToUpdate = insertedDisplays
-			.map(display => store.dbQueues().get(display.queueId))
-			.flat();
+		const queuesToUpdate = uniq(
+			insertedDisplays.map(display => store.dbQueues().get(display.queueId))
+		);
 		DisplayUtils.requestDisplaysUpdate(
 			store,
-			queuesToUpdate.map(queue => queue.id),
+			map(queuesToUpdate, queue => queue.id),
 			{
 				displayIds: insertedDisplays.map(display => display.id),
 				forceNew: true,
@@ -106,9 +106,9 @@ export namespace DisplayUtils {
 		);
 
 		// update displays
-		const queuesToUpdate = deletedDisplays
-			.map(display => store.dbQueues().get(display.queueId))
-			.flat();
+		const queuesToUpdate = uniq(
+			deletedDisplays.map(display => store.dbQueues().get(display.queueId))
+		);
 		deletedDisplays.forEach(display => store.deleteDisplay(display));
 		requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
 
@@ -191,11 +191,16 @@ export namespace DisplayUtils {
 
 					async function editDisplay() {
 						if (lastMessage) {
-							await lastMessage.edit({
-								embeds: embedBuilders,
-								components: lastMessage.components,
-								allowedMentions: { users: [] },
-							}).catch(console.error);
+							try {
+								await lastMessage.edit({
+									embeds: embedBuilders,
+									components: lastMessage.components,
+									allowedMentions: { users: [] },
+								});
+							}
+							catch {
+								await newDisplay();
+							}
 						}
 						else {
 							await newDisplay();

@@ -87,7 +87,7 @@ export namespace MemberUtils {
 	 * @param options.notificationOptions - Optionally notify the deleted members.
 	 * @param options.deleteOptions - Optionally specify the members to delete.
 	 */
-	export async function deleteMembers(options: {
+	export function deleteMembers(options: {
 		store: Store,
 		queues: DbQueue[] | Collection<bigint, DbQueue>,
 		reason: ArchivedMemberReason,
@@ -149,13 +149,15 @@ export namespace MemberUtils {
 			});
 		}
 
-		await Promise.all(
-			deletedMembers.map(async (member) => {
+		for (const member of deletedMembers) {
+			try {
 				const queue = find(queues, queue => queue.id === member.queueId);
-				const jsMember = await store.jsMember(member.userId);
-				await modifyRole(store, jsMember.id, queue.roleId, "remove");
-			}),
-		);
+				store.jsMember(member.userId).then(jsMember =>
+					modifyRole(store, jsMember.id, queue.roleId, "remove")
+				);
+			}
+			catch { }
+		}
 
 		DisplayUtils.requestDisplaysUpdate(store, map(queues, queue => queue.id));
 

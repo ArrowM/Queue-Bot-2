@@ -48,7 +48,7 @@ export class DisplaysCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly GET_OPTIONS = {
-		queues: new QueuesOption({ description: "Get displays of specific queue(s)" }),
+		queues: new QueuesOption({ required: true, description: "Get displays of specific queue(s)" }),
 	};
 
 	static async displays_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
@@ -81,9 +81,9 @@ export class DisplaysCommand extends AdminCommand {
 	static async displays_add(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
 		queues = queues ?? await DisplaysCommand.ADD_OPTIONS.queues.get(inter);
 
-		const { updatedQueues } = await ShowCommand.show(inter, queues);
+		await ShowCommand.show(inter, queues);
 
-		await this.displays_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
+		await this.displays_get(inter, queues);
 	}
 
 	// ====================================================================

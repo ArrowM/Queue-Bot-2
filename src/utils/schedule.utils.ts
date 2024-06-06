@@ -1,4 +1,5 @@
 import type { Collection } from "discord.js";
+import { uniq } from "lodash-es";
 import { schedule as cron, type ScheduledTask, validate } from "node-cron";
 
 import { Store } from "../core/store.ts";
@@ -48,10 +49,10 @@ export namespace ScheduleUtils {
 		});
 
 		// update displays
-		const queuesToUpdate = insertedSchedules
-			.map(schedule => store.dbQueues().get(schedule.queueId))
-			.flat();
-		DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
+		const queuesToUpdate = uniq(
+			insertedSchedules.map(schedule => store.dbQueues().get(schedule.queueId))
+		);
+		DisplayUtils.requestDisplaysUpdate(store, map(queuesToUpdate, queue => queue.id));
 
 		return { insertedSchedules, updatedQueues: queuesToUpdate };
 	}
@@ -73,9 +74,9 @@ export namespace ScheduleUtils {
 		});
 
 		// update displays
-		const queuesToUpdate = updatedSchedules
-			.map(schedule => store.dbQueues().get(schedule.queueId))
-			.flat();
+		const queuesToUpdate = uniq(
+			updatedSchedules.map(schedule => store.dbQueues().get(schedule.queueId))
+		);
 		DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
 
 		return { updatedSchedules, updatedQueues: queuesToUpdate };
@@ -100,9 +101,9 @@ export namespace ScheduleUtils {
 		});
 
 		// update displays
-		const queuesToUpdate = deletedSchedules
-			.map(schedule => store.dbQueues().get(schedule.queueId))
-			.flat();
+		const queuesToUpdate = uniq(
+			deletedSchedules.map(schedule => store.dbQueues().get(schedule.queueId))
+		);
 		DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
 
 		return { deletedSchedules, updatedQueues: queuesToUpdate };
@@ -133,7 +134,7 @@ export namespace ScheduleUtils {
 			MemberUtils.clearMembers(store, queue);
 			break;
 		case ScheduleCommand.Pull:
-			await MemberUtils.deleteMembers({
+			MemberUtils.deleteMembers({
 				store,
 				queues: [queue],
 				reason: ArchivedMemberReason.Pulled,

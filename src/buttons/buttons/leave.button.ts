@@ -16,7 +16,7 @@ export class LeaveButton extends EveryoneButton {
 
 	async handle(inter: ButtonInteraction) {
 		const { queue } = await ButtonUtils.getButtonContext(inter);
-		await MemberUtils.deleteMembers({
+		MemberUtils.deleteMembers({
 			store: inter.store,
 			queues: [queue],
 			reason: ArchivedMemberReason.Left,

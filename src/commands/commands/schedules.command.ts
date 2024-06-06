@@ -67,7 +67,7 @@ export class SchedulesCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly GET_OPTIONS = {
-		queues: new QueuesOption({ description: "Get schedules of specific queue(s)" }),
+		queues: new QueuesOption({ required: true, description: "Get schedules of specific queue(s)" }),
 	};
 
 	static async schedules_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {

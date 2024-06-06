@@ -49,7 +49,7 @@ export class BlacklistCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly GET_OPTIONS = {
-		queues: new QueuesOption({ description: "Get blacklisted entries of specific queue(s)" }),
+		queues: new QueuesOption({ required: true, description: "Get blacklisted entries of specific queue(s)" }),
 	};
 
 	static async blacklist_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
@@ -62,7 +62,7 @@ export class BlacklistCommand extends AdminCommand {
 
 		const embeds = describeUserOrRoleTable({
 			store: inter.store,
-			tableName: "Blacklisted",
+			tableName: "Blacklisted members and roles",
 			color: Color.Black,
 			mentionables: blacklisted,
 		});
