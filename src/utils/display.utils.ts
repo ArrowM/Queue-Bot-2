@@ -152,6 +152,7 @@ export namespace DisplayUtils {
 						await InteractionUtils.verifyCanSendMessages(jsChannel);
 					}
 					catch (e) {
+						store.deleteDisplay(display);
 						if (store.initiator) {
 							await store.initiator.send({ embeds: (e as CustomError).extraEmbeds });
 						}

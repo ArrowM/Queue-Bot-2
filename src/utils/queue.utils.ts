@@ -50,15 +50,8 @@ export namespace QueueUtils {
 	}
 
 	function formatValue(value: any, setting: keyof DbQueue): string {
-		if (value === null) {
-			return "";
-		}
-
+		if (value === null) return "";
 		const valueFormatter = formattingFunctions[setting];
-		if (valueFormatter) {
-			return inlineCode(valueFormatter(value));
-		}
-
-		return inlineCode(value);
+		return valueFormatter ? valueFormatter(value) : inlineCode(value);
 	}
 }

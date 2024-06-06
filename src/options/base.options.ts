@@ -1,7 +1,6 @@
 import { ApplicationCommandOptionBase } from "@discordjs/builders";
 import type {
 	APIApplicationCommandOptionChoice,
-	APIRole,
 	ChannelType,
 	PublicThreadChannel,
 	Role,
@@ -176,7 +175,7 @@ export abstract class RoleOption extends BaseOptions<SlashCommandRoleOption> {
 
 	// force return type to be Role | APIRole
 	get(inter: AutocompleteInteraction | SlashInteraction) {
-		return super.get(inter) as Role | APIRole;
+		return super.get(inter) as Role;
 	}
 
 	protected getUncached(inter: AutocompleteInteraction | SlashInteraction) {

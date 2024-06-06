@@ -28,7 +28,7 @@ export class LeaveCommand extends EveryoneCommand {
 	static async leave(inter: SlashInteraction) {
 		const queue = await LeaveCommand.LEAVE_OPTIONS.queue.get(inter);
 
-		MemberUtils.deleteMembers({
+		await MemberUtils.deleteMembers({
 			store: inter.store,
 			queues: [queue],
 			reason: ArchivedMemberReason.Left,

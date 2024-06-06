@@ -133,7 +133,7 @@ export namespace ScheduleUtils {
 			MemberUtils.clearMembers(store, queue);
 			break;
 		case ScheduleCommand.Pull:
-			MemberUtils.deleteMembers({
+			await MemberUtils.deleteMembers({
 				store,
 				queues: [queue],
 				reason: ArchivedMemberReason.Pulled,

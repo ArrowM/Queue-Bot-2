@@ -125,7 +125,7 @@ export class MembersCommand extends AdminCommand {
 		const queues = await MembersCommand.DELETE_OPTIONS.queues.get(inter);
 		const members = await MembersCommand.DELETE_OPTIONS.members.get(inter);
 
-		const deletedMembers = MemberUtils.deleteMembers({
+		const deletedMembers = await MemberUtils.deleteMembers({
 			store: inter.store,
 			queues,
 			reason: ArchivedMemberReason.Kicked,

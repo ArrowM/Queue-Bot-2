@@ -45,34 +45,20 @@ export namespace MemberUtils {
 		force?: boolean,
 	}) {
 		const { store, queue, jsMember, message, force } = options;
-		if (!force) {
-			if (queue.lockToggle) {
-				throw new QueueLockedError();
-			}
-			if (queue.size) {
-				const members = store.dbMembers().filter(member => member.queueId === queue.id);
-				if (members.size >= queue.size) {
-					throw new QueueFullError();
-				}
-			}
-			if (WhitelistUtils.isBlockedByWhitelist(store, queue.id, jsMember)) {
-				throw new NotOnQueueWhitelistError();
-			}
-			if (BlacklistUtils.isBlockedByBlacklist(store, queue.id, jsMember)) {
-				throw new OnQueueBlacklistError();
-			}
-		}
 
-		const prioritized = store.dbPrioritized().filter(prioritized => prioritized.queueId === queue.id);
-		const isPrioritized = isPrioritizedByUser(prioritized, jsMember) || isPrioritizedByRole(prioritized, jsMember);
+		if (!force) {
+			verifyMemberEligibility(store, queue, jsMember);
+		}
 
 		const member = store.insertMember({
 			guildId: store.guild.id,
 			queueId: queue.id,
 			userId: jsMember.id,
 			message,
-			isPrioritized,
+			isPrioritized: isPrioritized(store, queue, jsMember),
 		});
+
+		await assignQueueRoleToMember(store, queue, jsMember);
 
 		DisplayUtils.requestDisplayUpdate(store, queue.id);
 
@@ -92,7 +78,7 @@ export namespace MemberUtils {
 	 * @param options.notificationOptions - Optionally notify the deleted members.
 	 * @param options.deleteOptions - Optionally specify the members to delete.
 	 */
-	export function deleteMembers(options: {
+	export async function deleteMembers(options: {
 		store: Store,
 		queues: DbQueue[] | Collection<bigint, DbQueue>,
 		reason: ArchivedMemberReason,
@@ -153,6 +139,14 @@ export namespace MemberUtils {
 				}
 			});
 		}
+
+		await Promise.all(
+			deletedMembers.map(async (member) => {
+				const queue = find(queues, queue => queue.id === member.queueId);
+				const jsMember = await store.jsMember(member.userId);
+				await removeQueueRoleFromMember(store, queue, jsMember);
+			})
+		);
 
 		DisplayUtils.requestDisplaysUpdate(store, map(queues, queue => queue.id));
 
@@ -251,9 +245,75 @@ export namespace MemberUtils {
 		return embeds;
 	}
 
+	export async function assignNewRoleToAllMembersOfQueue(store: Store, queue: DbQueue) {
+		const memberIds = store.dbMembers()
+			.filter(member => member.queueId === queue.id)
+			.map(member => member.userId);
+		await Promise.all(
+			memberIds.map(async (memberId) => {
+				const member = await store.guild.members.fetch(memberId);
+				await member.roles.add(queue.roleId);
+			})
+		);
+	}
+
+	export async function removeRoleFromAllMembersOfQueue(store: Store, queue: DbQueue) {
+		const memberIds = store.dbMembers()
+			.filter(member => member.queueId === queue.id)
+			.map(member => member.userId);
+		await Promise.all(
+			memberIds.map(async (memberId) => {
+				const member = await store.guild.members.fetch(memberId);
+				await member.roles.remove(queue.roleId);
+			})
+		);
+	}
+
 	// ====================================================================
 	// 												 Helpers
 	// ====================================================================
+
+	function verifyMemberEligibility(store: Store, queue: DbQueue, jsMember: GuildMember) {
+		if (queue.lockToggle) {
+			throw new QueueLockedError();
+		}
+		if (queue.size) {
+			const members = store.dbMembers().filter(member => member.queueId === queue.id);
+			if (members.size >= queue.size) {
+				throw new QueueFullError();
+			}
+		}
+		if (WhitelistUtils.isBlockedByWhitelist(store, queue.id, jsMember)) {
+			throw new NotOnQueueWhitelistError();
+		}
+		if (BlacklistUtils.isBlockedByBlacklist(store, queue.id, jsMember)) {
+			throw new OnQueueBlacklistError();
+		}
+	}
+
+	async function assignQueueRoleToMember(store: Store, queue: DbQueue, jsMember: GuildMember) {
+		if (!queue.roleId) return;
+		const role = await store.guild.roles.fetch(queue.roleId);
+		if (role) {
+			await jsMember.roles.add(role);
+		}
+		else {
+			// Role deleted, remove from queue
+			store.updateQueue({ ...queue, roleId: null });
+		}
+	}
+
+	async function removeQueueRoleFromMember(store: Store, queue: DbQueue, jsMember: GuildMember) {
+		if (!queue.roleId) return;
+		const role = await store.guild.roles.fetch(queue.roleId);
+		if (role) {
+			await jsMember.roles.remove(role);
+		}
+		else {
+			// Role deleted, remove from queue
+			store.updateQueue({ ...queue, roleId: null });
+		}
+	}
 
 	function getMemberPosition(store: Store, queue: DbQueue, userId: Snowflake) {
 		const members = [...store.dbMembers().filter(member => member.queueId === queue.id).values()];
@@ -270,5 +330,10 @@ export namespace MemberUtils {
 		return Array.isArray(jsMember.roles)
 			? jsMember.roles.some(roleId => prioritizeds.some(prioritized => prioritized.subjectId === roleId))
 			: jsMember.roles.cache.some(role => prioritizeds.some(prioritized => prioritized.subjectId === role.id));
+	}
+
+	function isPrioritized(store: Store, queue: DbQueue, jsMember: GuildMember) {
+		const prioritized = store.dbPrioritized().filter(prioritized => prioritized.queueId === queue.id);
+		return isPrioritizedByUser(prioritized, jsMember) || isPrioritizedByRole(prioritized, jsMember);
 	}
 }

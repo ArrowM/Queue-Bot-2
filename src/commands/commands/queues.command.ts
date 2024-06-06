@@ -1,6 +1,6 @@
-import { type Collection, EmbedBuilder, inlineCode, italic, SlashCommandBuilder } from "discord.js";
+import { type Collection, EmbedBuilder, inlineCode, italic, type Role, SlashCommandBuilder } from "discord.js";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
-import { findKey, isNil, omitBy } from "lodash-es";
+import { findKey, get, isNil, omitBy } from "lodash-es";
 
 import { SelectMenuTransactor } from "../../core/select-menu-transactor.ts";
 import { type DbQueue, QUEUE_TABLE } from "../../db/schema.ts";
@@ -25,6 +25,7 @@ import { UpdateTypeOption } from "../../options/options/update-type.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { DisplayUtils } from "../../utils/display.utils.ts";
+import { MemberUtils } from "../../utils/member.utils.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
 import { QueueUtils } from "../../utils/queue.utils.ts";
 import { commandMention, queueMention, queuesMention } from "../../utils/string.utils.ts";
@@ -148,7 +149,7 @@ export class QueuesCommand extends AdminCommand {
 				logLevel: QueuesCommand.ADD_OPTIONS.logLevel.get(inter),
 				notificationsToggle: QueuesCommand.ADD_OPTIONS.notificationsToggle.get(inter),
 				pullBatchSize: QueuesCommand.ADD_OPTIONS.pullBatchSize.get(inter),
-				role: QueuesCommand.ADD_OPTIONS.role.get(inter),
+				roleId: QueuesCommand.ADD_OPTIONS.role.get(inter).id,
 				size: QueuesCommand.ADD_OPTIONS.size.get(inter),
 				timestampType: QueuesCommand.ADD_OPTIONS.timestampType.get(inter),
 				updateType: QueuesCommand.ADD_OPTIONS.updateType.get(inter),
@@ -156,6 +157,12 @@ export class QueuesCommand extends AdminCommand {
 		};
 
 		const insertedQueue = inter.store.insertQueue(queue);
+
+		const role = get(queue, "role") as Role;
+		if (role) {
+			await MemberUtils.assignNewRoleToAllMembersOfQueue(inter.store, insertedQueue);
+		}
+
 		DisplayUtils.insertDisplays(inter.store, [insertedQueue], inter.channelId);
 
 		await QueuesCommand.queues_get(inter, toCollection<bigint, DbQueue>("id", [insertedQueue]));
@@ -200,7 +207,7 @@ export class QueuesCommand extends AdminCommand {
 			name: QueuesCommand.SET_OPTIONS.name.get(inter),
 			notificationsToggle: QueuesCommand.SET_OPTIONS.notificationsToggle.get(inter),
 			pullBatchSize: QueuesCommand.SET_OPTIONS.pullBatchSize.get(inter),
-			role: QueuesCommand.SET_OPTIONS.role.get(inter),
+			roleId: QueuesCommand.SET_OPTIONS.role.get(inter).id,
 			size: QueuesCommand.SET_OPTIONS.size.get(inter),
 			timestampType: QueuesCommand.SET_OPTIONS.timestampType.get(inter),
 			updateType: QueuesCommand.SET_OPTIONS.updateType.get(inter),
@@ -209,6 +216,11 @@ export class QueuesCommand extends AdminCommand {
 		const updatedQueues = queues.map(queue =>
 			inter.store.updateQueue({ id: queue.id, ...update }),
 		);
+
+		if (update.roleId) {
+			updatedQueues.forEach(queue => MemberUtils.assignNewRoleToAllMembersOfQueue(inter.store, queue));
+		}
+
 		DisplayUtils.requestDisplaysUpdate(inter.store, updatedQueues.map(queue => queue.id));
 
 		await QueuesCommand.queues_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
@@ -253,6 +265,7 @@ export class QueuesCommand extends AdminCommand {
 		}
 
 		const updatedQueues = queues.map((queue) => {
+			MemberUtils.removeRoleFromAllMembersOfQueue(inter.store, queue);
 			return inter.store.updateQueue({ id: queue.id, ...updatedSettings });
 		});
 

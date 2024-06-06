@@ -40,7 +40,7 @@ export class PullCommand extends AdminCommand {
 			throw new Error("Count must be a positive number.");
 		}
 
-		const pulledMembers = MemberUtils.deleteMembers({
+		const pulledMembers = await MemberUtils.deleteMembers({
 			store: inter.store,
 			queues: queues,
 			reason: ArchivedMemberReason.Pulled,

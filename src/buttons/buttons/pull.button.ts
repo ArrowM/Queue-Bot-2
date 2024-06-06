@@ -17,7 +17,7 @@ export class PullButton extends AdminButton {
 	async handle(inter: ButtonInteraction) {
 		const { queue } = await ButtonUtils.getButtonContext(inter);
 
-		const pulledMembers = MemberUtils.deleteMembers({
+		const pulledMembers = await MemberUtils.deleteMembers({
 			store: inter.store,
 			queues: [queue],
 			reason: ArchivedMemberReason.Pulled,

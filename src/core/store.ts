@@ -139,13 +139,15 @@ export class Store {
 
 	// throws error on conflict
 	insertQueue(newQueue: NewQueue) {
-		this.incrementGuildStat("queuesAdded");
-		this.dbQueues.clear();
 		try {
-			return db
-				.insert(QUEUE_TABLE)
-				.values(newQueue)
-				.returning().get();
+			return db.transaction(() => {
+				this.incrementGuildStat("queuesAdded");
+				this.dbQueues.clear();
+				return db
+					.insert(QUEUE_TABLE)
+					.values(newQueue)
+					.returning().get();
+			});
 		}
 		catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
@@ -156,41 +158,47 @@ export class Store {
 
 	// replace on conflict
 	insertDisplay(newDisplay: NewDisplay) {
-		this.incrementGuildStat("displaysAdded");
-		this.dbDisplays.clear();
-		return db
-			.insert(DISPLAY_TABLE)
-			.values(newDisplay)
-			.onConflictDoUpdate({
-				target: [DISPLAY_TABLE.queueId, DISPLAY_TABLE.displayChannelId],
-				set: newDisplay,
-			})
-			.returning().get();
+		return db.transaction(() => {
+			this.incrementGuildStat("displaysAdded");
+			this.dbDisplays.clear();
+			return db
+				.insert(DISPLAY_TABLE)
+				.values(newDisplay)
+				.onConflictDoUpdate({
+					target: [DISPLAY_TABLE.queueId, DISPLAY_TABLE.displayChannelId],
+					set: newDisplay,
+				})
+				.returning().get();
+		});
 	}
 
 	// replace on conflict
 	insertMember(newMember: NewMember) {
-		this.incrementGuildStat("membersAdded");
-		this.dbMembers.clear();
-		return db
-			.insert(MEMBER_TABLE)
-			.values(newMember)
-			.onConflictDoUpdate({
-				target: [MEMBER_TABLE.queueId, MEMBER_TABLE.userId],
-				set: newMember,
-			})
-			.returning().get();
+		return db.transaction(() => {
+			this.incrementGuildStat("membersAdded");
+			this.dbMembers.clear();
+			return db
+				.insert(MEMBER_TABLE)
+				.values(newMember)
+				.onConflictDoUpdate({
+					target: [MEMBER_TABLE.queueId, MEMBER_TABLE.userId],
+					set: newMember,
+				})
+				.returning().get();
+		});
 	}
 
 	// throws error on conflict
 	insertSchedule(newSchedule: NewSchedule) {
-		this.incrementGuildStat("schedulesAdded");
-		this.dbSchedules.clear();
 		try {
-			return db
-				.insert(SCHEDULE_TABLE)
-				.values(newSchedule)
-				.returning().get();
+			return db.transaction(() => {
+				this.incrementGuildStat("schedulesAdded");
+				this.dbSchedules.clear();
+				return db
+					.insert(SCHEDULE_TABLE)
+					.values(newSchedule)
+					.returning().get();
+			});
 		}
 		catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
@@ -201,13 +209,15 @@ export class Store {
 
 	// throws error on conflict
 	insertWhitelisted(newWhitelisted: NewWhitelisted) {
-		this.incrementGuildStat("whitelistedAdded");
-		this.dbWhitelisted.clear();
 		try {
-			return db
-				.insert(WHITELISTED_TABLE)
-				.values(newWhitelisted)
-				.returning().get();
+			return db.transaction(() => {
+				this.incrementGuildStat("whitelistedAdded");
+				this.dbWhitelisted.clear();
+				return db
+					.insert(WHITELISTED_TABLE)
+					.values(newWhitelisted)
+					.returning().get();
+			});
 		}
 		catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
@@ -218,13 +228,15 @@ export class Store {
 
 	// throws error on conflict
 	insertBlacklisted(newBlacklisted: NewBlacklisted) {
-		this.incrementGuildStat("blacklistedAdded");
-		this.dbBlacklisted.clear();
 		try {
-			return db
-				.insert(BLACKLISTED_TABLE)
-				.values(newBlacklisted)
-				.returning().get();
+			return db.transaction(() => {
+				this.incrementGuildStat("blacklistedAdded");
+				this.dbBlacklisted.clear();
+				return db
+					.insert(BLACKLISTED_TABLE)
+					.values(newBlacklisted)
+					.returning().get();
+			});
 		}
 		catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
@@ -235,13 +247,15 @@ export class Store {
 
 	// throws error on conflict
 	insertPrioritized(newPrioritized: NewPrioritized) {
-		this.incrementGuildStat("prioritizedAdded");
-		this.dbPrioritized.clear();
 		try {
-			return db
-				.insert(PRIORITIZED_TABLE)
-				.values(newPrioritized)
-				.returning().get();
+			return db.transaction(() => {
+				this.incrementGuildStat("prioritizedAdded");
+				this.dbPrioritized.clear();
+				return db
+					.insert(PRIORITIZED_TABLE)
+					.values(newPrioritized)
+					.returning().get();
+			});
 		}
 		catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
@@ -252,13 +266,15 @@ export class Store {
 
 	// throws error on conflict
 	insertAdmin(newAdmin: NewAdmin) {
-		this.incrementGuildStat("adminsAdded");
-		this.dbAdmins.clear();
 		try {
-			return db
-				.insert(ADMIN_TABLE)
-				.values(newAdmin)
-				.returning().get();
+			return db.transaction(() => {
+				this.incrementGuildStat("adminsAdded");
+				this.dbAdmins.clear();
+				return db
+					.insert(ADMIN_TABLE)
+					.values(newAdmin)
+					.returning().get();
+			});
 		}
 		catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
@@ -269,16 +285,18 @@ export class Store {
 
 	// replace on conflict
 	insertArchivedMember(newArchivedMember: NewArchivedMember) {
-		this.incrementGuildStat("archivedMembersAdded");
-		this.dbArchivedMembers.clear();
-		return db
-			.insert(ARCHIVED_MEMBER_TABLE)
-			.values({ ...newArchivedMember, archivedTime: BigInt(Date.now()) })
-			.onConflictDoUpdate({
-				target: [ARCHIVED_MEMBER_TABLE.queueId, ARCHIVED_MEMBER_TABLE.userId],
-				set: newArchivedMember,
-			})
-			.returning().get();
+		return db.transaction(() => {
+			this.incrementGuildStat("archivedMembersAdded");
+			this.dbArchivedMembers.clear();
+			return db
+				.insert(ARCHIVED_MEMBER_TABLE)
+				.values({ ...newArchivedMember, archivedTime: BigInt(Date.now()) })
+				.onConflictDoUpdate({
+					target: [ARCHIVED_MEMBER_TABLE.queueId, ARCHIVED_MEMBER_TABLE.userId],
+					set: newArchivedMember,
+				})
+				.returning().get();
+		});
 	}
 
 	// ====================================================================
