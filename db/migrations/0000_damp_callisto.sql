@@ -52,7 +52,7 @@ CREATE TABLE `guild`
     `last_updated_time`      integer           NOT NULL,
     `commands_received`      integer DEFAULT 0 NOT NULL,
     `buttons_received`       integer DEFAULT 0 NOT NULL,
-    `displays_sent`          integer DEFAULT 0 NOT NULL,
+    `displays_added`          integer DEFAULT 0 NOT NULL,
     `queues_added`           integer DEFAULT 0 NOT NULL,
     `members_added`          integer DEFAULT 0 NOT NULL,
     `schedules_added`        integer DEFAULT 0 NOT NULL,

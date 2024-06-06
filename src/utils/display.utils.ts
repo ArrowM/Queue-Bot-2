@@ -150,7 +150,8 @@ export namespace DisplayUtils {
 					const jsChannel = await store.jsChannel(display.displayChannelId) as GuildTextBasedChannel;
 					try {
 						await InteractionUtils.verifyCanSendMessages(jsChannel);
-					} catch (e) {
+					}
+					catch (e) {
 						if (store.initiator) {
 							await store.initiator.send({ embeds: (e as CustomError).extraEmbeds });
 						}
@@ -212,13 +213,15 @@ export namespace DisplayUtils {
 					else if (queue.updateType === DisplayUpdateType.Replace) {
 						await replaceDisplay();
 					}
-				} catch (e: any) {
+				}
+				catch (e: any) {
 					await handleFailedDisplayUpdate(store, queue, display, e);
 				}
 			}));
 
-			incrementGuildStat(store.guild.id, "displaysSent", displays.size);
-		} catch (e: any) {
+			incrementGuildStat(store.guild.id, "displaysAdded", displays.size);
+		}
+		catch (e: any) {
 			const { message, stack } = e as Error;
 			console.error("Failed to update displays:");
 			console.error(`Error: ${message}`);
@@ -250,7 +253,8 @@ export namespace DisplayUtils {
 				console.error(`Error: ${message}`);
 				console.error(`Stack Trace: ${stack}`);
 			}
-		} catch (handlingError) {
+		}
+		catch (handlingError) {
 			const { message: handlingMessage, stack: handlingStack } = handlingError as Error;
 			console.error("An error occurred during handleFailedDisplayUpdate:");
 			console.error(`Error: ${handlingMessage}`);
@@ -307,7 +311,7 @@ export namespace DisplayUtils {
 		 * 	  Discord.js does not automatically split messages for us, so we need to do it manually.
 		 */
 
-			// Build embeds
+		// Build embeds
 		const description = await buildDescription(store, queue, sourceVoiceChannel, destinationVoiceChannel);
 		const sizeStr = `size: ${memberDisplayLines.length}${queue.size ? ` / ${queue.size}` : ""}`;
 		const embedBuilders: EmbedBuilder[] = [];

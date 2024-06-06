@@ -114,7 +114,8 @@ export namespace ScheduleUtils {
 			cron(schedule.cron, async () => {
 				try {
 					await executeScheduledCommand(schedule.id);
-				} catch (e) {
+				}
+				catch (e) {
 					const { message, stack } = e as Error;
 					console.error("Failed to execute scheduled command:");
 					console.error(`Error: ${message}`);
@@ -152,7 +153,8 @@ export namespace ScheduleUtils {
 
 		try {
 			schedule = QueryUtils.selectSchedule({ id: scheduleId });
-		} catch (e) {
+		}
+		catch (e) {
 			deleteSchedules([schedule.id]);
 			throw e;
 		}
@@ -160,14 +162,16 @@ export namespace ScheduleUtils {
 		try {
 			const guild = await ClientUtils.getGuild(schedule.guildId);
 			store = new Store(guild);
-		} catch (e) {
+		}
+		catch (e) {
 			QueryUtils.deleteGuild({ guildId: schedule.guildId });
 			throw e;
 		}
 
 		try {
 			queue = QueryUtils.selectQueue({ guildId: schedule.guildId, id: schedule.queueId });
-		} catch (e) {
+		}
+		catch (e) {
 			store.deleteQueue({ id: queue.id });
 			throw e;
 		}

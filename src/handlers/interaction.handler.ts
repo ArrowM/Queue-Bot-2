@@ -30,7 +30,8 @@ export class InteractionHandler implements Handler {
 			else if (this.inter.isButton()) {
 				await new ButtonHandler(this.inter).handle();
 			}
-		} catch (e) {
+		}
+		catch (e) {
 			await this.handleInteractionError(e as Error);
 		}
 	}
@@ -58,7 +59,8 @@ export class InteractionHandler implements Handler {
 			if ("respond" in this.inter) {
 				await this.inter.respond({ embeds, ephemeral: true });
 			}
-		} catch (handlingError) {
+		}
+		catch (handlingError) {
 			console.log();
 			console.log("An Error occurred during handling of another error:");
 			console.error(handlingError);

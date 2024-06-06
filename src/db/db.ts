@@ -39,7 +39,8 @@ cron("0 */3 * * *", async () => {
 		await deleteDeadGuilds();
 		logStats();
 		backup();
-	} catch (e) {
+	}
+	catch (e) {
 		const { message, stack } = e as Error;
 		console.error("Database backup failed:");
 		console.error(`Error: ${message}`);
@@ -170,7 +171,8 @@ async function flushPendingGuildUpdatesToDB() {
 						eq(GUILD_TABLE.guildId, guildId),
 					)
 					.run();
-			} catch (e) {
+			}
+			catch (e) {
 				const { message, stack } = e as Error;
 				console.error("Failed to flush guild updates to db:");
 				console.error(`Error: ${message}`);
@@ -185,7 +187,8 @@ async function flushPendingGuildUpdatesToDB() {
 cron("*/5 * * * *", async () => {
 	try {
 		await flushPendingGuildUpdatesToDB();
-	} catch (e) {
+	}
+	catch (e) {
 		const { message, stack } = e as Error;
 		console.error("Failed to write pending guild updates to the database:");
 		console.error(`Error: ${message}`);

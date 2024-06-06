@@ -82,7 +82,8 @@ export function describeTable<T>(options: {
 		let queue;
 		try {
 			queue = store.dbQueues().get(BigInt(queueId));
-		} catch {
+		}
+		catch {
 		}
 
 		const embed = new EmbedBuilder()
@@ -112,7 +113,8 @@ export function describeUserOrRoleTable<T extends { isRole: boolean, subjectId: 
 		let queue;
 		try {
 			queue = store.dbQueues().get(BigInt(queueId));
-		} catch {
+		}
+		catch {
 		}
 
 		const embed = new EmbedBuilder()

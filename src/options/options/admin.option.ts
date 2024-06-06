@@ -34,7 +34,8 @@ export class AdminOption extends CustomOption {
 			else {
 				throw new AdminNotFoundError();
 			}
-		} catch {
+		}
+		catch {
 			throw new AdminNotFoundError();
 		}
 	}

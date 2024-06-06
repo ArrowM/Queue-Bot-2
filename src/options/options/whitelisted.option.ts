@@ -37,7 +37,8 @@ export class WhitelistedOption extends CustomOption {
 			else {
 				throw new WhitelistedNotFoundError();
 			}
-		} catch {
+		}
+		catch {
 			throw new WhitelistedNotFoundError();
 		}
 	}

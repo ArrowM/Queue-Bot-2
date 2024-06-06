@@ -35,7 +35,8 @@ export class SelectMenuTransactor {
 				time: 60000, // 1 minute
 			});
 			return this.userResponse.values;
-		} catch {
+		}
+		catch {
 			await this.inter.editReply({
 				content: "Confirmation not received within 1 minute, cancelling",
 				components: [],

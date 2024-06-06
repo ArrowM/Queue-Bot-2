@@ -37,7 +37,8 @@ export class DisplayOption extends CustomOption {
 			else {
 				throw new DisplayNotFoundError();
 			}
-		} catch {
+		}
+		catch {
 			throw new DisplayNotFoundError();
 		}
 	}

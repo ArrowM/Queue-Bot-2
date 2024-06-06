@@ -40,7 +40,8 @@ export class PrioritizedsOption extends CustomOption {
 			else {
 				throw new PrioritizedNotFoundError();
 			}
-		} catch {
+		}
+		catch {
 			throw new PrioritizedNotFoundError();
 		}
 	}

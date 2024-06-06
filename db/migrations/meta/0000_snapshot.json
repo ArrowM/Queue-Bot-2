@@ -400,8 +400,8 @@
           "autoincrement": false,
           "default": 0
         },
-        "displays_sent": {
-          "name": "displays_sent",
+        "displays_added": {
+          "name": "displays_added",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,

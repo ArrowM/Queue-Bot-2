@@ -66,7 +66,8 @@ export namespace ClientUtils {
 
 			await checkPatchNotes();
 
-		} catch (e) {
+		}
+		catch (e) {
 			const { message, stack } = e as Error;
 			console.error("Failed to start bot:");
 			console.error(`Error: ${message}`);
@@ -85,7 +86,8 @@ export namespace ClientUtils {
 
 			LIVE_COMMANDS = await CLIENT.application.commands.fetch();
 			console.timeEnd(`Registered ${COMMANDS.size} commands with server`);
-		} catch (e) {
+		}
+		catch (e) {
 			console.error(e);
 		}
 	}

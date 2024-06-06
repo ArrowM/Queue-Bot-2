@@ -35,7 +35,7 @@ import {
 	SCHEDULE_TABLE,
 	WHITELISTED_TABLE,
 } from "../db/schema.ts";
-import { ArchivedMemberReason } from "../types/db.types.ts";
+import { ArchivedMemberReason, type GuildStat } from "../types/db.types.ts";
 import {
 	AdminAlreadyExistsError,
 	BlacklistedAlreadyExistsError,
@@ -57,17 +57,16 @@ import deleteMembers = MemberUtils.deleteMembers;
  */
 export class Store {
 
-	constructor(public guild: Guild, public initiator?: GuildMember) {
-		if (!this.dbGuild()) {
-			this.insertGuild({ guildId: guild.id });
-		}
+	constructor(
+		public guild: Guild,
+		public initiator?: GuildMember
+	) {
 	}
 
 	// ====================================================================
 	//                           Common data
 	// ====================================================================
 
-	dbGuild = moize(() => QueryUtils.selectGuild({ guildId: this.guild.id }));
 	dbQueues = moize(() => toCollection<bigint, DbQueue>("id", QueryUtils.selectManyQueues({ guildId: this.guild.id })));
 	dbDisplays = moize(() => toCollection<bigint, DbDisplay>("id", QueryUtils.selectManyDisplays({ guildId: this.guild.id })));
 	// DbMembers is ordered by positionTime
@@ -87,7 +86,8 @@ export class Store {
 	async jsChannel(channelId: Snowflake) {
 		try {
 			return await this.guild.channels.fetch(channelId);
-		} catch (_e) {
+		}
+		catch (_e) {
 			const e = _e as DiscordAPIError;
 			if (e.status == 404) {
 				this.deleteManyDisplays({ displayChannelId: channelId });
@@ -98,7 +98,8 @@ export class Store {
 	async jsMember(userId: Snowflake) {
 		try {
 			return await this.guild.members.fetch(userId);
-		} catch (_e) {
+		}
+		catch (_e) {
 			const e = _e as DiscordAPIError;
 			if (e.status == 404) {
 				this.deleteManyMembers({ userId }, ArchivedMemberReason.NotFound);
@@ -122,24 +123,31 @@ export class Store {
 	//                           Inserts
 	// ====================================================================
 
+	incrementGuildStat(stat: GuildStat, by = 1) {
+		// Ensure the guild is in the database
+		this.insertGuild({ guildId: this.guild.id });
+		incrementGuildStat(this.guild.id, stat, by);
+	}
+
 	insertGuild(dbGuild: NewGuild) {
-		this.dbGuild.clear();
 		return db
 			.insert(GUILD_TABLE)
 			.values(dbGuild)
+			.onConflictDoNothing()
 			.returning().get();
 	}
 
 	// throws error on conflict
 	insertQueue(newQueue: NewQueue) {
-		incrementGuildStat(this.guild.id, "queuesAdded");
+		this.incrementGuildStat("queuesAdded");
 		this.dbQueues.clear();
 		try {
 			return db
 				.insert(QUEUE_TABLE)
 				.values(newQueue)
 				.returning().get();
-		} catch (e) {
+		}
+		catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
 				throw new QueueAlreadyExistsError();
 			}
@@ -148,6 +156,7 @@ export class Store {
 
 	// replace on conflict
 	insertDisplay(newDisplay: NewDisplay) {
+		this.incrementGuildStat("displaysAdded");
 		this.dbDisplays.clear();
 		return db
 			.insert(DISPLAY_TABLE)
@@ -161,7 +170,7 @@ export class Store {
 
 	// replace on conflict
 	insertMember(newMember: NewMember) {
-		incrementGuildStat(this.guild.id, "membersAdded");
+		this.incrementGuildStat("membersAdded");
 		this.dbMembers.clear();
 		return db
 			.insert(MEMBER_TABLE)
@@ -175,14 +184,15 @@ export class Store {
 
 	// throws error on conflict
 	insertSchedule(newSchedule: NewSchedule) {
-		incrementGuildStat(this.guild.id, "schedulesAdded");
+		this.incrementGuildStat("schedulesAdded");
 		this.dbSchedules.clear();
 		try {
 			return db
 				.insert(SCHEDULE_TABLE)
 				.values(newSchedule)
 				.returning().get();
-		} catch (e) {
+		}
+		catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
 				throw new ScheduleAlreadyExistsError();
 			}
@@ -191,14 +201,15 @@ export class Store {
 
 	// throws error on conflict
 	insertWhitelisted(newWhitelisted: NewWhitelisted) {
-		incrementGuildStat(this.guild.id, "whitelistedAdded");
+		this.incrementGuildStat("whitelistedAdded");
 		this.dbWhitelisted.clear();
 		try {
 			return db
 				.insert(WHITELISTED_TABLE)
 				.values(newWhitelisted)
 				.returning().get();
-		} catch (e) {
+		}
+		catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
 				throw new WhitelistedAlreadyExistsError();
 			}
@@ -207,14 +218,15 @@ export class Store {
 
 	// throws error on conflict
 	insertBlacklisted(newBlacklisted: NewBlacklisted) {
-		incrementGuildStat(this.guild.id, "blacklistedAdded");
+		this.incrementGuildStat("blacklistedAdded");
 		this.dbBlacklisted.clear();
 		try {
 			return db
 				.insert(BLACKLISTED_TABLE)
 				.values(newBlacklisted)
 				.returning().get();
-		} catch (e) {
+		}
+		catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
 				throw new BlacklistedAlreadyExistsError();
 			}
@@ -223,14 +235,15 @@ export class Store {
 
 	// throws error on conflict
 	insertPrioritized(newPrioritized: NewPrioritized) {
-		incrementGuildStat(this.guild.id, "prioritizedAdded");
+		this.incrementGuildStat("prioritizedAdded");
 		this.dbPrioritized.clear();
 		try {
 			return db
 				.insert(PRIORITIZED_TABLE)
 				.values(newPrioritized)
 				.returning().get();
-		} catch (e) {
+		}
+		catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
 				throw new PrioritizedAlreadyExistsError();
 			}
@@ -239,14 +252,15 @@ export class Store {
 
 	// throws error on conflict
 	insertAdmin(newAdmin: NewAdmin) {
-		incrementGuildStat(this.guild.id, "adminsAdded");
+		this.incrementGuildStat("adminsAdded");
 		this.dbAdmins.clear();
 		try {
 			return db
 				.insert(ADMIN_TABLE)
 				.values(newAdmin)
 				.returning().get();
-		} catch (e) {
+		}
+		catch (e) {
 			if ((e as Error).message.includes("UNIQUE constraint failed")) {
 				throw new AdminAlreadyExistsError();
 			}
@@ -255,7 +269,7 @@ export class Store {
 
 	// replace on conflict
 	insertArchivedMember(newArchivedMember: NewArchivedMember) {
-		incrementGuildStat(this.guild.id, "archivedMembersAdded");
+		this.incrementGuildStat("archivedMembersAdded");
 		this.dbArchivedMembers.clear();
 		return db
 			.insert(ARCHIVED_MEMBER_TABLE)
@@ -385,7 +399,7 @@ export class Store {
 	deleteMember(by:
 			{ id: bigint } |
 			{ queueId: bigint, userId?: Snowflake },
-		reason: ArchivedMemberReason,
+	reason: ArchivedMemberReason,
 	) {
 		this.dbMembers.clear();
 		const cond = this.createCondition(MEMBER_TABLE, by);
@@ -401,7 +415,7 @@ export class Store {
 	deleteManyMembers(by:
 			{ userId?: Snowflake } |
 			{ queueId: bigint, count?: number },
-		reason: ArchivedMemberReason,
+	reason: ArchivedMemberReason,
 	) {
 		this.dbMembers.clear();
 		const cond = ("count" in by)

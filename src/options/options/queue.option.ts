@@ -36,7 +36,8 @@ export class QueueOption extends CustomOption {
 			else {
 				throw new QueueNotFoundError();
 			}
-		} catch {
+		}
+		catch {
 			throw new QueueNotFoundError();
 		}
 	}
