@@ -443,7 +443,7 @@ export namespace QueryUtils {
 			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 			eq(MEMBER_TABLE.queueId, sql.placeholder("queueId")),
 		))
-		.orderBy(MEMBER_TABLE.isPrioritized, MEMBER_TABLE.positionTime)
+		.orderBy(MEMBER_TABLE.priority, MEMBER_TABLE.positionTime)
 		.prepare();
 
 	const selectManyMembersByGuildIdAndUserId = db
@@ -453,7 +453,7 @@ export namespace QueryUtils {
 			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 			eq(MEMBER_TABLE.userId, sql.placeholder("userId")),
 		))
-		.orderBy(MEMBER_TABLE.isPrioritized, MEMBER_TABLE.positionTime)
+		.orderBy(MEMBER_TABLE.priority, MEMBER_TABLE.positionTime)
 		.prepare();
 
 	const selectManyMembersByGuildId = db
@@ -462,7 +462,7 @@ export namespace QueryUtils {
 		.where(
 			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 		)
-		.orderBy(MEMBER_TABLE.isPrioritized, MEMBER_TABLE.positionTime)
+		.orderBy(MEMBER_TABLE.priority, MEMBER_TABLE.positionTime)
 		.prepare();
 
 	const selectManyMembersByQueueIdAndCount = db
@@ -472,7 +472,7 @@ export namespace QueryUtils {
 			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 			eq(MEMBER_TABLE.queueId, sql.placeholder("queueId")),
 		))
-		.orderBy(MEMBER_TABLE.isPrioritized, MEMBER_TABLE.positionTime)
+		.orderBy(MEMBER_TABLE.priority, MEMBER_TABLE.positionTime)
 		.limit(sql.placeholder("count"))
 		.prepare();
 
@@ -483,7 +483,7 @@ export namespace QueryUtils {
 			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 			eq(MEMBER_TABLE.queueId, sql.placeholder("queueId")),
 		))
-		.orderBy(MEMBER_TABLE.isPrioritized, MEMBER_TABLE.positionTime)
+		.orderBy(MEMBER_TABLE.priority, MEMBER_TABLE.positionTime)
 		.prepare();
 
 // Schedules

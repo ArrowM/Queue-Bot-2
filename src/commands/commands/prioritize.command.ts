@@ -9,14 +9,16 @@ import { AdminCommand } from "../../types/command.types.ts";
 import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
-import { PrioritizeUtils } from "../../utils/prioritize.utils.ts";
+import { PriorityUtils } from "../../utils/priority.utils.ts";
 import { describeUserOrRoleTable } from "../../utils/string.utils.ts";
+import { PriorityOrderOption } from "../../options/options/priority-order.option.ts";
 
 export class PrioritizeCommand extends AdminCommand {
 	static readonly ID = "prioritize";
 
 	prioritize_get = PrioritizeCommand.prioritize_get;
 	prioritize_add = PrioritizeCommand.prioritize_add;
+	prioritize_update = PrioritizeCommand.prioritize_update;
 	prioritize_delete = PrioritizeCommand.prioritize_delete;
 
 	data = new SlashCommandBuilder()
@@ -78,6 +80,7 @@ export class PrioritizeCommand extends AdminCommand {
 		queues: new QueuesOption({ required: true, description: "Queue(s) to prioritize in" }),
 		mentionable: new MentionableOption({ required: true, description: "User or role to prioritize" }),
 		reason: new ReasonOption({ description: "Reason for the priority" }),
+		priorityOrder: new PriorityOrderOption({ description: "Lower priority orders go first" }),
 	};
 
 	static async prioritize_add(inter: SlashInteraction) {
@@ -85,7 +88,29 @@ export class PrioritizeCommand extends AdminCommand {
 		const mentionable = PrioritizeCommand.ADD_OPTIONS.mentionable.get(inter);
 		const reason = PrioritizeCommand.ADD_OPTIONS.reason.get(inter);
 
-		const { updatedQueues } = PrioritizeUtils.insertPrioritized(inter.store, queues, mentionable, reason);
+		const { updatedQueues } = PriorityUtils.insertPrioritized(inter.store, queues, mentionable, reason);
+
+		await this.prioritize_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
+	}
+
+	// ====================================================================
+	//                           /prioritize update
+	// ====================================================================
+
+	static readonly UPDATE_OPTIONS = {
+		prioritizeds: new PrioritizedsOption({ required: true, description: "Prioritized users and roles to update" }),
+		reason: new ReasonOption({ description: "Reason for the priority" }),
+		priorityOrder: new PriorityOrderOption({ description: "Lower priority orders go first" }),
+	};
+
+	static async prioritize_update(inter: SlashInteraction) {
+		const prioritizeds = await PrioritizeCommand.UPDATE_OPTIONS.prioritizeds.get(inter);
+		const update = {
+			reason: PrioritizeCommand.UPDATE_OPTIONS.reason.get(inter),
+			priorityOrder: PrioritizeCommand.UPDATE_OPTIONS.priorityOrder.get(inter),
+		}
+
+		const { updatedQueues } = PriorityUtils.updatePrioritized(inter.store, prioritizeds.map(prioritized => prioritized.id), update);
 
 		await this.prioritize_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
@@ -101,7 +126,7 @@ export class PrioritizeCommand extends AdminCommand {
 	static async prioritize_delete(inter: SlashInteraction) {
 		const prioritizeds = await PrioritizeCommand.DELETE_OPTIONS.prioritizeds.get(inter);
 
-		const { updatedQueues } = PrioritizeUtils.deletePrioritized(inter.store, prioritizeds.map(prioritized => prioritized.id));
+		const { updatedQueues } = PriorityUtils.deletePrioritized(inter.store, prioritizeds.map(prioritized => prioritized.id));
 
 		await this.prioritize_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}

@@ -39,6 +39,7 @@ import {
 	queueMention,
 	scheduleMention,
 } from "./string.utils.ts";
+import { isNil } from "lodash-es";
 
 export namespace DisplayUtils {
 	const UPDATED_QUEUE_IDS = new Map<bigint, Store>();
@@ -124,7 +125,7 @@ export namespace DisplayUtils {
 		const timeStr = (queue.timestampType !== TimestampType.Off)
 			? time(new Date(Number(member.joinTime)), queue.timestampType as TimestampStylesString)
 			: "";
-		const prioStr = member.isPrioritized ? "✨" : "";
+		const prioStr = member.priority ? "✨" : "";
 		const nameStr = queueMemberMention(jsMember, queue.memberDisplayType);
 		const msgStr = member.message ? ` -- ${member.message}` : "";
 
@@ -394,7 +395,7 @@ export namespace DisplayUtils {
 			}
 		}
 
-		if (members.some(m => m.isPrioritized)) {
+		if (members.some(m => !isNil(m.priority))) {
 			descriptionParts.push("Prioritized users are marked with a ✨.");
 		}
 

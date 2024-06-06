@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "f729bf2c-6cc9-4e46-8ca6-42af6873acb5",
+  "id": "a1d1971d-4b7d-4cad-8dd2-8e9abbdf397d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "admin": {
@@ -400,16 +400,16 @@
           "autoincrement": false,
           "default": 0
         },
-        "displays_added": {
-          "name": "displays_added",
+        "queues_added": {
+          "name": "queues_added",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": 0
         },
-        "queues_added": {
-          "name": "queues_added",
+        "displays_added": {
+          "name": "displays_added",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -530,13 +530,12 @@
           "notNull": true,
           "autoincrement": false
         },
-        "is_prioritized": {
-          "name": "is_prioritized",
+        "priority": {
+          "name": "priority",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {
@@ -544,6 +543,13 @@
           "name": "member_guild_id_index",
           "columns": [
             "guild_id"
+          ],
+          "isUnique": false
+        },
+        "member_priority_index": {
+          "name": "member_priority_index",
+          "columns": [
+            "priority"
           ],
           "isUnique": false
         },
@@ -655,6 +661,14 @@
           "notNull": true,
           "autoincrement": false
         },
+        "priority_order": {
+          "name": "priority_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
         "reason": {
           "name": "reason",
           "type": "text",
@@ -757,7 +771,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'#42aaec'"
+          "default": "'Random'"
         },
         "grace_period": {
           "name": "grace_period",

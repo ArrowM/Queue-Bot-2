@@ -2,7 +2,7 @@ import { Collection, EmbedBuilder, GuildMember, Role, type Snowflake, userMentio
 import { groupBy, isNil } from "lodash-es";
 
 import type { Store } from "../core/store.ts";
-import { type DbMember, type DbPrioritized, type DbQueue } from "../db/schema.ts";
+import { type DbMember, type DbQueue } from "../db/schema.ts";
 import { ArchivedMemberReason } from "../types/db.types.ts";
 import type { MemberDeleteBy } from "../types/member.types.ts";
 import type { NotificationOptions } from "../types/notification.types.ts";
@@ -15,6 +15,7 @@ import { NotificationUtils } from "./notification.utils.ts";
 import { QueryUtils } from "./query.utils.ts";
 import { queueMention } from "./string.utils.ts";
 import { WhitelistUtils } from "./whitelist.utils.ts";
+import { PriorityUtils } from "./priority.utils.ts";
 
 export namespace MemberUtils {
 	export async function insertMentionable(store: Store, mentionable: Mentionable, queues?: Collection<bigint, DbQueue>) {
@@ -50,12 +51,14 @@ export namespace MemberUtils {
 			verifyMemberEligibility(store, queue, jsMember);
 		}
 
+		const priority = PriorityUtils.getMemberPriority(store, queue.id, jsMember);
+
 		const member = store.insertMember({
 			guildId: store.guild.id,
 			queueId: queue.id,
 			userId: jsMember.id,
 			message,
-			isPrioritized: isPrioritized(store, queue, jsMember),
+			priority,
 		});
 
 		await assignQueueRoleToMember(store, queue, jsMember);
@@ -145,7 +148,7 @@ export namespace MemberUtils {
 				const queue = find(queues, queue => queue.id === member.queueId);
 				const jsMember = await store.jsMember(member.userId);
 				await removeQueueRoleFromMember(store, queue, jsMember);
-			})
+			}),
 		);
 
 		DisplayUtils.requestDisplaysUpdate(store, map(queues, queue => queue.id));
@@ -253,7 +256,7 @@ export namespace MemberUtils {
 			memberIds.map(async (memberId) => {
 				const member = await store.guild.members.fetch(memberId);
 				await member.roles.add(queue.roleId);
-			})
+			}),
 		);
 	}
 
@@ -265,7 +268,7 @@ export namespace MemberUtils {
 			memberIds.map(async (memberId) => {
 				const member = await store.guild.members.fetch(memberId);
 				await member.roles.remove(queue.roleId);
-			})
+			}),
 		);
 	}
 
@@ -320,20 +323,5 @@ export namespace MemberUtils {
 		const member = members.find(member => member.userId === userId);
 		const position = members.indexOf(member) + 1;
 		return { position, member };
-	}
-
-	function isPrioritizedByUser(prioritizeds: Collection<bigint, DbPrioritized>, jsMember: GuildMember) {
-		return prioritizeds.some(prioritized => prioritized.subjectId === jsMember.id);
-	}
-
-	function isPrioritizedByRole(prioritizeds: Collection<bigint, DbPrioritized>, jsMember: GuildMember) {
-		return Array.isArray(jsMember.roles)
-			? jsMember.roles.some(roleId => prioritizeds.some(prioritized => prioritized.subjectId === roleId))
-			: jsMember.roles.cache.some(role => prioritizeds.some(prioritized => prioritized.subjectId === role.id));
-	}
-
-	function isPrioritized(store: Store, queue: DbQueue, jsMember: GuildMember) {
-		const prioritized = store.dbPrioritized().filter(prioritized => prioritized.queueId === queue.id);
-		return isPrioritizedByUser(prioritized, jsMember) || isPrioritizedByRole(prioritized, jsMember);
 	}
 }

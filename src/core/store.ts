@@ -381,6 +381,42 @@ export class Store {
 			.returning().get();
 	}
 
+	updateWhitelisted(whitelisted: { id: bigint } & Partial<DbWhitelisted>) {
+		this.dbWhitelisted.clear();
+		return db
+			.update(WHITELISTED_TABLE)
+			.set(whitelisted)
+			.where(and(
+				eq(WHITELISTED_TABLE.id, whitelisted.id),
+				eq(WHITELISTED_TABLE.guildId, this.guild.id),
+			))
+			.returning().get();
+	}
+
+	updateBlacklisted(blacklisted: { id: bigint } & Partial<DbBlacklisted>) {
+		this.dbBlacklisted.clear();
+		return db
+			.update(BLACKLISTED_TABLE)
+			.set(blacklisted)
+			.where(and(
+				eq(BLACKLISTED_TABLE.id, blacklisted.id),
+				eq(BLACKLISTED_TABLE.guildId, this.guild.id),
+			))
+			.returning().get();
+	}
+
+	updatePrioritized(prioritized: { id: bigint } & Partial<DbPrioritized>) {
+		this.dbPrioritized.clear();
+		return db
+			.update(PRIORITIZED_TABLE)
+			.set(prioritized)
+			.where(and(
+				eq(PRIORITIZED_TABLE.id, prioritized.id),
+				eq(PRIORITIZED_TABLE.guildId, this.guild.id),
+			))
+			.returning().get();
+	}
+
 	// Deletes
 
 	deleteQueue(by: { id: bigint }) {

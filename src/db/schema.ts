@@ -126,11 +126,12 @@ export const MEMBER_TABLE = sqliteTable("member", ({
 	message: text("message"),
 	positionTime: integer("position_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
 	joinTime: integer("join_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
-	isPrioritized: integer("is_prioritized", { mode: "boolean" }).notNull().default(false),
+	priority: integer("priority"),
 }),
 (table) => ({
 	unq: unique().on(table.queueId, table.userId),
 	guildIdIndex: index("member_guild_id_index").on(table.guildId),
+	priorityIndex: index("member_priority_index").on(table.priority),
 	positionTimeIndex: index("member_position_time_index").on(table.positionTime),
 }));
 
@@ -244,6 +245,7 @@ export const PRIORITIZED_TABLE = sqliteTable("prioritized", ({
 	queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
 	subjectId: text("subject_id").$type<Snowflake>().notNull(),
 	isRole: integer("is_role", { mode: "boolean" }).notNull(),
+	priorityOrder: integer("priority_order").notNull().default(1),
 	reason: text("reason"),
 }),
 (table) => ({
