@@ -2,9 +2,11 @@ import { Collection, EmbedBuilder, GuildMember, Role, roleMention, type Snowflak
 import { groupBy, isNil } from "lodash-es";
 
 import type { Store } from "../core/store.ts";
+import { db } from "../db/db.ts";
 import { type DbMember, type DbQueue } from "../db/schema.ts";
 import { ArchivedMemberReason } from "../types/db.types.ts";
 import type { MemberDeleteBy } from "../types/member.types.ts";
+import type { ArrayOrCollection } from "../types/misc.types.ts";
 import type { NotificationOptions } from "../types/notification.types.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
 import { BlacklistUtils } from "./blacklist.utils.ts";
@@ -26,16 +28,14 @@ import { WhitelistUtils } from "./whitelist.utils.ts";
 export namespace MemberUtils {
 	export async function insertMentionable(store: Store, mentionable: Mentionable, queues?: Collection<bigint, DbQueue>) {
 		const insertedMembers = [];
-		if (mentionable instanceof GuildMember) {
-			for (const queue of queues.values()) {
+		for (const queue of queues.values()) {
+			if (mentionable instanceof GuildMember) {
 				const member = await insertJsMember({ store, queue: queue, jsMember: mentionable });
 				insertedMembers.push(member);
 			}
-		}
-		else if (mentionable instanceof Role) {
-			for (const queue of queues.values()) {
-				const members = store.guild.roles.cache.get(mentionable.id).members;
-				for (const jsMember of members.values()) {
+			else if (mentionable instanceof Role) {
+				const role = await store.jsRole(mentionable.id);
+				for (const jsMember of role.members.values()) {
 					const member = await insertJsMember({ store, queue, jsMember });
 					insertedMembers.push(member);
 				}
@@ -74,7 +74,7 @@ export namespace MemberUtils {
 		return member;
 	}
 
-	export function updateMembers(store: Store, members: DbMember[] | Collection<bigint, DbMember>, message: string) {
+	export function updateMembers(store: Store, members: ArrayOrCollection<bigint, DbMember>, message: string) {
 		const updatedMembers = map(members, member => store.updateMember({ ...member, message }));
 		DisplayUtils.requestDisplaysUpdate(store, map(updatedMembers, member => member.queueId));
 		return updatedMembers;
@@ -89,7 +89,7 @@ export namespace MemberUtils {
 	 */
 	export function deleteMembers(options: {
 		store: Store,
-		queues: DbQueue[] | Collection<bigint, DbQueue>,
+		queues: ArrayOrCollection<bigint, DbQueue>,
 		reason: ArchivedMemberReason,
 		by?: MemberDeleteBy,
 		notification?: NotificationOptions,
@@ -98,8 +98,7 @@ export namespace MemberUtils {
 		const { store, queues, reason, by, notification, force } = options;
 		const deletedMembers: DbMember[] = [];
 		const membersToNotify: DbMember[] = [];
-		// @ts-ignore
-		const { userId, userIds, roleId, count } = by;
+		const { userId, userIds, roleId, count } = by as any;
 
 		if (!isNil(userId) || !isNil(userIds)) {
 			const ids: Snowflake[] = !isNil(userId) ? [userId] : userIds;
@@ -174,20 +173,22 @@ export namespace MemberUtils {
 		const positions = members.map(m => m.positionTime);
 		const originalPosition = positions.indexOf(member.positionTime);
 
-		if (originalPosition > newPosition) {
-			members.splice(originalPosition, 1);
-			members.splice(newPosition, 0, member);
-			members.forEach((member, i) =>
-				store.updateMember({ ...member, positionTime: positions[i] }),
-			);
-		}
-		else if (originalPosition < newPosition) {
-			members.splice(originalPosition, 1);
-			members.splice(newPosition - 1, 0, member);
-			members.forEach((member, i) =>
-				store.updateMember({ ...member, positionTime: positions[i] }),
-			);
-		}
+		db.transaction(() => {
+			if (originalPosition > newPosition) {
+				members.splice(originalPosition, 1);
+				members.splice(newPosition, 0, member);
+				members.forEach((member, i) =>
+					store.updateMember({ ...member, positionTime: positions[i] }),
+				);
+			}
+			else if (originalPosition < newPosition) {
+				members.splice(originalPosition, 1);
+				members.splice(newPosition - 1, 0, member);
+				members.forEach((member, i) =>
+					store.updateMember({ ...member, positionTime: positions[i] }),
+				);
+			}
+		});
 
 		DisplayUtils.requestDisplayUpdate(store, queue.id);
 
@@ -205,12 +206,15 @@ export namespace MemberUtils {
 		const shuffledPositionTimes = members
 			.map(member => member.positionTime)
 			.sort(() => Math.random() - 0.5);
-		members.forEach((member) => store.updateMember({
-			...member,
-			positionTime: shuffledPositionTimes.pop(),
-		}));
+
+		db.transaction(() => {
+			members.forEach((member) =>
+				store.updateMember({ ...member, positionTime: shuffledPositionTimes.pop() })
+			);
+		});
 
 		DisplayUtils.requestDisplayUpdate(store, queue.id);
+
 		return members;
 	}
 
@@ -223,7 +227,7 @@ export namespace MemberUtils {
 			.setDescription(DisplayUtils.createMemberDisplayLine(queue, member, jsMember, position));
 	}
 
-	export function formatPulledMemberEmbeds(queues: DbQueue[] | Collection<bigint, DbQueue>, pulledMembers: DbMember[]) {
+	export function formatPulledMemberEmbeds(queues: ArrayOrCollection<bigint, DbQueue>, pulledMembers: DbMember[]) {
 		const embeds: EmbedBuilder[] = [];
 		const grouped = groupBy(pulledMembers, "queueId");
 		for (const [queueId, pulledMembers] of Object.entries(grouped)) {
@@ -259,7 +263,7 @@ export namespace MemberUtils {
 
 	export async function modifyRole(store: Store, memberId: Snowflake, roleId: Snowflake, modification: "add" | "remove") {
 		if (!roleId) return;
-		const member = await store.guild.members.fetch(memberId);
+		const member = await store.jsMember(memberId);
 		try {
 			if (modification === "add") {
 				await member.roles.add(roleId);

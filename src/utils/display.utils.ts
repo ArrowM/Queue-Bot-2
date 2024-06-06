@@ -6,7 +6,6 @@ import {
 	ButtonBuilder,
 	channelMention,
 	codeBlock,
-	type Collection,
 	EmbedBuilder,
 	type GuildBasedChannel,
 	type GuildMember,
@@ -30,6 +29,7 @@ import { incrementGuildStat } from "../db/db.ts";
 import { type DbDisplay, type DbMember, type DbQueue } from "../db/schema.ts";
 import type { Button } from "../types/button.types.ts";
 import { ArchivedMemberReason, Color, DisplayUpdateType, MemberDisplayType, TimestampType } from "../types/db.types.ts";
+import type { ArrayOrCollection } from "../types/misc.types.ts";
 import type { CustomError } from "./error.utils.ts";
 import { InteractionUtils } from "./interaction.utils.ts";
 import { map } from "./misc.utils.ts";
@@ -73,7 +73,7 @@ export namespace DisplayUtils {
 		return uniq(queueIds).map(id => requestDisplayUpdate(store, id, opts));
 	}
 
-	export function insertDisplays(store: Store, queues: DbQueue[] | Collection<bigint, DbQueue>, displayChannelId: Snowflake) {
+	export function insertDisplays(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, displayChannelId: Snowflake) {
 		// insert into db
 		const insertedDisplays = map(queues, (queue) => store.insertDisplay({
 			guildId: store.guild.id,

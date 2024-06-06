@@ -5,7 +5,7 @@ import { schedule as cron, type ScheduledTask, validate } from "node-cron";
 import { Store } from "../core/store.ts";
 import { type DbQueue, type DbSchedule, type NewSchedule } from "../db/schema.ts";
 import { ArchivedMemberReason, ScheduleCommand } from "../types/db.types.ts";
-import { TIMEZONES } from "../types/misc.types.ts";
+import { type ArrayOrCollection, TIMEZONES } from "../types/misc.types.ts";
 import { NotificationType } from "../types/notification.types.ts";
 import { ClientUtils } from "./client.utils.ts";
 import { DisplayUtils } from "./display.utils.ts";
@@ -36,7 +36,7 @@ export namespace ScheduleUtils {
 		console.timeEnd(`Loaded ${dbSchedules.length} schedules`);
 	}
 
-	export function insertSchedules(store: Store, queues: DbQueue[] | Collection<bigint, DbQueue>, schedule: Omit<NewSchedule, "queueId">) {
+	export function insertSchedules(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, schedule: Omit<NewSchedule, "queueId">) {
 		// validate
 		validateCron(schedule.cron);
 		validateTimezone(schedule.timezone);

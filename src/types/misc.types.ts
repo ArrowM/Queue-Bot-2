@@ -1,4 +1,4 @@
-import { ChannelType, type Snowflake } from "discord.js";
+import { ChannelType, type Collection, type Snowflake } from "discord.js";
 
 import type { GuildStat } from "./db.types.ts";
 
@@ -25,3 +25,5 @@ export type PendingGuildUpdates = {
 		[P in GuildStat]?: number;
 	};
 }
+
+export type ArrayOrCollection<K, V> = V[] | Collection<bigint, V>;

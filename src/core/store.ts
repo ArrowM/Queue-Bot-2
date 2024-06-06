@@ -95,6 +95,12 @@ export class Store {
 		}
 	}
 
+	async jsChannels(channelIds: Snowflake[]) {
+		return toCollection<Snowflake, GuildBasedChannel>("id",
+			compact(await Promise.all(channelIds.map(id => this.jsChannel(id)))),
+		);
+	}
+
 	async jsMember(userId: Snowflake) {
 		try {
 			return await this.guild.members.fetch(userId);
@@ -107,16 +113,25 @@ export class Store {
 		}
 	}
 
-	async jsChannels(channelIds: Snowflake[]) {
-		return toCollection<Snowflake, GuildBasedChannel>("id",
-			compact(await Promise.all(channelIds.map(id => this.jsChannel(id)))),
-		);
-	}
-
 	async jsMembers(userIds: Snowflake[]) {
 		return toCollection<Snowflake, GuildMember>("id",
 			compact(await Promise.all(userIds.map(id => this.jsMember(id)))),
 		);
+	}
+
+	async jsRole(roleId: Snowflake) {
+		try {
+			return await this.guild.roles.fetch(roleId);
+		}
+		catch (_e) {
+			const e = _e as DiscordAPIError;
+			if (e.status == 404) {
+				this.deleteManyWhitelisted({ subjectId: roleId });
+				this.deleteManyBlacklisted({ subjectId: roleId });
+				this.deleteManyPrioritized({ subjectId: roleId });
+				this.deleteAdmin({ subjectId: roleId });
+			}
+		}
 	}
 
 	// ====================================================================

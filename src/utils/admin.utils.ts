@@ -22,12 +22,13 @@ export namespace AdminUtils {
 
 	export function isAdmin(store: Store, member: GuildMember) {
 		const isDiscordAdmin = () => member.permissions.has(PermissionsBitField.Flags.Administrator);
-		const isBotAdminUser = () => store.dbAdmins().some(admin => admin.subjectId === member.id);
-		const isBotAdminRole = () => Array.isArray(member.roles)
-			? member.roles.some(role => store.dbAdmins().some(admin => role.id === admin.subjectId))
-			: member.roles.cache.some(role => store.dbAdmins().some(admin => role.id === admin.subjectId));
-
-		return isDiscordAdmin() || isBotAdminUser() || isBotAdminRole();
+		const isBotAdmin = () => store.dbAdmins().some(admin =>
+			(admin.subjectId === member.id) ||
+			(Array.isArray(member.roles)
+				? member.roles.some(role => role.id === admin.subjectId)
+				: member.roles.cache.has(admin.subjectId)),
+		);
+		return isDiscordAdmin() || isBotAdmin();
 	}
 
 	export function verifyIsAdmin(store: Store, member: GuildMember) {

@@ -51,7 +51,7 @@ export class PrioritizedOption extends CustomOption {
 		const suggestions: UIOption[] = [];
 		for (const prioritized of prioritizeds.values()) {
 			const name = prioritized.isRole
-				? inter.store.guild.roles.cache.get(prioritized.subjectId).name
+				? (await inter.store.jsRole(prioritized.subjectId)).name
 				: (await inter.store.jsMember(prioritized.subjectId)).displayName;
 			const type = prioritized.isRole ? "role" : "user";
 			const scope = prioritized.queueId ? ` in '${queues.get(prioritized.queueId).name}' queue` : "";

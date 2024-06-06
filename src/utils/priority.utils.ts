@@ -1,14 +1,15 @@
-import { type Collection, type GuildMember, Role } from "discord.js";
+import { type GuildMember, Role } from "discord.js";
 import { min, uniq } from "lodash-es";
 
 import type { Store } from "../core/store.ts";
 import type { DbPrioritized, DbQueue } from "../db/schema.ts";
+import type { ArrayOrCollection } from "../types/misc.types.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
 import { DisplayUtils } from "./display.utils.ts";
-import { map } from "./misc.utils.ts";
+import { filterDbObjectsOnJsMember, map } from "./misc.utils.ts";
 
 export namespace PriorityUtils {
-	export function insertPrioritized(store: Store, queues: DbQueue[] | Collection<bigint, DbQueue>, mentionable: Mentionable, reason?: string, priorityOrder?: number) {
+	export function insertPrioritized(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, mentionable: Mentionable, reason?: string, priorityOrder?: number) {
 		// insert into db
 		const insertedPrioritized = map(queues, queue => store.insertPrioritized({
 			guildId: store.guild.id,
@@ -61,12 +62,9 @@ export namespace PriorityUtils {
 	}
 
 	export function getMemberPriority(store: Store, queueId: bigint, jsMember: GuildMember): number | null {
-		const scopedPrioritized = store.dbPrioritized().filter(prioritized => queueId === prioritized.queueId);
-		const prioritizeds = scopedPrioritized.filter(prioritized =>
-			(prioritized.subjectId === jsMember.id) ||
-			(prioritized.isRole && jsMember.roles.cache.some(role => role.id === prioritized.subjectId)),
-		);
-		return prioritizeds.size ? min(prioritizeds.map(prioritized => prioritized.priorityOrder)) : undefined;
+		const prioritizedOfQueue = store.dbPrioritized().filter(prioritized => queueId === prioritized.queueId);
+		const prioritizedOfMember = filterDbObjectsOnJsMember(prioritizedOfQueue, jsMember);
+		return prioritizedOfMember.size ? min(prioritizedOfMember.map(prioritized => prioritized.priorityOrder)) : undefined;
 	}
 
 	async function reEvaluatePrioritized(store: Store, queuesToReEvaluate: DbQueue[]) {

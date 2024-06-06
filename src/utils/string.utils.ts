@@ -1,19 +1,12 @@
 import { chatInputApplicationCommandMention } from "@discordjs/formatters";
 import cronstrue from "cronstrue";
-import {
-	bold,
-	type Collection,
-	EmbedBuilder,
-	type GuildMember,
-	roleMention,
-	type Snowflake,
-	userMention,
-} from "discord.js";
+import { bold, EmbedBuilder, type GuildMember, roleMention, type Snowflake, userMention } from "discord.js";
 import { concat, get, groupBy, partition } from "lodash-es";
 
 import type { Store } from "../core/store.ts";
 import { type DbQueue, type DbSchedule } from "../db/schema.ts";
 import { Color, MemberDisplayType } from "../types/db.types.ts";
+import type { ArrayOrCollection } from "../types/misc.types.ts";
 import { ClientUtils } from "./client.utils.ts";
 import { map } from "./misc.utils.ts";
 
@@ -27,7 +20,7 @@ export function queueMention(queue: DbQueue): string {
 	return bold(queue.name) + (badges.length ? " " + badges.join(" ") : "");
 }
 
-export function queuesMention(queues: DbQueue[] | Collection<bigint, DbQueue>): string {
+export function queuesMention(queues: ArrayOrCollection<bigint, DbQueue>): string {
 	return map(queues, queue => queueMention(queue)).sort().join(", ");
 }
 

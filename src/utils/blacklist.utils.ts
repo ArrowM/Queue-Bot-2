@@ -1,16 +1,17 @@
-import { type Collection, type GuildMember, Role } from "discord.js";
+import { type GuildMember, Role } from "discord.js";
 import { uniq } from "lodash-es";
 
 import type { Store } from "../core/store.ts";
 import type { DbBlacklisted, DbQueue } from "../db/schema.ts";
 import { ArchivedMemberReason } from "../types/db.types.ts";
+import type { ArrayOrCollection } from "../types/misc.types.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
 import { DisplayUtils } from "./display.utils.ts";
 import { MemberUtils } from "./member.utils.ts";
-import { map } from "./misc.utils.ts";
+import { filterDbObjectsOnJsMember, map } from "./misc.utils.ts";
 
 export namespace BlacklistUtils {
-	export function insertBlacklisted(store: Store, queues: DbQueue[] | Collection<bigint, DbQueue>, mentionable: Mentionable, reason?: string) {
+	export function insertBlacklisted(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, mentionable: Mentionable, reason?: string) {
 		// insert into db
 		const insertedBlacklisted = map(queues, queue => store.insertBlacklisted({
 			guildId: store.guild.id,
@@ -35,13 +36,9 @@ export namespace BlacklistUtils {
 		return blacklistedIds.map(id => store.deleteBlacklisted({ id }));
 	}
 
-	export function isBlockedByBlacklist(store: Store, queueId: bigint, member: GuildMember): boolean {
-		const scopedBlacklisted = store.dbBlacklisted().filter(blacklisted => blacklisted.queueId == queueId);
-		return scopedBlacklisted.some(blacklisted =>
-			(blacklisted.subjectId === member.id) ||
-			(Array.isArray(member.roles)
-				? member.roles.some(role => role.id === blacklisted.subjectId)
-				: member.roles.cache.has(blacklisted.subjectId)),
-		);
+	export function isBlockedByBlacklist(store: Store, queueId: bigint, jsMember: GuildMember): boolean {
+		const blacklistedOfQueue = store.dbBlacklisted().filter(blacklisted => blacklisted.queueId == queueId);
+		const blacklistedOfMember = filterDbObjectsOnJsMember(blacklistedOfQueue, jsMember);
+		return blacklistedOfMember.size > 0;
 	}
 }

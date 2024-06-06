@@ -11,6 +11,7 @@ import {
 
 import { MAX_SELECT_MENU_OPTIONS } from "../types/handler.types.ts";
 import type { SlashInteraction } from "../types/interaction.types.ts";
+import type { ArrayOrCollection } from "../types/misc.types.ts";
 
 export class SelectMenuTransactor {
 	protected userResponse: StringSelectMenuInteraction;
@@ -44,7 +45,7 @@ export class SelectMenuTransactor {
 		}
 	}
 
-	async updateWithResult(title: string, selection: any[] | Collection<any, any> | string) {
+	async updateWithResult(title: string, selection: ArrayOrCollection<any, any> | string) {
 		let description;
 		if (typeof selection === "string") {
 			description = selection;

@@ -51,7 +51,7 @@ export class BlacklistedOption extends CustomOption {
 		const suggestions: UIOption[] = [];
 		for (const blacklisted of blacklisteds.values()) {
 			const name = blacklisted.isRole
-				? inter.store.guild.roles.cache.get(blacklisted.subjectId).name
+				? (await inter.store.jsRole(blacklisted.subjectId)).name
 				: (await inter.store.jsMember(blacklisted.subjectId)).displayName;
 			const type = blacklisted.isRole ? "role" : "user";
 			const scope = blacklisted.queueId ? ` in '${queues.get(blacklisted.queueId).name}' queue` : "";

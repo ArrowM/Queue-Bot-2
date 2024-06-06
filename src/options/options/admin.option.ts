@@ -46,7 +46,7 @@ export class AdminOption extends CustomOption {
 		const suggestions: UIOption[] = [];
 		for (const admin of inter.store.dbAdmins().values()) {
 			const name = admin.isRole
-				? inter.store.guild.roles.cache.get(admin.subjectId).name
+				? (await inter.store.jsRole(admin.subjectId)).name
 				: (await inter.store.jsMember(admin.subjectId)).displayName;
 			suggestions.push({
 				name: `'${name}' ${admin.isRole ? "role" : "user"}`,

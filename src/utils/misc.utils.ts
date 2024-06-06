@@ -1,4 +1,6 @@
-import { Collection } from "discord.js";
+import { Collection, type GuildMember, type Snowflake } from "discord.js";
+
+import type { ArrayOrCollection } from "../types/misc.types.ts";
 
 
 export function toCollection<K, V>(property: string | number, list: V[]) {
@@ -9,14 +11,27 @@ export function toChoices(coll: ({ [key: string | number]: any }) | any[]) {
 	return Object.values(coll).map((value) => ({ name: value, value }));
 }
 
-export function size<T>(items: T[] | Collection<any, T>): number {
+export function size<T>(items: ArrayOrCollection<any, T>): number {
 	return ((items instanceof Collection) ? items?.size : items?.length) ?? 0;
 }
 
-export function map<T, S>(items: T[] | Collection<any, T>, fn: (queue: T) => S): S[] {
+export function map<T, S>(items: ArrayOrCollection<any, T>, fn: (queue: T) => S): S[] {
 	return (items instanceof Collection) ? items.map(fn) : items.map(fn);
 }
 
-export function find<T>(items: T[] | Collection<any, T>, fn: (queue: T) => boolean): T {
+export function find<T>(items: ArrayOrCollection<any, T>, fn: (queue: T) => boolean): T {
 	return (items instanceof Collection) ? items.find(fn) : items.find(fn);
+}
+
+export function filterDbObjectsOnJsMember<T extends {subjectId: Snowflake, isRole: boolean}>(dbObjects: Collection<bigint, T>, jsMember: GuildMember) {
+	return dbObjects.filter(dbObj => {
+		if (dbObj.isRole) {
+			return Array.isArray(jsMember.roles)
+				? jsMember.roles.some(role => role.id === dbObj.subjectId)
+				: jsMember.roles.cache.has(dbObj.subjectId);
+		}
+		else {
+			return dbObj.subjectId === jsMember.id;
+		}
+	});
 }
