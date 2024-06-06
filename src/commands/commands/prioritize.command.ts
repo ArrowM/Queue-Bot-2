@@ -3,6 +3,7 @@ import { type Collection, SlashCommandBuilder } from "discord.js";
 import type { DbQueue } from "../../db/schema.ts";
 import { MentionableOption } from "../../options/options/mentionable.option.ts";
 import { PrioritizedsOption } from "../../options/options/prioritizeds.option.ts";
+import { PriorityOrderOption } from "../../options/options/priority-order.option.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
 import { ReasonOption } from "../../options/options/reason.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
@@ -11,7 +12,6 @@ import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
 import { PriorityUtils } from "../../utils/priority.utils.ts";
 import { describeUserOrRoleTable } from "../../utils/string.utils.ts";
-import { PriorityOrderOption } from "../../options/options/priority-order.option.ts";
 
 export class PrioritizeCommand extends AdminCommand {
 	static readonly ID = "prioritize";
@@ -108,7 +108,7 @@ export class PrioritizeCommand extends AdminCommand {
 		const update = {
 			reason: PrioritizeCommand.UPDATE_OPTIONS.reason.get(inter),
 			priorityOrder: PrioritizeCommand.UPDATE_OPTIONS.priorityOrder.get(inter),
-		}
+		};
 
 		const { updatedQueues } = PriorityUtils.updatePrioritized(inter.store, prioritizeds.map(prioritized => prioritized.id), update);
 

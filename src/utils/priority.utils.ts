@@ -1,11 +1,11 @@
 import { type Collection, type GuildMember, Role } from "discord.js";
+import { min } from "lodash-es";
 
 import type { Store } from "../core/store.ts";
 import type { DbPrioritized, DbQueue } from "../db/schema.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
 import { DisplayUtils } from "./display.utils.ts";
 import { map } from "./misc.utils.ts";
-import { min } from "lodash-es";
 
 export namespace PriorityUtils {
 	export function insertPrioritized(store: Store, queues: DbQueue[] | Collection<bigint, DbQueue>, mentionable: Mentionable, reason?: string) {
@@ -68,7 +68,7 @@ export namespace PriorityUtils {
 	export function getMemberPriority(store: Store, queueId: bigint, jsMember: GuildMember): number | null {
 		const scopedPrioritized = store.dbPrioritized().filter(prioritized => queueId === prioritized.queueId);
 		const prioritizeds = scopedPrioritized.filter(prioritized =>
-			(prioritized.subjectId === jsMember.user.id) ||
+			(prioritized.subjectId === jsMember.id) ||
 			(prioritized.isRole && jsMember.roles.cache.some(role => role.id === prioritized.subjectId))
 		);
 		return prioritizeds.size ? min(prioritizeds.map(prioritized => prioritized.priorityOrder)) : null;
@@ -79,7 +79,7 @@ export namespace PriorityUtils {
 			const members = store.dbMembers().filter(member => member.queueId === queue.id);
 			for (const member of members.values()) {
 				const jsMember = await store.jsMember(member.userId);
-				const priority = getMemberPriority(store, queue.id, jsMember)
+				const priority = getMemberPriority(store, queue.id, jsMember);
 				store.updateMember({ priority, ...member });
 			}
 		}

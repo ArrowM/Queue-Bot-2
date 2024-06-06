@@ -17,6 +17,7 @@ import {
 	time,
 	type TimestampStylesString,
 } from "discord.js";
+import { isNil } from "lodash-es";
 
 import { BUTTONS } from "../buttons/buttons.loader.ts";
 import { JoinButton } from "../buttons/buttons/join.button.ts";
@@ -39,7 +40,6 @@ import {
 	queueMention,
 	scheduleMention,
 } from "./string.utils.ts";
-import { isNil } from "lodash-es";
 
 export namespace DisplayUtils {
 	const UPDATED_QUEUE_IDS = new Map<bigint, Store>();

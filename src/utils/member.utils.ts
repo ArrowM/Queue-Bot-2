@@ -1,4 +1,4 @@
-import { Collection, EmbedBuilder, GuildMember, Role, type Snowflake, userMention } from "discord.js";
+import { Collection, EmbedBuilder, GuildMember, Role, roleMention, type Snowflake, userMention } from "discord.js";
 import { groupBy, isNil } from "lodash-es";
 
 import type { Store } from "../core/store.ts";
@@ -9,13 +9,19 @@ import type { NotificationOptions } from "../types/notification.types.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
 import { BlacklistUtils } from "./blacklist.utils.ts";
 import { DisplayUtils } from "./display.utils.ts";
-import { NotOnQueueWhitelistError, OnQueueBlacklistError, QueueFullError, QueueLockedError } from "./error.utils.ts";
+import {
+	CustomError,
+	NotOnQueueWhitelistError,
+	OnQueueBlacklistError,
+	QueueFullError,
+	QueueLockedError,
+} from "./error.utils.ts";
 import { find, map } from "./misc.utils.ts";
 import { NotificationUtils } from "./notification.utils.ts";
+import { PriorityUtils } from "./priority.utils.ts";
 import { QueryUtils } from "./query.utils.ts";
 import { queueMention } from "./string.utils.ts";
 import { WhitelistUtils } from "./whitelist.utils.ts";
-import { PriorityUtils } from "./priority.utils.ts";
 
 export namespace MemberUtils {
 	export async function insertMentionable(store: Store, mentionable: Mentionable, queues?: Collection<bigint, DbQueue>) {
@@ -61,6 +67,7 @@ export namespace MemberUtils {
 			priority,
 		});
 
+		await modifyRole(store, jsMember.id, queue.roleId, "add");
 		await assignQueueRoleToMember(store, queue, jsMember);
 
 		DisplayUtils.requestDisplayUpdate(store, queue.id);
@@ -248,28 +255,22 @@ export namespace MemberUtils {
 		return embeds;
 	}
 
-	export async function assignNewRoleToAllMembersOfQueue(store: Store, queue: DbQueue) {
-		const memberIds = store.dbMembers()
-			.filter(member => member.queueId === queue.id)
-			.map(member => member.userId);
-		await Promise.all(
-			memberIds.map(async (memberId) => {
-				const member = await store.guild.members.fetch(memberId);
-				await member.roles.add(queue.roleId);
-			}),
-		);
-	}
-
-	export async function removeRoleFromAllMembersOfQueue(store: Store, queue: DbQueue) {
-		const memberIds = store.dbMembers()
-			.filter(member => member.queueId === queue.id)
-			.map(member => member.userId);
-		await Promise.all(
-			memberIds.map(async (memberId) => {
-				const member = await store.guild.members.fetch(memberId);
-				await member.roles.remove(queue.roleId);
-			}),
-		);
+	export async function modifyRole(store: Store, memberId: Snowflake, roleId: Snowflake, modification: "add" | "remove") {
+		const member = await store.guild.members.fetch(memberId);
+		try {
+			if (modification === "add") {
+				await member.roles.add(roleId);
+			}
+			else if (modification === "remove") {
+				await member.roles.remove(roleId);
+			}
+		}
+		catch (error) {
+			throw new CustomError(
+				`Can not manage '${roleMention(roleId)}' role.`,
+				[new EmbedBuilder().setDescription(`Make sure the bot has the permission to manage '${roleMention(roleId)}' role.`)]
+			);
+		}
 	}
 
 	// ====================================================================
@@ -298,7 +299,7 @@ export namespace MemberUtils {
 		if (!queue.roleId) return;
 		const role = await store.guild.roles.fetch(queue.roleId);
 		if (role) {
-			await jsMember.roles.add(role);
+			await jsMember.roles.add(role).catch(() => null);
 		}
 		else {
 			// Role deleted, remove from queue
@@ -310,7 +311,7 @@ export namespace MemberUtils {
 		if (!queue.roleId) return;
 		const role = await store.guild.roles.fetch(queue.roleId);
 		if (role) {
-			await jsMember.roles.remove(role);
+			await jsMember.roles.remove(role).catch(() => null);
 		}
 		else {
 			// Role deleted, remove from queue

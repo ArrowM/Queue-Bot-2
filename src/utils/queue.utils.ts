@@ -1,7 +1,9 @@
 import { bold, channelMention, inlineCode, roleMention, strikethrough } from "discord.js";
 import { compact, isNil } from "lodash-es";
 
+import type { Store } from "../core/store.ts";
 import { type DbQueue, QUEUE_TABLE } from "../db/schema.ts";
+import { MemberUtils } from "./member.utils.ts";
 
 export namespace QueueUtils {
 	const QUEUE_HIDDEN_SETTINGS = ["id", "name", "guildId", "lastPullUserIds"];
@@ -29,6 +31,28 @@ export namespace QueueUtils {
 		if (queue.size && queue.size < 1) {
 			throw new Error("Size must be a positive number.");
 		}
+	}
+
+	export async function addQueueRole(store: Store, queue: DbQueue) {
+		const memberIds = store.dbMembers()
+			.filter(member => member.queueId === queue.id)
+			.map(member => member.userId);
+		await Promise.all(
+			memberIds.map(async (memberId) => {
+				await MemberUtils.modifyRole(store, memberId, queue.roleId, "add");
+			}),
+		);
+	}
+
+	export async function removeQueueRole(store: Store, queue: DbQueue) {
+		const memberIds = store.dbMembers()
+			.filter(member => member.queueId === queue.id)
+			.map(member => member.userId);
+		await Promise.all(
+			memberIds.map(async (memberId) => {
+				await MemberUtils.modifyRole(store, memberId, queue.roleId, "remove");
+			}),
+		);
 	}
 
 	function formatSettingWithFallBack(queue: DbQueue, setting: string) {

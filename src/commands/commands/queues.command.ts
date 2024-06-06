@@ -25,7 +25,6 @@ import { UpdateTypeOption } from "../../options/options/update-type.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { DisplayUtils } from "../../utils/display.utils.ts";
-import { MemberUtils } from "../../utils/member.utils.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
 import { QueueUtils } from "../../utils/queue.utils.ts";
 import { commandMention, queueMention, queuesMention } from "../../utils/string.utils.ts";
@@ -160,7 +159,7 @@ export class QueuesCommand extends AdminCommand {
 
 		const role = get(queue, "role") as Role;
 		if (role) {
-			await MemberUtils.assignNewRoleToAllMembersOfQueue(inter.store, insertedQueue);
+			await QueueUtils.addQueueRole(inter.store, insertedQueue);
 		}
 
 		DisplayUtils.insertDisplays(inter.store, [insertedQueue], inter.channelId);
@@ -218,7 +217,7 @@ export class QueuesCommand extends AdminCommand {
 		);
 
 		if (update.roleId) {
-			updatedQueues.forEach(queue => MemberUtils.assignNewRoleToAllMembersOfQueue(inter.store, queue));
+			updatedQueues.forEach(queue => QueueUtils.addQueueRole(inter.store, queue));
 		}
 
 		DisplayUtils.requestDisplaysUpdate(inter.store, updatedQueues.map(queue => queue.id));
@@ -265,7 +264,7 @@ export class QueuesCommand extends AdminCommand {
 		}
 
 		const updatedQueues = queues.map((queue) => {
-			MemberUtils.removeRoleFromAllMembersOfQueue(inter.store, queue);
+			QueueUtils.removeQueueRole(inter.store, queue);
 			return inter.store.updateQueue({ id: queue.id, ...updatedSettings });
 		});
 
