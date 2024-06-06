@@ -380,7 +380,7 @@ export namespace DisplayUtils {
 		}
 
 		if (lockToggle) {
-			descriptionParts.push("Queue is locked.");
+			descriptionParts.push("- Queue is locked.");
 		}
 		else {
 			if (sourceVoiceChannel && destinationVoiceChannel) {
@@ -397,16 +397,16 @@ export namespace DisplayUtils {
 			}
 
 			if (gracePeriod) {
-				descriptionParts.push(`If you leave, you have '${bold(convertSecondsToMinutesAndSeconds(gracePeriod))}' to reclaim your spot.`);
+				descriptionParts.push(`- If you leave, you have '${bold(convertSecondsToMinutesAndSeconds(gracePeriod))}' to reclaim your spot.`);
 			}
 		}
 
 		if (members.some(m => !isNil(m.priority))) {
-			descriptionParts.push("'✨' indicates priority in a queue.");
+			descriptionParts.push("- '✨' indicates priority.");
 		}
 
 		if (roleId) {
-			descriptionParts.push(`Members are assigned the ${roleMention(roleId)} role.`);
+			descriptionParts.push(`- Members are assigned the ${roleMention(roleId)} role.`);
 		}
 
 		if (schedules.size) {

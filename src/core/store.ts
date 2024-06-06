@@ -76,14 +76,14 @@ export class Store {
 
 	dbQueues = moize(() => toCollection<bigint, DbQueue>("id", QueryUtils.selectManyQueues({ guildId: this.guild.id })));
 	dbDisplays = moize(() => toCollection<bigint, DbDisplay>("id", QueryUtils.selectManyDisplays({ guildId: this.guild.id })));
-	// DbMembers is ordered by positionTime
+	// DbMembers is **ordered by positionTime**.
 	dbMembers = moize(() => toCollection<bigint, DbMember>("id", QueryUtils.selectManyMembers({ guildId: this.guild.id })));
 	dbSchedules = moize(() => toCollection<bigint, DbSchedule>("id", QueryUtils.selectManySchedules({ guildId: this.guild.id })));
 	dbWhitelisted = moize(() => toCollection<bigint, DbWhitelisted>("id", QueryUtils.selectManyWhitelisted({ guildId: this.guild.id })));
 	dbBlacklisted = moize(() => toCollection<bigint, DbBlacklisted>("id", QueryUtils.selectManyBlacklisted({ guildId: this.guild.id })));
 	dbPrioritized = moize(() => toCollection<bigint, DbPrioritized>("id", QueryUtils.selectManyPrioritized({ guildId: this.guild.id })));
 	dbAdmins = moize(() => toCollection<bigint, DbAdmin>("id", QueryUtils.selectManyAdmins({ guildId: this.guild.id })));
-	// dbArchivedMembers is unordered
+	// dbArchivedMembers is **unordered**.
 	dbArchivedMembers = moize(() => toCollection<bigint, DbArchivedMember>("id", QueryUtils.selectManyArchivedMembers({ guildId: this.guild.id })));
 
 	// ====================================================================
