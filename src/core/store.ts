@@ -1,4 +1,11 @@
-import { type DiscordAPIError, Guild, type GuildBasedChannel, type GuildMember, type Snowflake } from "discord.js";
+import {
+	type DiscordAPIError,
+	Guild,
+	type GuildBasedChannel,
+	type GuildMember,
+	type Role,
+	type Snowflake,
+} from "discord.js";
 import { and, eq, isNull, or } from "drizzle-orm";
 import { compact, isNil } from "lodash-es";
 import moize from "moize";
@@ -132,6 +139,12 @@ export class Store {
 				this.deleteAdmin({ subjectId: roleId });
 			}
 		}
+	}
+
+	async jsRoles(roleIds: Snowflake[]) {
+		return toCollection<Snowflake, Role>("id",
+			compact(await Promise.all(roleIds.map(id => this.jsRole(id)))),
+		);
 	}
 
 	// ====================================================================
