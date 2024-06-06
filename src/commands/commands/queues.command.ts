@@ -149,7 +149,7 @@ export class QueuesCommand extends AdminCommand {
 				logLevel: QueuesCommand.ADD_OPTIONS.logLevel.get(inter),
 				notificationsToggle: QueuesCommand.ADD_OPTIONS.notificationsToggle.get(inter),
 				pullBatchSize: QueuesCommand.ADD_OPTIONS.pullBatchSize.get(inter),
-				roleId: QueuesCommand.ADD_OPTIONS.role.get(inter).id,
+				roleId: QueuesCommand.ADD_OPTIONS.role.get(inter)?.id,
 				size: QueuesCommand.ADD_OPTIONS.size.get(inter),
 				timestampType: QueuesCommand.ADD_OPTIONS.timestampType.get(inter),
 				updateType: QueuesCommand.ADD_OPTIONS.updateType.get(inter),
@@ -207,7 +207,7 @@ export class QueuesCommand extends AdminCommand {
 			name: QueuesCommand.SET_OPTIONS.name.get(inter),
 			notificationsToggle: QueuesCommand.SET_OPTIONS.notificationsToggle.get(inter),
 			pullBatchSize: QueuesCommand.SET_OPTIONS.pullBatchSize.get(inter),
-			roleId: QueuesCommand.SET_OPTIONS.role.get(inter).id,
+			roleId: QueuesCommand.SET_OPTIONS.role.get(inter)?.id,
 			size: QueuesCommand.SET_OPTIONS.size.get(inter),
 			timestampType: QueuesCommand.SET_OPTIONS.timestampType.get(inter),
 			updateType: QueuesCommand.SET_OPTIONS.updateType.get(inter),
@@ -238,23 +238,23 @@ export class QueuesCommand extends AdminCommand {
 		const queues = await QueuesCommand.RESET_OPTIONS.queues.get(inter);
 
 		const selectMenuOptions = [
-			AutopullToggleOption.ID,
-			ButtonsToggleOption.ID,
-			ColorOption.ID,
-			GracePeriodOption.ID,
-			HeaderOption.ID,
-			InlineToggleOption.ID,
-			LockToggleOption.ID,
-			LogChannelOption.ID,
-			LogLevelOption.ID,
-			NameOption.ID,
-			NotificationsToggleOption.ID,
-			PullBatchSizeOption.ID,
-			RoleOption.ID,
-			SizeOption.ID,
-			TimestampTypeOption.ID,
-			UpdateTypeOption.ID,
-		].map(name => ({ name, value: name }));
+			{ name: "autopull_toggle", value: QUEUE_TABLE.autopullToggle.name },
+			{ name: "buttons_toggle", value: QUEUE_TABLE.buttonsToggle.name },
+			{ name: "color", value: QUEUE_TABLE.color.name },
+			{ name: "grace_period", value: QUEUE_TABLE.gracePeriod.name },
+			{ name: "header", value: QUEUE_TABLE.header.name },
+			{ name: "inline_toggle", value: QUEUE_TABLE.inlineToggle.name },
+			{ name: "lock_toggle", value: QUEUE_TABLE.lockToggle.name },
+			{ name: "log_channel", value: QUEUE_TABLE.logChannelId.name },
+			{ name: "log_level", value: QUEUE_TABLE.logLevel.name },
+			{ name: "member_display_type", value: QUEUE_TABLE.name.name },
+			{ name: "notifications_toggle", value: QUEUE_TABLE.notificationsToggle.name },
+			{ name: "pull_batch_size", value: QUEUE_TABLE.pullBatchSize.name },
+			{ name: "role", value: QUEUE_TABLE.roleId.name },
+			{ name: "size", value: QUEUE_TABLE.size.name },
+			{ name: "time_display_type", value: QUEUE_TABLE.timestampType.name },
+			{ name: "update_type", value: QUEUE_TABLE.updateType.name },
+		];
 		const selectMenuTransactor = new SelectMenuTransactor(inter);
 		const settingsToReset = await selectMenuTransactor.sendAndReceive("Queue settings to reset", selectMenuOptions);
 
