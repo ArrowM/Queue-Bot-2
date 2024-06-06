@@ -101,16 +101,16 @@ async function deleteDeadGuilds() {
 }
 
 function logStats() {
-	console.log("Guilds:", db.select({ count: count() }).from(GUILD_TABLE).run());
-	console.log("Queues:", db.select({ count: count() }).from(QUEUE_TABLE).run());
-	console.log("Members:", db.select({ count: count() }).from(MEMBER_TABLE).run());
-	console.log("Displays:", db.select({ count: count() }).from(DISPLAY_TABLE).run());
-	console.log("Schedules:", db.select({ count: count() }).from(SCHEDULE_TABLE).run());
-	console.log("Blacklisted:", db.select({ count: count() }).from(BLACKLISTED_TABLE).run());
-	console.log("Whitelisted:", db.select({ count: count() }).from(WHITELISTED_TABLE).run());
-	console.log("Prioritized", db.select({ count: count() }).from(PRIORITIZED_TABLE).run());
-	console.log("Admins:", db.select({ count: count() }).from(ADMIN_TABLE).run());
-	console.log("Archived Members:", db.select({ count: count() }).from(ARCHIVED_MEMBER_TABLE).run());
+	console.log("Guilds:", db.select({ count: count() }).from(GUILD_TABLE).get().count);
+	console.log("Queues:", db.select({ count: count() }).from(QUEUE_TABLE).get().count);
+	console.log("Members:", db.select({ count: count() }).from(MEMBER_TABLE).get().count);
+	console.log("Displays:", db.select({ count: count() }).from(DISPLAY_TABLE).get().count);
+	console.log("Schedules:", db.select({ count: count() }).from(SCHEDULE_TABLE).get().count);
+	console.log("Blacklisted:", db.select({ count: count() }).from(BLACKLISTED_TABLE).get().count);
+	console.log("Whitelisted:", db.select({ count: count() }).from(WHITELISTED_TABLE).get().count);
+	console.log("Prioritized", db.select({ count: count() }).from(PRIORITIZED_TABLE).get().count);
+	console.log("Admins:", db.select({ count: count() }).from(ADMIN_TABLE).get().count);
+	console.log("Archived Members:", db.select({ count: count() }).from(ARCHIVED_MEMBER_TABLE).get().count);
 }
 
 // Create a backup of the SQLite database file
