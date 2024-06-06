@@ -269,11 +269,13 @@ export namespace MemberUtils {
 			const { message } = e as Error;
 			if (message.includes("Missing Permissions")) {
 				throw new CustomError(
-					`Can not manage '${roleMention(roleId)}' role.`,
-					[new EmbedBuilder().setDescription(`Make sure the bot has the permission to manage '${roleMention(roleId)}' role.`)]
+					"Missing Permissions",
+					[new EmbedBuilder().setDescription(`I can not manage the ${roleMention(roleId)} role. Please check my permissions.`)],
 				);
 			}
-			else {throw e;}
+			else {
+				throw e;
+			}
 		}
 	}
 
