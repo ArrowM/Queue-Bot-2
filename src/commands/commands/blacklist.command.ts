@@ -10,7 +10,7 @@ import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { BlacklistUtils } from "../../utils/blacklist.utils.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
-import { describeUserOrRoleTable } from "../../utils/string.utils.ts";
+import { describeTable, mentionableMention, queuesMention } from "../../utils/string.utils.ts";
 
 export class BlacklistCommand extends AdminCommand {
 	static readonly ID = "blacklist";
@@ -32,14 +32,14 @@ export class BlacklistCommand extends AdminCommand {
 		.addSubcommand(subcommand => {
 			subcommand
 				.setName("add")
-				.setDescription("Add blacklisted users and roles");
+				.setDescription("Blacklist users and roles");
 			Object.values(BlacklistCommand.ADD_OPTIONS).forEach(option => option.addToCommand(subcommand));
 			return subcommand;
 		})
 		.addSubcommand(subcommand => {
 			subcommand
 				.setName("delete")
-				.setDescription("Delete blacklisted users and roles");
+				.setDescription("Un-blacklist users and roles");
 			Object.values(BlacklistCommand.DELETE_OPTIONS).forEach(option => option.addToCommand(subcommand));
 			return subcommand;
 		});
@@ -60,11 +60,11 @@ export class BlacklistCommand extends AdminCommand {
 			blacklisted = blacklisted.filter(blacklisted => queues.has(blacklisted.queueId));
 		}
 
-		const embeds = describeUserOrRoleTable({
+		const embeds = describeTable({
 			store: inter.store,
 			tableName: "Blacklisted members and roles",
 			color: Color.Black,
-			mentionables: blacklisted,
+			entries: blacklisted,
 		});
 
 		await inter.respond({ embeds });
@@ -87,6 +87,8 @@ export class BlacklistCommand extends AdminCommand {
 
 		const { updatedQueues } = BlacklistUtils.insertBlacklisted(inter.store, queues, mentionable, reason);
 
+		await inter.respond(`Blacklisted ${mentionable} from the '${queuesMention(queues)}' queue${queues.size ? "s" : ""}.`);
+
 		await this.blacklist_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
@@ -95,13 +97,18 @@ export class BlacklistCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly DELETE_OPTIONS = {
-		blacklisteds: new BlacklistedsOption({ required: true, description: "Blacklisted users and roles" }),
+		blacklisteds: new BlacklistedsOption({
+			required: true,
+			description: "Blacklisted users and roles to un-blacklist",
+		}),
 	};
 
 	static async blacklist_delete(inter: SlashInteraction) {
 		const blacklisteds = await BlacklistCommand.DELETE_OPTIONS.blacklisteds.get(inter);
 
 		const deletedBlacklisted = BlacklistUtils.deleteBlacklisted(inter.store, blacklisteds.map(blacklisted => blacklisted.id));
+
+		await inter.respond(`Un-blacklisted ${blacklisteds.map(mentionableMention).join(", ")}.`);
 
 		const updatedQueues = deletedBlacklisted.map(deleted => inter.store.dbQueues().get(deleted.queueId));
 		await this.blacklist_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));

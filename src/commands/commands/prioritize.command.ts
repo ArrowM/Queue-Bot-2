@@ -11,7 +11,7 @@ import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
 import { PriorityUtils } from "../../utils/priority.utils.ts";
-import { describeUserOrRoleTable } from "../../utils/string.utils.ts";
+import { describeTable, mentionableMention, queuesMention } from "../../utils/string.utils.ts";
 
 export class PrioritizeCommand extends AdminCommand {
 	static readonly ID = "prioritize";
@@ -34,14 +34,14 @@ export class PrioritizeCommand extends AdminCommand {
 		.addSubcommand(subcommand => {
 			subcommand
 				.setName("add")
-				.setDescription("Add prioritized users and roles");
+				.setDescription("Prioritize users and roles");
 			Object.values(PrioritizeCommand.ADD_OPTIONS).forEach(option => option.addToCommand(subcommand));
 			return subcommand;
 		})
 		.addSubcommand(subcommand => {
 			subcommand
 				.setName("delete")
-				.setDescription("Delete prioritized users and roles");
+				.setDescription("Un-prioritize users and roles");
 			Object.values(PrioritizeCommand.DELETE_OPTIONS).forEach(option => option.addToCommand(subcommand));
 			return subcommand;
 		});
@@ -59,14 +59,14 @@ export class PrioritizeCommand extends AdminCommand {
 
 		const prioritized = [...inter.store.dbPrioritized().values()];
 		if (queues) {
-			prioritized.filter(prioritized => queues.some(queue => queue.id === prioritized.queueId));
+			prioritized.filter(prioritized => queues.has(prioritized.queueId));
 		}
 
-		const embeds = describeUserOrRoleTable({
+		const embeds = describeTable({
 			store: inter.store,
 			tableName: "Prioritized members and roles",
 			color: Color.Gold,
-			mentionables: prioritized,
+			entries: prioritized,
 		});
 
 		await inter.respond({ embeds });
@@ -91,6 +91,8 @@ export class PrioritizeCommand extends AdminCommand {
 
 		const { updatedQueues } = PriorityUtils.insertPrioritized(inter.store, queues, mentionable, reason, priorityOrder);
 
+		await inter.respond(`Prioritized ${mentionable} in the '${queuesMention(queues)}' queue${queues.size ? "s" : ""}.`);
+
 		await this.prioritize_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
@@ -111,7 +113,12 @@ export class PrioritizeCommand extends AdminCommand {
 			priorityOrder: PrioritizeCommand.UPDATE_OPTIONS.priorityOrder.get(inter),
 		};
 
-		const { updatedQueues } = PriorityUtils.updatePrioritized(inter.store, prioritizeds.map(prioritized => prioritized.id), update);
+		const {
+			updatedQueues,
+			updatedPrioritized,
+		} = PriorityUtils.updatePrioritized(inter.store, prioritizeds.map(prioritized => prioritized.id), update);
+
+		await inter.respond(`Updated priority of ${updatedPrioritized.map(mentionableMention)}.`);
 
 		await this.prioritize_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
@@ -121,13 +128,21 @@ export class PrioritizeCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly DELETE_OPTIONS = {
-		prioritizeds: new PrioritizedsOption({ required: true, description: "Prioritized users and roles to delete" }),
+		prioritizeds: new PrioritizedsOption({
+			required: true,
+			description: "Prioritized users and roles to un-prioritize",
+		}),
 	};
 
 	static async prioritize_delete(inter: SlashInteraction) {
 		const prioritizeds = await PrioritizeCommand.DELETE_OPTIONS.prioritizeds.get(inter);
 
-		const { updatedQueues } = PriorityUtils.deletePrioritized(inter.store, prioritizeds.map(prioritized => prioritized.id));
+		const {
+			updatedQueues,
+			deletedPrioritized,
+		} = PriorityUtils.deletePrioritized(inter.store, prioritizeds.map(prioritized => prioritized.id));
+
+		await inter.respond(`Un-prioritized ${deletedPrioritized.map(mentionableMention).join(", ")}.`);
 
 		await this.prioritize_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}

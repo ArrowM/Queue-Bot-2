@@ -7,7 +7,7 @@ import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { AdminUtils } from "../../utils/admin.utils.ts";
 import { QueryUtils } from "../../utils/query.utils.ts";
-import { describeUserOrRoleTable } from "../../utils/string.utils.ts";
+import { describeTable, mentionableMention } from "../../utils/string.utils.ts";
 
 export class AdminsCommand extends EveryoneCommand {
 	static readonly ID = "admins";
@@ -28,14 +28,14 @@ export class AdminsCommand extends EveryoneCommand {
 		.addSubcommand(subcommand => {
 			subcommand
 				.setName("add")
-				.setDescription("Add admin users and roles");
+				.setDescription("Grant admin status to users and roles");
 			Object.values(AdminsCommand.ADD_OPTIONS).forEach(option => option.addToCommand(subcommand));
 			return subcommand;
 		})
 		.addSubcommand(subcommand => {
 			subcommand
 				.setName("delete")
-				.setDescription("Delete admin users and roles");
+				.setDescription("Revoke admin status from users and roles");
 			Object.values(AdminsCommand.DELETE_OPTIONS).forEach(option => option.addToCommand(subcommand));
 			return subcommand;
 		});
@@ -47,11 +47,11 @@ export class AdminsCommand extends EveryoneCommand {
 	static async admins_get(inter: SlashInteraction) {
 		const admins = QueryUtils.selectManyAdmins({ guildId: inter.guildId });
 
-		const embeds = describeUserOrRoleTable({
+		const embeds = describeTable({
 			store: inter.store,
 			tableName: "Admins",
 			color: Color.DarkRed,
-			mentionables: admins,
+			entries: admins,
 		});
 
 		await inter.respond({ embeds });
@@ -62,7 +62,7 @@ export class AdminsCommand extends EveryoneCommand {
 	// ====================================================================
 
 	static readonly ADD_OPTIONS = {
-		mentionable: new MentionableOption({ required: true, description: "User or role to grant admin access" }),
+		mentionable: new MentionableOption({ required: true, description: "User or role to grant admin status to" }),
 	};
 
 	static async admins_add(inter: SlashInteraction) {
@@ -80,13 +80,15 @@ export class AdminsCommand extends EveryoneCommand {
 	// ====================================================================
 
 	static readonly DELETE_OPTIONS = {
-		admins: new AdminsOption({ required: true, description: "User or role to revoke admin access" }),
+		admins: new AdminsOption({ required: true, description: "User or role to revoke admin status from" }),
 	};
 
 	static async admins_delete(inter: SlashInteraction) {
 		const admins = await AdminsCommand.DELETE_OPTIONS.admins.get(inter);
 
 		AdminUtils.deleteAdmins(inter.store, admins.map(admin => admin.id));
+
+		await inter.respond(`Revoked Queue Bot admin access from ${admins.map(mentionableMention).join(", ")}.`);
 
 		await this.admins_get(inter);
 	}

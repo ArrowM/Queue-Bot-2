@@ -446,6 +446,21 @@ export namespace QueryUtils {
 		.orderBy(MEMBER_TABLE.priority, MEMBER_TABLE.positionTime)
 		.prepare();
 
+	const MEMBER_ORDER = [
+		// Raw SQL for CASE statement to handle NULL values
+		sql`CASE WHEN
+    ${MEMBER_TABLE.priority}
+    IS
+    NULL
+    THEN
+    1
+    ELSE
+    0
+    END`,
+		MEMBER_TABLE.priority,
+		MEMBER_TABLE.positionTime,
+	];
+
 	const selectManyMembersByGuildIdAndUserId = db
 		.select()
 		.from(MEMBER_TABLE)
@@ -453,7 +468,7 @@ export namespace QueryUtils {
 			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 			eq(MEMBER_TABLE.userId, sql.placeholder("userId")),
 		))
-		.orderBy(MEMBER_TABLE.priority, MEMBER_TABLE.positionTime)
+		.orderBy(...MEMBER_ORDER)
 		.prepare();
 
 	const selectManyMembersByGuildId = db
@@ -462,7 +477,7 @@ export namespace QueryUtils {
 		.where(
 			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 		)
-		.orderBy(MEMBER_TABLE.priority, MEMBER_TABLE.positionTime)
+		.orderBy(...MEMBER_ORDER)
 		.prepare();
 
 	const selectManyMembersByQueueIdAndCount = db
@@ -472,7 +487,7 @@ export namespace QueryUtils {
 			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 			eq(MEMBER_TABLE.queueId, sql.placeholder("queueId")),
 		))
-		.orderBy(MEMBER_TABLE.priority, MEMBER_TABLE.positionTime)
+		.orderBy(...MEMBER_ORDER)
 		.limit(sql.placeholder("count"))
 		.prepare();
 
@@ -483,7 +498,7 @@ export namespace QueryUtils {
 			eq(MEMBER_TABLE.guildId, sql.placeholder("guildId")),
 			eq(MEMBER_TABLE.queueId, sql.placeholder("queueId")),
 		))
-		.orderBy(MEMBER_TABLE.priority, MEMBER_TABLE.positionTime)
+		.orderBy(...MEMBER_ORDER)
 		.prepare();
 
 // Schedules
@@ -652,7 +667,6 @@ export namespace QueryUtils {
 			eq(PRIORITIZED_TABLE.guildId, sql.placeholder("guildId")),
 			eq(PRIORITIZED_TABLE.queueId, sql.placeholder("queueId")),
 		))
-		.orderBy(PRIORITIZED_TABLE.queueId)
 		.prepare();
 
 // Admins

@@ -86,7 +86,7 @@ export namespace DisplayUtils {
 
 		// update displays
 		const queuesToUpdate = uniq(
-			insertedDisplays.map(display => store.dbQueues().get(display.queueId))
+			insertedDisplays.map(display => store.dbQueues().get(display.queueId)),
 		);
 		DisplayUtils.requestDisplaysUpdate(
 			store,
@@ -107,7 +107,7 @@ export namespace DisplayUtils {
 
 		// update displays
 		const queuesToUpdate = uniq(
-			deletedDisplays.map(display => store.dbQueues().get(display.queueId))
+			deletedDisplays.map(display => store.dbQueues().get(display.queueId)),
 		);
 		deletedDisplays.forEach(display => store.deleteDisplay(display));
 		requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
@@ -332,8 +332,7 @@ export namespace DisplayUtils {
 				.setTitle(title)
 				.setColor(color)
 				.setDescription(description)
-				.setFields(...fields)
-				.setTimestamp(new Date());
+				.setFields(...fields);
 		}
 
 		function createField(): APIEmbedField {
@@ -398,12 +397,12 @@ export namespace DisplayUtils {
 			}
 
 			if (gracePeriod) {
-				descriptionParts.push(`If you leave, you have ${bold(convertSecondsToMinutesAndSeconds(gracePeriod))} to reclaim your spot.`);
+				descriptionParts.push(`If you leave, you have '${bold(convertSecondsToMinutesAndSeconds(gracePeriod))}' to reclaim your spot.`);
 			}
 		}
 
 		if (members.some(m => !isNil(m.priority))) {
-			descriptionParts.push("Prioritized users are marked with a ✨.");
+			descriptionParts.push("'✨' indicates priority in a queue.");
 		}
 
 		if (roleId) {

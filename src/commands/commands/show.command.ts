@@ -30,8 +30,10 @@ export class ShowCommand extends EveryoneCommand {
 
 		const result = DisplayUtils.insertDisplays(inter.store, queues, inter.channel.id);
 
-		await inter.respond(italic("displaying..."));
-		setTimeout(async () => await inter.deleteReply().catch(() => null), 2000);
+		if (!inter.replied) {
+			await inter.respond(italic("displaying..."));
+		}
+		setTimeout(async () => await inter.deleteReply().catch(() => null), 3000);
 
 		return result;
 	}

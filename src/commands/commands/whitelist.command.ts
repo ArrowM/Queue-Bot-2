@@ -9,7 +9,7 @@ import { AdminCommand } from "../../types/command.types.ts";
 import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
-import { describeUserOrRoleTable } from "../../utils/string.utils.ts";
+import { describeTable, mentionableMention, queuesMention } from "../../utils/string.utils.ts";
 import { WhitelistUtils } from "../../utils/whitelist.utils.ts";
 
 export class WhitelistCommand extends AdminCommand {
@@ -32,14 +32,14 @@ export class WhitelistCommand extends AdminCommand {
 		.addSubcommand(subcommand => {
 			subcommand
 				.setName("add")
-				.setDescription("Add whitelisted users and roles");
+				.setDescription("Whitelist users and roles");
 			Object.values(WhitelistCommand.ADD_OPTIONS).forEach(option => option.addToCommand(subcommand));
 			return subcommand;
 		})
 		.addSubcommand(subcommand => {
 			subcommand
 				.setName("delete")
-				.setDescription("Delete whitelisted users and roles");
+				.setDescription("Un-whitelist users and roles");
 			Object.values(WhitelistCommand.DELETE_OPTIONS).forEach(option => option.addToCommand(subcommand));
 			return subcommand;
 		});
@@ -60,11 +60,11 @@ export class WhitelistCommand extends AdminCommand {
 			whitelisted = whitelisted.filter(whitelisted => queues.has(whitelisted.queueId));
 		}
 
-		const embeds = describeUserOrRoleTable({
+		const embeds = describeTable({
 			store: inter.store,
 			tableName: "Whitelisted members and roles",
 			color: Color.White,
-			mentionables: whitelisted,
+			entries: whitelisted,
 		});
 
 		await inter.respond({ embeds });
@@ -87,6 +87,8 @@ export class WhitelistCommand extends AdminCommand {
 
 		const insertedWhitedListed = WhitelistUtils.insertWhitelisted(inter.store, queues, mentionable, reason);
 
+		await inter.respond(`Whitelisted ${mentionable} in the '${queuesMention(queues)}' queue${queues.size ? "s" : ""}.`);
+
 		const updatedQueues = insertedWhitedListed.map(inserted => inter.store.dbQueues().get(inserted.queueId));
 		await this.whitelist_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
@@ -96,13 +98,18 @@ export class WhitelistCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly DELETE_OPTIONS = {
-		whitelisteds: new WhitelistedsOption({ required: true, description: "Whitelisted users and roles to delete" }),
+		whitelisteds: new WhitelistedsOption({
+			required: true,
+			description: "Whitelisted users and roles to un-whitelist",
+		}),
 	};
 
 	static async whitelist_delete(inter: SlashInteraction) {
 		const whitelisteds = await WhitelistCommand.DELETE_OPTIONS.whitelisteds.get(inter);
 
 		const deletedWhitelisted = WhitelistUtils.deleteWhitelisted(inter.store, whitelisteds.map(whitelisted => whitelisted.id));
+
+		await inter.respond(`Un-whitelisted ${whitelisteds.map(mentionableMention).join(", ")}.`);
 
 		const updatedQueues = deletedWhitelisted.map(deleted => inter.store.dbQueues().get(deleted.queueId));
 		await this.whitelist_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));

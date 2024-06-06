@@ -153,15 +153,16 @@ export namespace MemberUtils {
 			try {
 				const queue = find(queues, queue => queue.id === member.queueId);
 				store.jsMember(member.userId).then(jsMember =>
-					modifyRole(store, jsMember.id, queue.roleId, "remove")
+					modifyRole(store, jsMember.id, queue.roleId, "remove"),
 				);
 			}
-			catch { }
+			catch {
+			}
 		}
 
 		DisplayUtils.requestDisplaysUpdate(store, map(queues, queue => queue.id));
 
-		if (membersToNotify.length && notification) {
+		if (notification) {
 			NotificationUtils.notify(store, membersToNotify, notification);
 		}
 

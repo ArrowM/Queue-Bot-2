@@ -59,7 +59,7 @@ export class Store {
 
 	constructor(
 		public guild: Guild,
-		public initiator?: GuildMember
+		public initiator?: GuildMember,
 	) {
 	}
 

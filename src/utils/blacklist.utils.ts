@@ -21,7 +21,7 @@ export namespace BlacklistUtils {
 		}));
 
 		const queuesToUpdate = uniq(
-			insertedBlacklisted.map(blacklisted => store.dbQueues().get(blacklisted.queueId))
+			insertedBlacklisted.map(blacklisted => store.dbQueues().get(blacklisted.queueId)),
 		);
 		const by = (mentionable instanceof Role) ? { roleId: mentionable.id } : { userId: mentionable.id };
 		MemberUtils.deleteMembers({ store, queues, reason: ArchivedMemberReason.Kicked, by, force: true });

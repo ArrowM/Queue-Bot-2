@@ -21,7 +21,7 @@ export namespace PriorityUtils {
 
 		// re-evaluate prioritized & update displays
 		const queuesToUpdate = uniq(
-			insertedPrioritized.map(prioritized => store.dbQueues().get(prioritized.queueId))
+			insertedPrioritized.map(prioritized => store.dbQueues().get(prioritized.queueId)),
 		);
 		reEvaluatePrioritized(store, queuesToUpdate).then(() =>
 			DisplayUtils.requestDisplaysUpdate(store, map(queuesToUpdate, queue => queue.id)),
@@ -36,7 +36,7 @@ export namespace PriorityUtils {
 
 		// re-evaluate prioritized & update displays
 		const queuesToUpdate = uniq(
-			updatedPrioritized.map(prioritized => store.dbQueues().get(prioritized.queueId))
+			updatedPrioritized.map(prioritized => store.dbQueues().get(prioritized.queueId)),
 		);
 		reEvaluatePrioritized(store, queuesToUpdate).then(() =>
 			DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id)),
@@ -51,7 +51,7 @@ export namespace PriorityUtils {
 
 		// re-evaluate prioritized & update displays
 		const queuesToUpdate = uniq(
-			deletedPrioritized.map(display => store.dbQueues().get(display.queueId))
+			deletedPrioritized.map(display => store.dbQueues().get(display.queueId)),
 		);
 		reEvaluatePrioritized(store, queuesToUpdate).then(() =>
 			DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id)),
@@ -64,7 +64,7 @@ export namespace PriorityUtils {
 		const scopedPrioritized = store.dbPrioritized().filter(prioritized => queueId === prioritized.queueId);
 		const prioritizeds = scopedPrioritized.filter(prioritized =>
 			(prioritized.subjectId === jsMember.id) ||
-			(prioritized.isRole && jsMember.roles.cache.some(role => role.id === prioritized.subjectId))
+			(prioritized.isRole && jsMember.roles.cache.some(role => role.id === prioritized.subjectId)),
 		);
 		return prioritizeds.size ? min(prioritizeds.map(prioritized => prioritized.priorityOrder)) : undefined;
 	}

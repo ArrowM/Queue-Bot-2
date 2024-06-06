@@ -50,7 +50,7 @@ export namespace ScheduleUtils {
 
 		// update displays
 		const queuesToUpdate = uniq(
-			insertedSchedules.map(schedule => store.dbQueues().get(schedule.queueId))
+			insertedSchedules.map(schedule => store.dbQueues().get(schedule.queueId)),
 		);
 		DisplayUtils.requestDisplaysUpdate(store, map(queuesToUpdate, queue => queue.id));
 
@@ -75,7 +75,7 @@ export namespace ScheduleUtils {
 
 		// update displays
 		const queuesToUpdate = uniq(
-			updatedSchedules.map(schedule => store.dbQueues().get(schedule.queueId))
+			updatedSchedules.map(schedule => store.dbQueues().get(schedule.queueId)),
 		);
 		DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
 
@@ -102,7 +102,7 @@ export namespace ScheduleUtils {
 
 		// update displays
 		const queuesToUpdate = uniq(
-			deletedSchedules.map(schedule => store.dbQueues().get(schedule.queueId))
+			deletedSchedules.map(schedule => store.dbQueues().get(schedule.queueId)),
 		);
 		DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
 
