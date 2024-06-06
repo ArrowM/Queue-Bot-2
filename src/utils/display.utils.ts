@@ -13,6 +13,7 @@ import {
 	type GuildTextBasedChannel,
 	inlineCode,
 	type Message,
+	roleMention,
 	type Snowflake,
 	time,
 	type TimestampStylesString,
@@ -366,7 +367,7 @@ export namespace DisplayUtils {
 	async function buildDescription(store: Store, queue: DbQueue, sourceVoiceChannel: GuildBasedChannel, destinationVoiceChannel: GuildBasedChannel) {
 		const schedules = store.dbSchedules().filter(schedule => queue.id === schedule.queueId);
 		const members = store.dbMembers().filter(member => member.queueId === queue.id);
-		const { lockToggle, header, gracePeriod, autopullToggle } = queue;
+		const { lockToggle, header, gracePeriod, autopullToggle, roleId } = queue;
 		const descriptionParts = [];
 
 		if (header) {
@@ -397,6 +398,10 @@ export namespace DisplayUtils {
 
 		if (members.some(m => !isNil(m.priority))) {
 			descriptionParts.push("Prioritized users are marked with a ✨.");
+		}
+
+		if (roleId) {
+			descriptionParts.push(`Members are assigned the ${roleMention(roleId)} role.`);
 		}
 
 		if (schedules.size) {

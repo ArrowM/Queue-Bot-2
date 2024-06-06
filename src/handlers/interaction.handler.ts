@@ -39,12 +39,9 @@ export class InteractionHandler implements Handler {
 	private async handleInteractionError(error: Error) {
 		const { message, stack, extraEmbeds, log } = error as CustomError;
 
-		if ((message === "Unknown interaction") || (log === false)) return;
+		if (message === "Unknown interaction") return;
 
 		try {
-			console.error(`Error: ${message}`);
-			console.error(`Stack Trace: ${stack}`);
-
 			const embeds: EmbedBuilder[] = [
 				new EmbedBuilder()
 					.setTitle(ERROR_HEADER_LINE)
@@ -58,6 +55,11 @@ export class InteractionHandler implements Handler {
 
 			if ("respond" in this.inter) {
 				await this.inter.respond({ embeds, ephemeral: true });
+			}
+
+			if (log !== false) {
+				console.error(`Error: ${message}`);
+				console.error(`Stack Trace: ${stack}`);
 			}
 		}
 		catch (handlingError) {

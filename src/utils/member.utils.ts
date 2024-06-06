@@ -68,7 +68,6 @@ export namespace MemberUtils {
 		});
 
 		await modifyRole(store, jsMember.id, queue.roleId, "add");
-		await assignQueueRoleToMember(store, queue, jsMember);
 
 		DisplayUtils.requestDisplayUpdate(store, queue.id);
 
@@ -154,7 +153,7 @@ export namespace MemberUtils {
 			deletedMembers.map(async (member) => {
 				const queue = find(queues, queue => queue.id === member.queueId);
 				const jsMember = await store.jsMember(member.userId);
-				await removeQueueRoleFromMember(store, queue, jsMember);
+				await modifyRole(store, jsMember.id, queue.roleId, "remove");
 			}),
 		);
 
@@ -256,6 +255,7 @@ export namespace MemberUtils {
 	}
 
 	export async function modifyRole(store: Store, memberId: Snowflake, roleId: Snowflake, modification: "add" | "remove") {
+		if (!roleId) return;
 		const member = await store.guild.members.fetch(memberId);
 		try {
 			if (modification === "add") {
@@ -265,11 +265,15 @@ export namespace MemberUtils {
 				await member.roles.remove(roleId);
 			}
 		}
-		catch (error) {
-			throw new CustomError(
-				`Can not manage '${roleMention(roleId)}' role.`,
-				[new EmbedBuilder().setDescription(`Make sure the bot has the permission to manage '${roleMention(roleId)}' role.`)]
-			);
+		catch (e) {
+			const { message } = e as Error;
+			if (message.includes("Missing Permissions")) {
+				throw new CustomError(
+					`Can not manage '${roleMention(roleId)}' role.`,
+					[new EmbedBuilder().setDescription(`Make sure the bot has the permission to manage '${roleMention(roleId)}' role.`)]
+				);
+			}
+			else {throw e;}
 		}
 	}
 
@@ -292,30 +296,6 @@ export namespace MemberUtils {
 		}
 		if (BlacklistUtils.isBlockedByBlacklist(store, queue.id, jsMember)) {
 			throw new OnQueueBlacklistError();
-		}
-	}
-
-	async function assignQueueRoleToMember(store: Store, queue: DbQueue, jsMember: GuildMember) {
-		if (!queue.roleId) return;
-		const role = await store.guild.roles.fetch(queue.roleId);
-		if (role) {
-			await jsMember.roles.add(role).catch(() => null);
-		}
-		else {
-			// Role deleted, remove from queue
-			store.updateQueue({ ...queue, roleId: null });
-		}
-	}
-
-	async function removeQueueRoleFromMember(store: Store, queue: DbQueue, jsMember: GuildMember) {
-		if (!queue.roleId) return;
-		const role = await store.guild.roles.fetch(queue.roleId);
-		if (role) {
-			await jsMember.roles.remove(role).catch(() => null);
-		}
-		else {
-			// Role deleted, remove from queue
-			store.updateQueue({ ...queue, roleId: null });
 		}
 	}
 
