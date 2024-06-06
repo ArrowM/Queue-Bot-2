@@ -24,7 +24,6 @@ export function queueMention(queue: DbQueue): string {
 	if (queue.lockToggle) badges.push("🔒");
 	if (queue.notificationsToggle) badges.push("🔔");
 	if (queue.autopullToggle) badges.push("🔁");
-
 	return bold(queue.name) + (badges.length ? " " + badges.join(" ") : "");
 }
 
@@ -56,9 +55,7 @@ export function scheduleMention(schedule: DbSchedule) {
 }
 
 export function convertSecondsToMinutesAndSeconds(secondsIn: number) {
-	if (!secondsIn) {
-		return "";
-	}
+	if (!secondsIn) return "";
 
 	const minutes = Math.floor(secondsIn / 60);
 	const seconds = secondsIn % 60;

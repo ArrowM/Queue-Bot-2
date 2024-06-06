@@ -37,7 +37,6 @@ export namespace BlacklistUtils {
 
 	export function isBlockedByBlacklist(store: Store, queueId: bigint, member: GuildMember): boolean {
 		const scopedBlacklisted = store.dbBlacklisted().filter(blacklisted => blacklisted.queueId == queueId);
-		if (!scopedBlacklisted.size) return false;
 		return scopedBlacklisted.some(blacklisted =>
 			(blacklisted.subjectId === member.id) ||
 			(Array.isArray(member.roles)

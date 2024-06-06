@@ -27,11 +27,14 @@ export class ShuffleCommand extends AdminCommand {
 	static async shuffle(inter: SlashInteraction) {
 		const queues = await ShuffleCommand.SHUFFLE_OPTIONS.queues.get(inter);
 
+		const confirmed = await inter.promptConfirmOrCancel(`Are you sure you want to shuffle the '${queuesMention(queues)}' queue${queues.size ? "s" : ""}?`);
+		if (!confirmed) return;
+
 		queues.forEach((queue) => MemberUtils.shuffleMembers(inter.store, queue));
 
 		await Promise.all([
 			inter.deleteReply(),
-			inter.channel.send(`Shuffled the '${queuesMention(queues)}' queues.`),
+			inter.channel.send(`Shuffled the '${queuesMention(queues)}' queue${queues.size ? "s" : ""}.`),
 		]);
 	}
 }

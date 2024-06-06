@@ -327,7 +327,8 @@ export namespace DisplayUtils {
 				.setTitle(title)
 				.setColor(color)
 				.setDescription(description)
-				.setFields(...fields);
+				.setFields(...fields)
+				.setTimestamp(new Date());
 		}
 
 		function createField(): APIEmbedField {

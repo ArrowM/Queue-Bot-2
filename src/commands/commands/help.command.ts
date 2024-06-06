@@ -41,10 +41,10 @@ export class HelpCommand extends EveryoneCommand {
 				new EmbedBuilder()
 					.setTitle("Setup Help")
 					.setColor(Color.Indigo)
-					.setDescription("Hello there! I'm Queue Bot, and I'm here to help you manage your queues. Here's how to get started with me:")
+					.setDescription("Hello there! I'm Queue Bot, and I'm here to help you manage your queues. Here's how to get started:")
 					.addFields({
-						name: "1. Create a Queue",
-						value: "Create a queue by typing `/queues add`. You can create as many queues as you want.",
+						name: "1. Create queues",
+						value: "Create queues by typing `/queues add`. You can create as many queues as you want.",
 					},
 					{
 						name: "2. Add Members",
@@ -53,7 +53,7 @@ export class HelpCommand extends EveryoneCommand {
 					},
 					{
 						name: "3. Pull Members",
-						value: `Members can be pulled from a queue by admins by clicking the 'Pull' button queue displays or with ${commandMention("pull")}.`,
+						value: `Members can be pulled from queues by admins by clicking the 'Pull' button queue displays or with ${commandMention("pull")}.`,
 					},
 					{
 						name: "4. Explore other commands",
@@ -80,11 +80,11 @@ export class HelpCommand extends EveryoneCommand {
 					},
 					{
 						name: commandMention("join"),
-						value: "Join a queue",
+						value: "Join queues",
 					},
 					{
 						name: commandMention("leave"),
-						value: "Leave a queue",
+						value: "Leave queues",
 					},
 					{
 						name: commandMention("positions"),
@@ -115,7 +115,7 @@ export class HelpCommand extends EveryoneCommand {
 					},
 					{
 						name: commandMention("blacklist", "add"),
-						value: "Blacklist a user or role from a queue",
+						value: "Blacklist a user or role from queues",
 					},
 					{
 						name: commandMention("displays", "add"),
@@ -123,7 +123,7 @@ export class HelpCommand extends EveryoneCommand {
 					},
 					{
 						name: commandMention("clear"),
-						value: "Clear a queue",
+						value: "Clear queues",
 					},
 					{
 						name: commandMention("members", "add"),
@@ -131,7 +131,7 @@ export class HelpCommand extends EveryoneCommand {
 					},
 					{
 						name: commandMention("move"),
-						value: "Move a member in a queue",
+						value: "Move a member in queues",
 					},
 					{
 						name: commandMention("prioritize", "add"),
@@ -147,7 +147,7 @@ export class HelpCommand extends EveryoneCommand {
 					},
 					{
 						name: commandMention("shuffle"),
-						value: "Shuffle a queue",
+						value: "Shuffle queues",
 					},
 					{
 						name: commandMention("voice", "add"),
@@ -155,7 +155,7 @@ export class HelpCommand extends EveryoneCommand {
 					},
 					{
 						name: commandMention("whitelist", "add"),
-						value: "Whitelist a user or role in a queue",
+						value: "Whitelist a user or role in queues",
 					}),
 			],
 		});
