@@ -1,6 +1,6 @@
+import { QueryUtils } from "../db/queries.ts";
 import type { ButtonInteraction } from "../types/interaction.types.ts";
 import { DisplayNotFoundError } from "./error.utils.ts";
-import { QueryUtils } from "./query.utils.ts";
 
 export namespace ButtonUtils {
 	export async function getButtonContext(inter: ButtonInteraction) {

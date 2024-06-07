@@ -16,10 +16,10 @@ import {
 import AutoPoster from "topgg-autoposter";
 
 import { COMMANDS } from "../commands/commands.loader.ts";
+import { QueryUtils } from "../db/queries.ts";
 import { ClientHandler } from "../handlers/client.handler.ts";
 import { InteractionHandler } from "../handlers/interaction.handler.ts";
 import { Color } from "../types/db.types.ts";
-import { QueryUtils } from "./query.utils.ts";
 import { ScheduleUtils } from "./schedule.utils.ts";
 
 export namespace ClientUtils {

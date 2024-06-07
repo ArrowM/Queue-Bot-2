@@ -24,7 +24,7 @@ import { JoinButton } from "../buttons/buttons/join.button.ts";
 import { LeaveButton } from "../buttons/buttons/leave.button.ts";
 import { MyPositionsButton } from "../buttons/buttons/my-positions.button.ts";
 import { PullButton } from "../buttons/buttons/pull.button.ts";
-import { incrementGuildStat } from "../db/db.ts";
+import { incrementGuildStat } from "../db/queries.ts";
 import { type DbDisplay, type DbMember, type DbQueue } from "../db/schema.ts";
 import type { Store } from "../db/store.ts";
 import type { Button } from "../types/button.types.ts";

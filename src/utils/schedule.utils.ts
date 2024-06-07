@@ -2,6 +2,7 @@ import type { Collection } from "discord.js";
 import { uniq } from "lodash-es";
 import { schedule as cron, type ScheduledTask, validate } from "node-cron";
 
+import { QueryUtils } from "../db/queries.ts";
 import { type DbQueue, type DbSchedule, type NewSchedule } from "../db/schema.ts";
 import { Store } from "../db/store.ts";
 import { ArchivedMemberReason, ScheduleCommand } from "../types/db.types.ts";
@@ -12,7 +13,6 @@ import { DisplayUtils } from "./display.utils.ts";
 import { InvalidCronError } from "./error.utils.ts";
 import { MemberUtils } from "./member.utils.ts";
 import { map } from "./misc.utils.ts";
-import { QueryUtils } from "./query.utils.ts";
 
 export namespace ScheduleUtils {
 	export function insertSchedules(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, schedule: Omit<NewSchedule, "queueId">) {

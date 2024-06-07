@@ -1,7 +1,7 @@
 import { Collection, EmbedBuilder, GuildMember, Role, roleMention, type Snowflake, userMention } from "discord.js";
 import { groupBy, isNil } from "lodash-es";
 
-import { db } from "../db/db.ts";
+import { db, QueryUtils } from "../db/queries.ts";
 import { type DbMember, type DbQueue } from "../db/schema.ts";
 import type { Store } from "../db/store.ts";
 import { ArchivedMemberReason } from "../types/db.types.ts";
@@ -21,7 +21,6 @@ import {
 import { find, map } from "./misc.utils.ts";
 import { NotificationUtils } from "./notification.utils.ts";
 import { PriorityUtils } from "./priority.utils.ts";
-import { QueryUtils } from "./query.utils.ts";
 import { queueMention } from "./string.utils.ts";
 import { WhitelistUtils } from "./whitelist.utils.ts";
 

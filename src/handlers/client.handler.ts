@@ -1,7 +1,7 @@
 import type { Guild } from "discord.js";
 
+import { QueryUtils } from "../db/queries.ts";
 import { Store } from "../db/store.ts";
-import { QueryUtils } from "../utils/query.utils.ts";
 
 export namespace ClientHandler {
 	export function handleGuildCreate(guild: Guild) {

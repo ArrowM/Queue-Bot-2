@@ -38,5 +38,6 @@ export const COMMANDS = new Collection<string, Command>([
 	[ShowCommand.ID, new ShowCommand()],
 	[ShuffleCommand.ID, new ShuffleCommand()],
 	[VoiceCommand.ID, new VoiceCommand()],
+	[VoiceCommand.ID, new VoiceCommand()],
 	[WhitelistCommand.ID, new WhitelistCommand()],
 ]);

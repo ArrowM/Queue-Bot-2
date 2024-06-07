@@ -21,8 +21,7 @@ import {
 } from "../utils/error.utils.ts";
 import { MemberUtils } from "../utils/member.utils.ts";
 import { toCollection } from "../utils/misc.utils.ts";
-import { QueryUtils } from "../utils/query.utils.ts";
-import { db, incrementGuildStat } from "./db.ts";
+import { db, incrementGuildStat as _incrementGuildStat, QueryUtils } from "./queries.ts";
 import {
 	ADMIN_TABLE,
 	ARCHIVED_MEMBER_TABLE,
@@ -158,7 +157,7 @@ export class Store {
 	incrementGuildStat(stat: GuildStat, by = 1) {
 		// Ensure the guild is in the database
 		this.insertGuild({ guildId: this.guild.id });
-		incrementGuildStat(this.guild.id, stat, by);
+		_incrementGuildStat(this.guild.id, stat, by);
 	}
 
 	// do nothing on conflict

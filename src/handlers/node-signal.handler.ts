@@ -1,4 +1,4 @@
-import { flushPendingGuildUpdatesToDB } from "../db/db.ts";
+import { flushPendingGuildUpdatesToDB } from "../db/queries.ts";
 
 export namespace NodeSignalHandler {
 	// Load signal handlers for graceful shutdown with error logging

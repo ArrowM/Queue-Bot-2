@@ -1,12 +1,12 @@
 import { SlashCommandBuilder } from "discord.js";
 
+import { QueryUtils } from "../../db/queries.ts";
 import { AdminsOption } from "../../options/options/admins.option.ts";
 import { MentionableOption } from "../../options/options/mentionable.option.ts";
 import { EveryoneCommand } from "../../types/command.types.ts";
 import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { AdminUtils } from "../../utils/admin.utils.ts";
-import { QueryUtils } from "../../utils/query.utils.ts";
 import { describeTable, mentionableMention } from "../../utils/string.utils.ts";
 
 export class AdminsCommand extends EveryoneCommand {
