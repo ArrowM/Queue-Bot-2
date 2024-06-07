@@ -10,7 +10,19 @@ import { and, eq, isNull, or } from "drizzle-orm";
 import { compact, isNil } from "lodash-es";
 import moize from "moize";
 
-import { db, incrementGuildStat } from "../db/db.ts";
+import { ArchivedMemberReason, type GuildStat } from "../types/db.types.ts";
+import {
+	AdminAlreadyExistsError,
+	BlacklistedAlreadyExistsError,
+	PrioritizedAlreadyExistsError,
+	QueueAlreadyExistsError,
+	ScheduleAlreadyExistsError,
+	WhitelistedAlreadyExistsError,
+} from "../utils/error.utils.ts";
+import { MemberUtils } from "../utils/member.utils.ts";
+import { toCollection } from "../utils/misc.utils.ts";
+import { QueryUtils } from "../utils/query.utils.ts";
+import { db, incrementGuildStat } from "./db.ts";
 import {
 	ADMIN_TABLE,
 	ARCHIVED_MEMBER_TABLE,
@@ -23,6 +35,7 @@ import {
 	type DbPrioritized,
 	type DbQueue,
 	type DbSchedule,
+	type DbVoice,
 	type DbWhitelisted,
 	DISPLAY_TABLE,
 	GUILD_TABLE,
@@ -36,24 +49,14 @@ import {
 	type NewPrioritized,
 	type NewQueue,
 	type NewSchedule,
+	type NewVoice,
 	type NewWhitelisted,
 	PRIORITIZED_TABLE,
 	QUEUE_TABLE,
 	SCHEDULE_TABLE,
+	VOICE_TABLE,
 	WHITELISTED_TABLE,
-} from "../db/schema.ts";
-import { ArchivedMemberReason, type GuildStat } from "../types/db.types.ts";
-import {
-	AdminAlreadyExistsError,
-	BlacklistedAlreadyExistsError,
-	PrioritizedAlreadyExistsError,
-	QueueAlreadyExistsError,
-	ScheduleAlreadyExistsError,
-	WhitelistedAlreadyExistsError,
-} from "../utils/error.utils.ts";
-import { MemberUtils } from "../utils/member.utils.ts";
-import { toCollection } from "../utils/misc.utils.ts";
-import { QueryUtils } from "../utils/query.utils.ts";
+} from "./schema.ts";
 import deleteMembers = MemberUtils.deleteMembers;
 
 /**
@@ -75,6 +78,7 @@ export class Store {
 	// ====================================================================
 
 	dbQueues = moize(() => toCollection<bigint, DbQueue>("id", QueryUtils.selectManyQueues({ guildId: this.guild.id })));
+	dbVoices = moize(() => toCollection<bigint, DbVoice>("id", QueryUtils.selectManyVoices({ guildId: this.guild.id })));
 	dbDisplays = moize(() => toCollection<bigint, DbDisplay>("id", QueryUtils.selectManyDisplays({ guildId: this.guild.id })));
 	// DbMembers is **ordered by positionTime**.
 	dbMembers = moize(() => toCollection<bigint, DbMember>("id", QueryUtils.selectManyMembers({ guildId: this.guild.id })));
@@ -157,6 +161,7 @@ export class Store {
 		incrementGuildStat(this.guild.id, stat, by);
 	}
 
+	// do nothing on conflict
 	insertGuild(dbGuild: NewGuild) {
 		return db
 			.insert(GUILD_TABLE)
@@ -182,6 +187,22 @@ export class Store {
 				throw new QueueAlreadyExistsError();
 			}
 		}
+	}
+
+	// replace on conflict
+	insertVoice(newVoice: NewVoice) {
+		return db.transaction(() => {
+			this.incrementGuildStat("voicesAdded");
+			this.dbVoices.clear();
+			return db
+				.insert(VOICE_TABLE)
+				.values(newVoice)
+				.onConflictDoUpdate({
+					target: [VOICE_TABLE.queueId, VOICE_TABLE.sourceChannelId],
+					set: newVoice,
+				})
+				.returning().get();
+		});
 	}
 
 	// replace on conflict
@@ -359,8 +380,6 @@ export class Store {
 	//                           Updates
 	// ====================================================================
 
-	// Updates
-
 	updateQueue(queue: { id: bigint } & Partial<DbQueue>) {
 		this.dbQueues.clear();
 		return db
@@ -369,6 +388,18 @@ export class Store {
 			.where(and(
 				eq(QUEUE_TABLE.id, queue.id),
 				eq(QUEUE_TABLE.guildId, this.guild.id),
+			))
+			.returning().get();
+	}
+
+	updateVoice(voice: { id: bigint } & Partial<DbVoice>) {
+		this.dbVoices.clear();
+		return db
+			.update(VOICE_TABLE)
+			.set(voice)
+			.where(and(
+				eq(VOICE_TABLE.id, voice.id),
+				eq(VOICE_TABLE.guildId, this.guild.id),
 			))
 			.returning().get();
 	}
@@ -445,7 +476,9 @@ export class Store {
 			.returning().get();
 	}
 
-	// Deletes
+	// ====================================================================
+	//                           Deletes
+	// ====================================================================
 
 	deleteQueue(by: { id: bigint }) {
 		this.dbQueues.clear();
@@ -457,6 +490,18 @@ export class Store {
 		this.dbQueues.clear();
 		const cond = this.createCondition(QUEUE_TABLE, {});
 		return db.delete(QUEUE_TABLE).where(cond).returning().all();
+	}
+
+	deleteVoice(by: { id: bigint }) {
+		this.dbVoices.clear();
+		const cond = this.createCondition(VOICE_TABLE, by);
+		return db.delete(VOICE_TABLE).where(cond).returning().get();
+	}
+
+	deleteManyVoices() {
+		this.dbVoices.clear();
+		const cond = this.createCondition(VOICE_TABLE, {});
+		return db.delete(VOICE_TABLE).where(cond).returning().all();
 	}
 
 	deleteDisplay(by:

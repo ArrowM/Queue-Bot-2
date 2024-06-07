@@ -21,6 +21,7 @@ export const GUILD_TABLE = sqliteTable("guild", ({
 	commandsReceived: integer("commands_received").notNull().default(0),
 	buttonsReceived: integer("buttons_received").notNull().default(0),
 	queuesAdded: integer("queues_added").notNull().default(0),
+	voicesAdded: integer("voices_added").notNull().default(0),
 	displaysAdded: integer("displays_added").notNull().default(0),
 	membersAdded: integer("members_added").notNull().default(0),
 	schedulesAdded: integer("schedules_added").notNull().default(0),
@@ -33,6 +34,7 @@ export const GUILD_TABLE = sqliteTable("guild", ({
 
 export const GUILD_RELATIONS = relations(GUILD_TABLE, ({ many }) => ({
 	queues: many(QUEUE_TABLE),
+	voices: many(VOICE_TABLE),
 	displays: many(DISPLAY_TABLE),
 	members: many(MEMBER_TABLE),
 	schedules: many(SCHEDULE_TABLE),
@@ -68,10 +70,6 @@ export const QUEUE_TABLE = sqliteTable("queue", ({
 	size: integer("size"),
 	timestampType: text("time_display_type").$type<TimestampType>().default(TimestampType.Off),
 	updateType: text("update_type").$type<DisplayUpdateType>().notNull().default(DisplayUpdateType.Edit),
-
-	// voice integration
-	sourceVoiceChannelId: text("source_voice_channel_id").$type<Snowflake | null>(),
-	destinationVoiceChannelId: text("destination_voice_channel_id").$type<Snowflake | null>(),
 }),
 (table) => ({
 	unq: unique().on(table.name, table.guildId),
@@ -83,6 +81,7 @@ export const QUEUE_RELATIONS = relations(QUEUE_TABLE, ({ one, many }) => ({
 		fields: [QUEUE_TABLE.guildId],
 		references: [GUILD_TABLE.guildId],
 	}),
+	voices: many(VOICE_TABLE),
 	displays: many(DISPLAY_TABLE),
 	members: many(MEMBER_TABLE),
 	schedules: many(SCHEDULE_TABLE),
@@ -93,6 +92,28 @@ export const QUEUE_RELATIONS = relations(QUEUE_TABLE, ({ one, many }) => ({
 
 export type NewQueue = typeof QUEUE_TABLE.$inferInsert;
 export type DbQueue = typeof QUEUE_TABLE.$inferSelect;
+
+
+export const VOICE_TABLE = sqliteTable("voice", ({
+	id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
+
+	guildId: text("guild_id").$type<Snowflake>().notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
+	queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
+	sourceChannelId: text("source_channel_id").$type<Snowflake>().notNull(),
+	destinationChannelId: text("destination_channel_id").$type<Snowflake>().notNull(),
+}),
+(table) => ({
+	unq: unique().on(table.queueId, table.sourceChannelId),
+	guildIdIndex: index("voice_guild_id_index").on(table.guildId),
+}));
+
+export const VOICE_RELATIONS = relations(VOICE_TABLE, ({ one }) => ({
+	guilds: one(GUILD_TABLE),
+	queues: one(QUEUE_TABLE),
+}));
+
+export type NewVoice = typeof VOICE_TABLE.$inferInsert;
+export type DbVoice = typeof VOICE_TABLE.$inferSelect;
 
 
 export const DISPLAY_TABLE = sqliteTable("display", ({
@@ -293,8 +314,8 @@ export type DbAdmin = typeof ADMIN_TABLE.$inferSelect;
 export const ARCHIVED_MEMBER_TABLE = sqliteTable("archived_member", ({
 	id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
 
-	guildId: text("guild_id").notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
-	queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
+	guildId: text("guild_id").notNull(),
+	queueId: integer("queue_id").$type<bigint>().notNull(),
 	userId: text("user_id").$type<Snowflake>().notNull(),
 	message: text("message"),
 	positionTime: integer("position_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
@@ -306,22 +327,13 @@ export const ARCHIVED_MEMBER_TABLE = sqliteTable("archived_member", ({
 	unq: unique().on(table.queueId, table.userId),
 }));
 
-export const ARCHIVED_MEMBER_RELATIONS = relations(ARCHIVED_MEMBER_TABLE, ({ one }) => ({
-	guilds: one(GUILD_TABLE, {
-		fields: [ARCHIVED_MEMBER_TABLE.guildId],
-		references: [GUILD_TABLE.guildId],
-	}),
-	queues: one(QUEUE_TABLE, {
-		fields: [ARCHIVED_MEMBER_TABLE.guildId],
-		references: [QUEUE_TABLE.guildId],
-	}),
-}));
-
 export type NewArchivedMember = typeof ARCHIVED_MEMBER_TABLE.$inferInsert;
 export type DbArchivedMember = typeof ARCHIVED_MEMBER_TABLE.$inferSelect;
 
+
 export const PATCH_NOTE_TABLE = sqliteTable("patch_note", ({
 	id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
+
 	fileName: text("file_name").notNull(),
 }));
 

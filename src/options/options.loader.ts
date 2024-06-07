@@ -6,7 +6,6 @@ import { ButtonsToggleOption } from "./options/buttons-toggle.option.ts";
 import { ColorOption } from "./options/color.option.ts";
 import { CommandOption } from "./options/command.option.ts";
 import { CronOption } from "./options/cron.option.ts";
-import { DestinationVoiceChannelOption } from "./options/destination-voice-channel.option.ts";
 import { DisplaysOption } from "./options/displays.option.ts";
 import { GracePeriodOption } from "./options/grace-period.option.ts";
 import { HeaderOption } from "./options/header.option.ts";
@@ -30,10 +29,11 @@ import { RoleOption } from "./options/role.option.ts";
 import { ScheduleOption } from "./options/schedule.option.ts";
 import { SchedulesOption } from "./options/schedules.option.ts";
 import { SizeOption } from "./options/size.option.ts";
-import { SourceVoiceChannelOption } from "./options/source-voice-channel.option.ts";
 import { TimestampTypeOption } from "./options/timestamp-type.option.ts";
 import { TimezoneOption } from "./options/timezone.option.ts";
 import { UpdateTypeOption } from "./options/update-type.option.ts";
+import { VoiceDestinationChannelOption } from "./options/voice-destination-channel.option.ts";
+import { VoiceSourceChannelOption } from "./options/voice-source-channel.option.ts";
 
 export const OPTIONS = new Collection<string, Option>([
 	[AutopullToggleOption.ID, new AutopullToggleOption()],
@@ -41,7 +41,7 @@ export const OPTIONS = new Collection<string, Option>([
 	[ColorOption.ID, new ColorOption()],
 	[CommandOption.ID, new CommandOption()],
 	[CronOption.ID, new CronOption()],
-	[DestinationVoiceChannelOption.ID, new DestinationVoiceChannelOption()],
+	[VoiceDestinationChannelOption.ID, new VoiceDestinationChannelOption()],
 	[DisplaysOption.ID, new DisplaysOption()],
 	[GracePeriodOption.ID, new GracePeriodOption()],
 	[HeaderOption.ID, new HeaderOption()],
@@ -65,7 +65,7 @@ export const OPTIONS = new Collection<string, Option>([
 	[ScheduleOption.ID, new ScheduleOption()],
 	[SchedulesOption.ID, new SchedulesOption()],
 	[SizeOption.ID, new SizeOption()],
-	[SourceVoiceChannelOption.ID, new SourceVoiceChannelOption()],
+	[VoiceSourceChannelOption.ID, new VoiceSourceChannelOption()],
 	[TimestampTypeOption.ID, new TimestampTypeOption()],
 	[TimezoneOption.ID, new TimezoneOption()],
 	[UpdateTypeOption.ID, new UpdateTypeOption()],

@@ -9,9 +9,9 @@ import {
 	StringSelectMenuOptionBuilder,
 } from "discord.js";
 
-import { MAX_SELECT_MENU_OPTIONS } from "../types/handler.types.ts";
-import type { SlashInteraction } from "../types/interaction.types.ts";
-import type { ArrayOrCollection } from "../types/misc.types.ts";
+import { MAX_SELECT_MENU_OPTIONS } from "../../types/handler.types.ts";
+import type { SlashInteraction } from "../../types/interaction.types.ts";
+import type { ArrayOrCollection } from "../../types/misc.types.ts";
 
 export class SelectMenuTransactor {
 	protected userResponse: StringSelectMenuInteraction;

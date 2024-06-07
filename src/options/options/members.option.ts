@@ -1,16 +1,15 @@
 import { Collection } from "discord.js";
 
-import { SelectMenuTransactor } from "../../core/select-menu-transactor.ts";
 import type { DbMember } from "../../db/schema.ts";
 import type { AutocompleteInteraction, SlashInteraction } from "../../types/interaction.types.ts";
 import { CHOICE_ALL, CHOICE_SOME } from "../../types/parsing.types.ts";
+import { SelectMenuTransactor } from "../../utils/message-utils/select-menu-transactor.ts";
 import { CustomOption } from "../base.options.ts";
 import { MemberOption } from "./member.option.ts";
 
 export class MembersOption extends CustomOption {
 	static readonly ID = "queue_members";
 	name = MembersOption.ID;
-	autocomplete = true;
 	extraChoices = [CHOICE_ALL];
 
 	getAutocompletions = MemberOption.getAutocompletions;
@@ -28,18 +27,18 @@ export class MembersOption extends CustomOption {
 		const members = inter.parser.getScopedMembers(queues);
 
 		switch (inputString) {
-		case CHOICE_ALL.value:
-			return members;
-		case CHOICE_SOME.value:
-			return await this.getViaSelectMenu(inter as SlashInteraction, members);
-		default:
-			const member = MemberOption.findMember(members, inputString);
-			return member ? new Collection([[member.id, member]]) : null;
+			case CHOICE_ALL.value:
+				return members;
+			case CHOICE_SOME.value:
+				return await this.getViaSelectMenu(inter as SlashInteraction, members);
+			default:
+				const member = MemberOption.findMember(members, inputString);
+				return member ? new Collection([[member.id, member]]) : null;
 		}
 	}
 
-	protected async getViaSelectMenu(inter: SlashInteraction, scopedMembers: Collection<bigint, DbMember>): Promise<Collection<bigint, DbMember>> {
-		const memberIds = scopedMembers.map((member) => member.userId);
+	protected async getViaSelectMenu(inter: SlashInteraction, members: Collection<bigint, DbMember>): Promise<Collection<bigint, DbMember>> {
+		const memberIds = members.map((member) => member.userId);
 		const jsMembers = await inter.store.jsMembers(memberIds);
 
 		// build menu
@@ -55,7 +54,7 @@ export class MembersOption extends CustomOption {
 
 		// parse result
 		const resultIds = result.map(id => BigInt(id));
-		const selectedMembers = scopedMembers.filter(member => resultIds.includes(member.id));
+		const selectedMembers = members.filter(member => resultIds.includes(member.id));
 
 		// write result
 		await selectMenuTransactor.updateWithResult(label, selectedMembers);

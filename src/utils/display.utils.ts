@@ -24,9 +24,9 @@ import { JoinButton } from "../buttons/buttons/join.button.ts";
 import { LeaveButton } from "../buttons/buttons/leave.button.ts";
 import { MyPositionsButton } from "../buttons/buttons/my-positions.button.ts";
 import { PullButton } from "../buttons/buttons/pull.button.ts";
-import type { Store } from "../core/store.ts";
 import { incrementGuildStat } from "../db/db.ts";
 import { type DbDisplay, type DbMember, type DbQueue } from "../db/schema.ts";
+import type { Store } from "../db/store.ts";
 import type { Button } from "../types/button.types.ts";
 import { ArchivedMemberReason, Color, DisplayUpdateType, MemberDisplayType, TimestampType } from "../types/db.types.ts";
 import type { ArrayOrCollection } from "../types/misc.types.ts";
@@ -43,6 +43,43 @@ import {
 } from "./string.utils.ts";
 
 export namespace DisplayUtils {
+	export function insertDisplays(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, displayChannelId: Snowflake) {
+		// insert into db
+		const insertedDisplays = map(queues, (queue) => store.insertDisplay({
+			guildId: store.guild.id,
+			queueId: queue.id,
+			displayChannelId,
+		}));
+		const updatedQueueIds = uniq(insertedDisplays.map(display => display.queueId));
+
+		// We reset the member cache in case the bot has missed a member leaving the guild
+		store.guild.members.cache.clear();
+
+		DisplayUtils.requestDisplaysUpdate(
+			store,
+			updatedQueueIds,
+			{
+				displayIds: insertedDisplays.map(display => display.id),
+				forceNew: true,
+			});
+
+		return { insertedDisplays, updatedQueueIds };
+	}
+
+	export function deleteDisplays(store: Store, displayIds: bigint[]) {
+		// delete from db
+		const deletedDisplays = displayIds.map(displayId =>
+			store.deleteDisplay({ id: displayId }),
+		);
+		const updatedQueueIds = uniq(deletedDisplays.map(display => display.queueId));
+
+		return { deletedDisplays, updatedQueueIds };
+	}
+
+	// ====================================================================
+	//                           Display runner
+	// ====================================================================
+
 	const UPDATED_QUEUE_IDS = new Map<bigint, Store>();
 	const PENDING_QUEUE_IDS = new Map<bigint, Store>();
 
@@ -71,48 +108,6 @@ export namespace DisplayUtils {
 		forceNew?: boolean
 	}) {
 		return uniq(queueIds).map(id => requestDisplayUpdate(store, id, opts));
-	}
-
-	export function insertDisplays(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, displayChannelId: Snowflake) {
-		// insert into db
-		const insertedDisplays = map(queues, (queue) => store.insertDisplay({
-			guildId: store.guild.id,
-			queueId: queue.id,
-			displayChannelId,
-		}));
-
-		// We reset the member cache in case the bot has missed a member leaving the guild
-		store.guild.members.cache.clear();
-
-		// update displays
-		const queuesToUpdate = uniq(
-			insertedDisplays.map(display => store.dbQueues().get(display.queueId)),
-		);
-		DisplayUtils.requestDisplaysUpdate(
-			store,
-			map(queuesToUpdate, queue => queue.id),
-			{
-				displayIds: insertedDisplays.map(display => display.id),
-				forceNew: true,
-			});
-
-		return { insertedDisplays, updatedQueues: queuesToUpdate };
-	}
-
-	export function deleteDisplays(store: Store, displayIds: bigint[]) {
-		// delete from db
-		const deletedDisplays = displayIds.map(displayId =>
-			store.deleteDisplay({ id: displayId }),
-		);
-
-		// update displays
-		const queuesToUpdate = uniq(
-			deletedDisplays.map(display => store.dbQueues().get(display.queueId)),
-		);
-		deletedDisplays.forEach(display => store.deleteDisplay(display));
-		requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id));
-
-		return { deletedDisplays, queuesToUpdate };
 	}
 
 	export function createMemberDisplayLine(
@@ -170,7 +165,7 @@ export namespace DisplayUtils {
 						// Send new display
 						const message = await jsChannel.send({
 							embeds: embedBuilders,
-							components: getButtonRow(queue),
+							components: getButtonRow(store, queue),
 							allowedMentions: { users: [] },
 						}).catch(console.error);
 						if (message) {
@@ -271,24 +266,22 @@ export namespace DisplayUtils {
 	}
 
 	async function generateQueueDisplay(store: Store, queue: DbQueue): Promise<EmbedBuilder[]> {
-		const members = store.dbMembers().filter(member => member.queueId === queue.id);
-		const jsMembers = await store.jsMembers(members.map(member => member.userId));
-		const { color, inlineToggle, memberDisplayType, sourceVoiceChannelId, destinationVoiceChannelId } = queue;
-		let sourceVoiceChannel, destinationVoiceChannel;
-		const title = queueMention(queue);
-		const rightPadding = members.size.toString().length;
+		const { color, inlineToggle, memberDisplayType } = queue;
 
 		// Get voice channels if applicable
-		if (sourceVoiceChannelId && destinationVoiceChannelId) {
-			sourceVoiceChannel = await store.jsChannel(sourceVoiceChannelId);
-			destinationVoiceChannel = await store.jsChannel(destinationVoiceChannelId);
-			if (!sourceVoiceChannel || !destinationVoiceChannel) {
+		const { sourceChannelId, destinationChannelId } = store.dbVoices().get(queue.id) ?? {};
+		let voiceSourceChannel, voiceDestinationChannel;
+
+		if (sourceChannelId && destinationChannelId) {
+			voiceSourceChannel = await store.jsChannel(sourceChannelId);
+			voiceDestinationChannel = await store.jsChannel(destinationChannelId);
+			if (!voiceSourceChannel || !voiceDestinationChannel) {
 				let errorMessage = ERROR_HEADER_LINE + "\n";
-				if (!sourceVoiceChannel) {
-					errorMessage += `Source voice channel ${channelMention(sourceVoiceChannelId)} not found.`;
+				if (!voiceSourceChannel) {
+					errorMessage += `Source voice channel ${channelMention(sourceChannelId)} not found.`;
 				}
-				if (!destinationVoiceChannel) {
-					errorMessage += `Destination voice channel ${channelMention(destinationVoiceChannelId)} not found.`;
+				if (!voiceDestinationChannel) {
+					errorMessage += `Destination voice channel ${channelMention(destinationChannelId)} not found.`;
 				}
 				return [
 					new EmbedBuilder()
@@ -301,6 +294,10 @@ export namespace DisplayUtils {
 
 		// Build member strings
 		const memberDisplayLines: string[] = [];
+		const members = store.dbMembers().filter(member => member.queueId === queue.id);
+		const jsMembers = await store.jsMembers(members.map(member => member.userId));
+		const rightPadding = members.size.toString().length;
+
 		[...members.values()].forEach((member, position) => {
 			const jsMember = memberDisplayType === MemberDisplayType.Mention ? jsMembers.get(member.userId) : null;
 
@@ -320,9 +317,10 @@ export namespace DisplayUtils {
 		 */
 
 		// Build embeds
-		const description = await buildDescription(store, queue, sourceVoiceChannel, destinationVoiceChannel);
+		const embeds: EmbedBuilder[] = [];
+		const title = queueMention(queue);
+		const description = await buildDescription(store, queue, voiceSourceChannel, voiceDestinationChannel);
 		const sizeStr = `size: ${memberDisplayLines.length}${queue.size ? ` / ${queue.size}` : ""}`;
-		const embedBuilders: EmbedBuilder[] = [];
 		let fields: RestOrArray<APIEmbedField> = [];
 		let fieldIdx = 1;
 		let embedLength = title.length + description.length + sizeStr.length;
@@ -344,7 +342,7 @@ export namespace DisplayUtils {
 		for (let i = 0; i < memberDisplayLines.length; i++) {
 			const memberDisplayLine = memberDisplayLines[i];
 			if ((embedLength + memberDisplayLine.length >= 6000) || fieldIdx === 25) {
-				embedBuilders.push(createEmbed(fields));
+				embeds.push(createEmbed(fields));
 				fields = [];
 				field = createField();
 				fieldIdx = 1;
@@ -364,9 +362,9 @@ export namespace DisplayUtils {
 		fields.push(field);
 		fields[0].name = sizeStr;
 
-		embedBuilders.push(createEmbed(fields));
+		embeds.push(createEmbed(fields));
 
-		return embedBuilders;
+		return embeds;
 	}
 
 	async function buildDescription(store: Store, queue: DbQueue, sourceVoiceChannel: GuildBasedChannel, destinationVoiceChannel: GuildBasedChannel) {
@@ -423,10 +421,11 @@ export namespace DisplayUtils {
 			.setStyle(button.style);
 	}
 
-	function getButtonRow(queue: DbQueue) {
+	function getButtonRow(store: Store, queue: DbQueue) {
 		if (queue.buttonsToggle) {
 			const actionRowBuilder = new ActionRowBuilder<ButtonBuilder>();
-			if (!queue.sourceVoiceChannelId) {
+			const voice = store.dbVoices().find(voice => voice.queueId === queue.id);
+			if (!voice) {
 				actionRowBuilder.addComponents(
 					buildButton(BUTTONS.get(JoinButton.ID)),
 					buildButton(BUTTONS.get(LeaveButton.ID)),

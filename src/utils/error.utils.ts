@@ -27,6 +27,13 @@ export class QueueNotFoundError extends CustomError {
 	];
 }
 
+export class VoiceNotFoundError extends CustomError {
+	message = "Voice not found.";
+	extraEmbeds = [
+		new EmbedBuilder().setDescription(`Voices can be created with ${commandMention("voice", "add")}.`),
+	];
+}
+
 export class DisplayNotFoundError extends CustomError {
 	message = "Display not found.";
 	extraEmbeds = [

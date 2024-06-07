@@ -9,8 +9,8 @@ import {
 	MessagePayload,
 } from "discord.js";
 
-import { type Parser } from "../core/parser.ts";
-import type { Store } from "../core/store.ts";
+import type { Store } from "../db/store.ts";
+import { type Parser } from "../utils/message-utils/parser.ts";
 
 interface BaseProperties {
 	store: Store;

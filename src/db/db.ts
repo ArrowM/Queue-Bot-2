@@ -149,7 +149,7 @@ export function incrementGuildStat(guildId: Snowflake, stat: GuildStat, by = 1) 
 	PENDING_GUILD_UPDATES[guildId][stat]! += by;
 }
 
-async function flushPendingGuildUpdatesToDB() {
+export async function flushPendingGuildUpdatesToDB() {
 	// Start a transaction
 	db.transaction(() => {
 		for (const guildId in PENDING_GUILD_UPDATES) {
@@ -194,22 +194,4 @@ cron("*/5 * * * *", async () => {
 		console.error(`Error: ${message}`);
 		console.error(`Stack Trace: ${stack}`);
 	}
-});
-
-// Signal handlers for graceful shutdown
-process.on("SIGINT", async () => {
-	await flushPendingGuildUpdatesToDB();
-	process.exit(0);
-});
-process.on("SIGTERM", async () => {
-	await flushPendingGuildUpdatesToDB();
-	process.exit(0);
-});
-process.on("uncaughtException", async () => {
-	await flushPendingGuildUpdatesToDB();
-	process.exit(1);
-});
-process.on("unhandledRejection", async () => {
-	await flushPendingGuildUpdatesToDB();
-	process.exit(1);
 });

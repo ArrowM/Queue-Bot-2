@@ -9,7 +9,6 @@ import { type AutoCompleteOptions, CustomOption } from "../base.options.ts";
 export class PrioritizedOption extends CustomOption {
 	static readonly ID = "prioritized";
 	name = PrioritizedOption.ID;
-	autocomplete = true;
 
 	getAutocompletions = PrioritizedOption.getAutocompletions;
 
@@ -30,9 +29,9 @@ export class PrioritizedOption extends CustomOption {
 
 	static findPrioritized(prioritizeds: Collection<bigint, DbPrioritized>, idString: string): DbPrioritized {
 		try {
-			const prioritizedEntry = prioritizeds.find(entry => entry.id === BigInt(idString));
-			if (prioritizedEntry) {
-				return prioritizedEntry;
+			const prioritized = prioritizeds.find(entry => entry.id === BigInt(idString));
+			if (prioritized) {
+				return prioritized;
 			}
 			else {
 				throw new PrioritizedNotFoundError();

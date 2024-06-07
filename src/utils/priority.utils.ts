@@ -1,64 +1,50 @@
 import { type GuildMember, Role } from "discord.js";
 import { min, uniq } from "lodash-es";
 
-import type { Store } from "../core/store.ts";
 import type { DbPrioritized, DbQueue } from "../db/schema.ts";
+import type { Store } from "../db/store.ts";
 import type { ArrayOrCollection } from "../types/misc.types.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
 import { DisplayUtils } from "./display.utils.ts";
 import { filterDbObjectsOnJsMember, map } from "./misc.utils.ts";
 
 export namespace PriorityUtils {
-	export function insertPrioritized(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, mentionable: Mentionable, reason?: string, priorityOrder?: number) {
+	export function insertPrioritized(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, mentionable: Mentionable, priorityOrder?: number, reason?: string) {
 		// insert into db
 		const insertedPrioritized = map(queues, queue => store.insertPrioritized({
 			guildId: store.guild.id,
 			queueId: queue.id,
 			subjectId: mentionable.id,
 			isRole: mentionable instanceof Role,
-			reason,
 			priorityOrder,
+			reason,
 		}));
+		const updatedQueueIds = uniq(insertedPrioritized.map(prioritized => prioritized.queueId));
 
 		// re-evaluate prioritized & update displays
-		const queuesToUpdate = uniq(
-			insertedPrioritized.map(prioritized => store.dbQueues().get(prioritized.queueId)),
-		);
-		reEvaluatePrioritized(store, queuesToUpdate).then(() =>
-			DisplayUtils.requestDisplaysUpdate(store, map(queuesToUpdate, queue => queue.id)),
-		);
+		reEvaluatePrioritized(store, updatedQueueIds);
 
-		return { insertedPrioritized, updatedQueues: queuesToUpdate };
+		return { insertedPrioritized, updatedQueueIds };
 	}
 
 	export function updatePrioritized(store: Store, prioritizedIds: bigint[], update: Partial<DbPrioritized>) {
 		// update in db
 		const updatedPrioritized = prioritizedIds.map(id => store.updatePrioritized({ id, ...update }));
+		const updatedQueueIds = uniq(updatedPrioritized.map(prioritized => prioritized.queueId));
 
-		// re-evaluate prioritized & update displays
-		const queuesToUpdate = uniq(
-			updatedPrioritized.map(prioritized => store.dbQueues().get(prioritized.queueId)),
-		);
-		reEvaluatePrioritized(store, queuesToUpdate).then(() =>
-			DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id)),
-		);
+		reEvaluatePrioritized(store, updatedQueueIds);
 
-		return { updatedPrioritized, updatedQueues: queuesToUpdate };
+		return { updatedPrioritized, updatedQueueIds };
 	}
 
 	export function deletePrioritized(store: Store, prioritizedIds: bigint[]) {
 		// delete from db
 		const deletedPrioritized = prioritizedIds.map(id => store.deletePrioritized({ id }));
+		const updatedQueueIds = uniq(deletedPrioritized.map(prioritized => prioritized.queueId));
 
-		// re-evaluate prioritized & update displays
-		const queuesToUpdate = uniq(
-			deletedPrioritized.map(display => store.dbQueues().get(display.queueId)),
-		);
-		reEvaluatePrioritized(store, queuesToUpdate).then(() =>
-			DisplayUtils.requestDisplaysUpdate(store, queuesToUpdate.map(queue => queue.id)),
-		);
+		reEvaluatePrioritized(store, updatedQueueIds);
 
-		return { deletedPrioritized, updatedQueues: queuesToUpdate };
+		return { deletedPrioritized, updatedQueueIds };
 	}
 
 	export function getMemberPriority(store: Store, queueId: bigint, jsMember: GuildMember): number | null {
@@ -67,14 +53,15 @@ export namespace PriorityUtils {
 		return prioritizedOfMember.size ? min(prioritizedOfMember.map(prioritized => prioritized.priorityOrder)) : undefined;
 	}
 
-	async function reEvaluatePrioritized(store: Store, queuesToReEvaluate: DbQueue[]) {
-		for (const queue of queuesToReEvaluate) {
-			const members = store.dbMembers().filter(member => member.queueId === queue.id);
+	async function reEvaluatePrioritized(store: Store, queueIds: bigint[]) {
+		for (const queueId of queueIds) {
+			const members = store.dbMembers().filter(member => member.queueId === queueId);
 			for (const member of members.values()) {
 				const jsMember = await store.jsMember(member.userId);
-				const priority = getMemberPriority(store, queue.id, jsMember);
+				const priority = getMemberPriority(store, queueId, jsMember);
 				store.updateMember({ priority, ...member });
 			}
 		}
+		DisplayUtils.requestDisplaysUpdate(store, queueIds);
 	}
 }

@@ -3,8 +3,8 @@ import cronstrue from "cronstrue";
 import { bold, EmbedBuilder, type GuildMember, roleMention, type Snowflake, userMention } from "discord.js";
 import { concat, get, groupBy, partition } from "lodash-es";
 
-import type { Store } from "../core/store.ts";
 import { type DbQueue, type DbSchedule } from "../db/schema.ts";
+import type { Store } from "../db/store.ts";
 import { Color, MemberDisplayType } from "../types/db.types.ts";
 import type { ArrayOrCollection } from "../types/misc.types.ts";
 import { ClientUtils } from "./client.utils.ts";
@@ -78,6 +78,7 @@ export function describeTable<T>(options: {
 			queue = store.dbQueues().get(BigInt(queueId));
 		}
 		catch {
+			queue = null;
 		}
 
 		let itemStrings: string[] = [];

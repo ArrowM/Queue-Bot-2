@@ -1,16 +1,23 @@
-import { SlashCommandBuilder } from "discord.js";
+import { type Collection, SlashCommandBuilder } from "discord.js";
 
-import { DestinationVoiceChannelOption } from "../../options/options/destination-voice-channel.option.ts";
+import type { DbQueue } from "../../db/schema.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
-import { SourceVoiceChannelOption } from "../../options/options/source-voice-channel.option.ts";
+import { VoiceDestinationChannelOption } from "../../options/options/voice-destination-channel.option.ts";
+import { VoiceSourceChannelOption } from "../../options/options/voice-source-channel.option.ts";
+import { VoicesOption } from "../../options/options/voices.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
+import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
+import { toCollection } from "../../utils/misc.utils.ts";
+import { describeTable } from "../../utils/string.utils.ts";
+import { VoiceUtils } from "../../utils/voice.utils.ts";
 
 export class VoiceCommand extends AdminCommand {
 	static readonly ID = "voice";
 
 	voice_get = VoiceCommand.voice_get;
 	voice_add = VoiceCommand.voice_add;
+	voice_update = VoiceCommand.voice_update;
 	voice_delete = VoiceCommand.voice_delete;
 
 	data = new SlashCommandBuilder()
@@ -48,32 +55,22 @@ export class VoiceCommand extends AdminCommand {
 		queues: new QueuesOption({ required: true, description: "Get voice integrations of specific queue(s)" }),
 	};
 
-	static async voice_get(inter: SlashInteraction) {
-		const queues = await VoiceCommand.GET_OPTIONS.queues.get(inter);
+	static async voice_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
+		queues = queues ?? await VoiceCommand.GET_OPTIONS.queues.get(inter);
 
-		await inter.respond("Not implemented.");
+		let voices = [...inter.store.dbVoices().values()];
+		if (queues) {
+			voices = voices.filter(voice => queues.has(voice.queueId));
+		}
 
-		// const embeds: EmbedBuilder[] = [];
-		// queues.forEach(queue => {
-		// 	const { sourceVoiceChannelId, destinationVoiceChannelId } = queue;
-		//
-		// 	const embed = new EmbedBuilder().setTitle(queueMention(queue));
-		//
-		// 	if (sourceVoiceChannelId && destinationVoiceChannelId) {
-		// 		embed.setDescription(`${channelMention(sourceVoiceChannelId)} ⇒ ${channelMention(destinationVoiceChannelId)}`);
-		// 	}
-		// 	else {
-		// 		embed.setDescription("No voice integration.");
-		// 	}
-		//
-		// 	embeds.push(embed);
-		// });
-		//
-		// if (!embeds.length) {
-		// 	embeds.push(new EmbedBuilder().setDescription("No voice integrations."));
-		// }
-		//
-		// await inter.respond({ embeds });
+		const embeds = describeTable({
+			store: inter.store,
+			tableName: "Voice integrations",
+			color: Color.Purple,
+			entries: voices,
+		});
+
+		await inter.respond({ embeds });
 	}
 
 	// ====================================================================
@@ -82,14 +79,8 @@ export class VoiceCommand extends AdminCommand {
 
 	static readonly ADD_OPTIONS = {
 		queues: new QueuesOption({ required: true, description: "Queue(s) to integrate with voice" }),
-		sourceVoiceChannel: new SourceVoiceChannelOption({
-			required: true,
-			description: "Voice channel to pull members from",
-		}),
-		destinationVoiceChannel: new DestinationVoiceChannelOption({
-			required: true,
-			description: "Voice channel to push members to",
-		}),
+		sourceVoiceChannel: new VoiceSourceChannelOption({ required: true, description: "Voice channel to pull members from" }),
+		destinationVoiceChannel: new VoiceDestinationChannelOption({ required: true, description: "Voice channel to push members to" }),
 	};
 
 	static async voice_add(inter: SlashInteraction) {
@@ -97,8 +88,40 @@ export class VoiceCommand extends AdminCommand {
 		const sourceVoiceChannel = VoiceCommand.ADD_OPTIONS.sourceVoiceChannel.get(inter);
 		const destinationVoiceChannel = VoiceCommand.ADD_OPTIONS.destinationVoiceChannel.get(inter);
 
-		await inter.respond("Not implemented.");
+		const {
+			updatedQueueIds,
+		} = VoiceUtils.insertVoices(inter.store, queues, sourceVoiceChannel.id, destinationVoiceChannel.id);
+		const updatedQueues = updatedQueueIds.map(id => inter.store.dbQueues().get(id));
 
+		await inter.respond(`Added voice integrations to ${updatedQueues.length} queue${updatedQueues.length ? "s" : ""}`);
+		await this.voice_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
+	}
+
+	// ====================================================================
+	//                           /voice update
+	// ====================================================================
+
+	static readonly UPDATE_OPTIONS = {
+		voices: new VoicesOption({ required: true, description: "Voice integrations to update" }),
+		sourceVoiceChannel: new VoiceSourceChannelOption({ required: false, description: "Voice channel to pull members from" }),
+		destinationVoiceChannel: new VoiceDestinationChannelOption({ required: false, description: "Voice channel to push members to" }),
+	};
+
+	static async voice_update(inter: SlashInteraction) {
+		const voices = await VoiceCommand.UPDATE_OPTIONS.voices.get(inter);
+		const sourceVoiceChannel = VoiceCommand.UPDATE_OPTIONS.sourceVoiceChannel.get(inter);
+		const destinationVoiceChannel = VoiceCommand.UPDATE_OPTIONS.destinationVoiceChannel.get(inter);
+
+		const {
+			updatedQueueIds,
+		} = VoiceUtils.updateVoices(inter.store, voices.map(voice => voice.id), {
+			sourceChannelId: sourceVoiceChannel?.id,
+			destinationChannelId: destinationVoiceChannel?.id,
+		});
+		const updatedQueues = updatedQueueIds.map(id => inter.store.dbQueues().get(id));
+
+		await inter.respond(`Updated voice integrations in ${updatedQueues.length} queue${updatedQueues.length ? "s" : ""}`);
+		await this.voice_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
 	// ====================================================================
@@ -106,13 +129,18 @@ export class VoiceCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly DELETE_OPTIONS = {
-		queues: new QueuesOption({ required: true, description: "Queue(s) to integrate with voice" }),
+		voices: new VoicesOption({ required: true, description: "Voice integrations to delete" }),
 	};
 
 	static async voice_delete(inter: SlashInteraction) {
-		const queues = await VoiceCommand.DELETE_OPTIONS.queues.get(inter);
+		const voices = await VoiceCommand.DELETE_OPTIONS.voices.get(inter);
 
-		await inter.respond("Not implemented.");
+		const {
+			updatedQueueIds,
+		} = VoiceUtils.deleteVoices(inter.store, voices.map(voice => voice.id));
+		const updatedQueues = updatedQueueIds.map(id => inter.store.dbQueues().get(id));
 
+		await inter.respond(`Deleted voice integrations in ${updatedQueues.length} queue${updatedQueues.length ? "s" : ""}`);
+		await this.voice_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 }

@@ -1,24 +1,33 @@
 import { bold, channelMention, inlineCode, roleMention, strikethrough } from "discord.js";
-import { compact, isNil } from "lodash-es";
+import { compact, isNil, omit } from "lodash-es";
 
-import type { Store } from "../core/store.ts";
-import { type DbQueue, QUEUE_TABLE } from "../db/schema.ts";
+import { type DbQueue, type DbVoice, QUEUE_TABLE } from "../db/schema.ts";
+import type { Store } from "../db/store.ts";
 import { MemberUtils } from "./member.utils.ts";
 
 export namespace QueueUtils {
-	const QUEUE_HIDDEN_SETTINGS = ["id", "name", "guildId", "lastPullUserIds"];
-	const QUEUE_PRINT_SETTINGS = Object.keys(QUEUE_TABLE).filter(prop => !QUEUE_HIDDEN_SETTINGS.includes(prop));
+	const INDESCRIBABLE_QUEUE_PROPERTIES = ["id", "name", "guildId", "queueId"];
 
-	type FormattingFunctions = Partial<Record<keyof DbQueue, (value: any) => string>>;
+	type FormattingFunctions = Partial<Record<keyof DbQueue | keyof DbVoice, (value: any) => string>>;
 	const formattingFunctions: FormattingFunctions = {
 		logChannelId: channelMention,
 		roleId: roleMention,
-		sourceVoiceChannelId: channelMention,
-		destinationVoiceChannelId: channelMention,
+		sourceChannelId: channelMention,
+		destinationChannelId: channelMention,
 	};
 
-	export function getQueueProperties(queue: DbQueue) {
-		return compact(QUEUE_PRINT_SETTINGS.map(prop => formatSettingWithFallBack(queue, prop))).join("\n");
+	export function describeQueue(store: Store, queue: DbQueue) {
+		const describableProperties = omit(queue, INDESCRIBABLE_QUEUE_PROPERTIES);
+
+		const propertyStrings = Object.keys(describableProperties).map(property => describeProperty(queue, property));
+
+		const voice = store.dbVoices().find(voice => voice.queueId === queue.id);
+		if (voice) {
+			propertyStrings.push(`- voice_source_channel = ${channelMention(voice.sourceChannelId)}`);
+			propertyStrings.push(`- voice_destination_channel = ${channelMention(voice.destinationChannelId)}`);
+		}
+
+		return compact(propertyStrings).join("\n");
 	}
 
 	export function validateQueueProperties(queue: Partial<DbQueue>) {
@@ -55,22 +64,19 @@ export namespace QueueUtils {
 		);
 	}
 
-	function formatSettingWithFallBack(queue: DbQueue, setting: string) {
+	function describeProperty(queue: DbQueue, setting: string) {
 		const value = queue[setting as keyof DbQueue];
 		const dbQueueCol = QUEUE_TABLE[setting as keyof DbQueue];
 		const defaultValue = dbQueueCol?.default;
 		const isDefaultValue = value == defaultValue;
 
-		if (isNil(value) && isNil(defaultValue)) {
-			return null;
-		}
+		if (isNil(value) && isNil(defaultValue)) return;
 
 		const settingStr = isDefaultValue ? dbQueueCol.name : bold(dbQueueCol.name);
 		const valueStr = formatValue(value, setting as keyof DbQueue);
 		const defaultValueStr = isDefaultValue ? "" : strikethrough(inlineCode(defaultValue as string));
-		const connectorStr = (valueStr.length || defaultValueStr.length) ? " = " : "";
 
-		return `- ${settingStr} ${connectorStr} ${valueStr} ${defaultValueStr}`;
+		return `- ${settingStr} = ${valueStr} ${defaultValueStr}`;
 	}
 
 	function formatValue(value: any, setting: keyof DbQueue): string {

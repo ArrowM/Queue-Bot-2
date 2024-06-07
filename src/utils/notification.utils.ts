@@ -1,7 +1,7 @@
 import { groupBy } from "lodash-es";
 
-import type { Store } from "../core/store.ts";
 import type { DbMember } from "../db/schema.ts";
+import type { Store } from "../db/store.ts";
 import type { NotificationOptions } from "../types/notification.types.ts";
 import { queueMention } from "./string.utils.ts";
 

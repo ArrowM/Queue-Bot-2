@@ -97,7 +97,13 @@ export class DisplaysCommand extends AdminCommand {
 	static async displays_delete(inter: SlashInteraction) {
 		const displays = await DisplaysCommand.DELETE_OPTIONS.displays.get(inter);
 
-		const { queuesToUpdate } = DisplayUtils.deleteDisplays(inter.store, displays.map(dis => dis.id));
+		const {
+			deletedDisplays,
+			updatedQueueIds,
+		} = DisplayUtils.deleteDisplays(inter.store, displays.map(dis => dis.id));
+		const queuesToUpdate = updatedQueueIds.map(id => inter.store.dbQueues().get(id));
+
+		await inter.respond(`Deleted ${deletedDisplays.length} display${deletedDisplays.length === 1 ? "" : "s"}.`);
 
 		await this.displays_get(inter, toCollection<bigint, DbQueue>("id", queuesToUpdate));
 	}

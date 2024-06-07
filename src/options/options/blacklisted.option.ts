@@ -9,7 +9,6 @@ import { type AutoCompleteOptions, CustomOption } from "../base.options.ts";
 export class BlacklistedOption extends CustomOption {
 	static readonly ID = "blacklisted";
 	name = BlacklistedOption.ID;
-	autocomplete = true;
 
 	getAutocompletions = BlacklistedOption.getAutocompletions;
 
@@ -30,9 +29,9 @@ export class BlacklistedOption extends CustomOption {
 
 	static findBlacklisted(blacklisteds: Collection<bigint, DbBlacklisted>, idString: string): DbBlacklisted {
 		try {
-			const blacklistedEntry = blacklisteds.find(entry => entry.id === BigInt(idString));
-			if (blacklistedEntry) {
-				return blacklistedEntry;
+			const blacklisted = blacklisteds.find(entry => entry.id === BigInt(idString));
+			if (blacklisted) {
+				return blacklisted;
 			}
 			else {
 				throw new BlacklistedNotFoundError();

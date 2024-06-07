@@ -111,11 +111,13 @@ export class SchedulesCommand extends AdminCommand {
 			reason: SchedulesCommand.ADD_OPTIONS.reason.get(inter),
 		};
 
-		ScheduleUtils.insertSchedules(inter.store, queues, schedule);
+		const {
+			updatedQueueIds,
+		} = ScheduleUtils.insertSchedules(inter.store, queues, schedule);
+		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
-		await inter.respond(`Scheduled ${schedule.command} for the '${queuesMention(queues)}' queue${queues.size ? "s" : ""}.`);
-
-		await this.schedules_get(inter);
+		await inter.respond(`Scheduled ${schedule.command} for the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`);
+		await this.schedules_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
 	// ====================================================================
@@ -126,8 +128,8 @@ export class SchedulesCommand extends AdminCommand {
 		schedules: new SchedulesOption({ required: true, description: "Scheduled commands to update" }),
 		command: new CommandOption({ description: "Command to schedule" }),
 		cron: new CronOption({ description: "Cron schedule" }),
-		reason: new ReasonOption({ description: "Reason for the schedule" }),
 		timezone: new TimezoneOption({ description: "Timezone for the schedule" }),
+		reason: new ReasonOption({ description: "Reason for the schedule" }),
 	};
 
 	static async schedules_set(inter: SlashInteraction) {
@@ -139,10 +141,12 @@ export class SchedulesCommand extends AdminCommand {
 			reason: SchedulesCommand.SET_OPTIONS.reason.get(inter),
 		}, isNil);
 
-		const { updatedQueues } = ScheduleUtils.updateSchedules(inter.store, schedules, scheduleUpdate);
+		const {
+			updatedQueueIds,
+		} = ScheduleUtils.updateSchedules(inter.store, schedules, scheduleUpdate);
+		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
 		await inter.respond(`Updated ${schedules.size} schedule${schedules.size ? "s" : ""}.`);
-
 		await this.schedules_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
@@ -157,10 +161,12 @@ export class SchedulesCommand extends AdminCommand {
 	static async schedules_delete(inter: SlashInteraction) {
 		const schedules = await SchedulesCommand.DELETE_OPTIONS.schedules.get(inter);
 
-		const { updatedQueues } = ScheduleUtils.deleteSchedules(schedules.map(sch => sch.id), inter.store);
+		const {
+			updatedQueueIds,
+		} = ScheduleUtils.deleteSchedules(schedules.map(sch => sch.id), inter.store);
+		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
 		await inter.respond(`Deleted ${schedules.size} schedule${schedules.size ? "s" : ""}.`);
-
 		await this.schedules_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 

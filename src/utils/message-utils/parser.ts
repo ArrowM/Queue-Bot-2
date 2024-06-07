@@ -1,9 +1,9 @@
 import { Collection } from "discord.js";
 
-import type { DbQueue } from "../db/schema.ts";
-import { QueueOption } from "../options/options/queue.option.ts";
-import { QueuesOption } from "../options/options/queues.option.ts";
-import type { AutocompleteInteraction, SlashInteraction } from "../types/interaction.types.ts";
+import type { DbQueue } from "../../db/schema.ts";
+import { QueueOption } from "../../options/options/queue.option.ts";
+import { QueuesOption } from "../../options/options/queues.option.ts";
+import type { AutocompleteInteraction, SlashInteraction } from "../../types/interaction.types.ts";
 
 export class Parser<T extends AutocompleteInteraction | SlashInteraction> {
 	cache: Map<string, unknown> = new Map();
@@ -23,6 +23,12 @@ export class Parser<T extends AutocompleteInteraction | SlashInteraction> {
 		}
 
 		return this.inter.store.dbQueues();
+	}
+
+	getScopedVoices(queues: Collection<bigint, DbQueue>) {
+		return this.inter.store.dbVoices().filter(voice =>
+			queues.has(voice.queueId),
+		);
 	}
 
 	getScopedMembers(queues: Collection<bigint, DbQueue>) {

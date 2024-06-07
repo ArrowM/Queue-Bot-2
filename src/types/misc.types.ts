@@ -26,4 +26,4 @@ export type PendingGuildUpdates = {
 	};
 }
 
-export type ArrayOrCollection<K, V> = V[] | Collection<bigint, V>;
+export type ArrayOrCollection<K, V> = V[] | Collection<K, V>;

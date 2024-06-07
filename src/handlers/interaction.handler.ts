@@ -1,6 +1,6 @@
 import { codeBlock, EmbedBuilder, type Interaction } from "discord.js";
 
-import { Store } from "../core/store.ts";
+import { Store } from "../db/store.ts";
 import type { Handler } from "../types/handler.types.ts";
 import type { AnyInteraction } from "../types/interaction.types.ts";
 import { CustomError } from "../utils/error.utils.ts";

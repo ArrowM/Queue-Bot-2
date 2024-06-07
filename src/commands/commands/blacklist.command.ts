@@ -85,10 +85,12 @@ export class BlacklistCommand extends AdminCommand {
 		const mentionable = BlacklistCommand.ADD_OPTIONS.mentionable.get(inter);
 		const reason = BlacklistCommand.ADD_OPTIONS.reason.get(inter);
 
-		const { updatedQueues } = BlacklistUtils.insertBlacklisted(inter.store, queues, mentionable, reason);
+		const {
+			updatedQueueIds,
+		} = BlacklistUtils.insertBlacklisted(inter.store, queues, mentionable, reason);
+		const updatedQueues = updatedQueueIds.map(id => inter.store.dbQueues().get(id));
 
-		await inter.respond(`Blacklisted ${mentionable} from the '${queuesMention(queues)}' queue${queues.size ? "s" : ""}.`);
-
+		await inter.respond(`Blacklisted ${mentionable} from the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`);
 		await this.blacklist_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
@@ -106,11 +108,12 @@ export class BlacklistCommand extends AdminCommand {
 	static async blacklist_delete(inter: SlashInteraction) {
 		const blacklisteds = await BlacklistCommand.DELETE_OPTIONS.blacklisteds.get(inter);
 
-		const deletedBlacklisted = BlacklistUtils.deleteBlacklisted(inter.store, blacklisteds.map(blacklisted => blacklisted.id));
+		const {
+			updatedQueueIds,
+		} = BlacklistUtils.deleteBlacklisted(inter.store, blacklisteds.map(blacklisted => blacklisted.id));
+		const updatedQueues = updatedQueueIds.map(id => inter.store.dbQueues().get(id));
 
 		await inter.respond(`Un-blacklisted ${blacklisteds.map(mentionableMention).join(", ")}.`);
-
-		const updatedQueues = deletedBlacklisted.map(deleted => inter.store.dbQueues().get(deleted.queueId));
 		await this.blacklist_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 }

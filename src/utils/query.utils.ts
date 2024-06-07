@@ -14,6 +14,7 @@ import {
 	PRIORITIZED_TABLE,
 	QUEUE_TABLE,
 	SCHEDULE_TABLE,
+	VOICE_TABLE,
 	WHITELISTED_TABLE,
 } from "../db/schema.ts";
 
@@ -60,7 +61,17 @@ export namespace QueryUtils {
 		return selectManyQueuesByGuildId.all(by);
 	}
 
-// Displays
+	// Voice
+
+	export function selectVoice(by: { guildId: Snowflake, id: bigint }) {
+		return selectVoiceById.get(by);
+	}
+
+	export function selectManyVoices(by: { guildId: Snowflake }) {
+		return selectManyVoicesByGuildId.all(by);
+	}
+
+	// Displays
 
 	export function selectDisplay(by:
 		{ guildId: Snowflake, id: bigint } |
@@ -94,7 +105,7 @@ export namespace QueryUtils {
 		}
 	}
 
-// Members
+	// Members
 
 	export function selectMember(by:
 		{ guildId: Snowflake, id: bigint } |
@@ -132,7 +143,7 @@ export namespace QueryUtils {
 		}
 	}
 
-// Schedules
+	// Schedules
 
 	// Must allow by without guildId for automatic schedule running
 	export function selectSchedule(by: { id: bigint }) {
@@ -151,7 +162,7 @@ export namespace QueryUtils {
 		}
 	}
 
-// Needed for startup schedule load
+	// Needed for startup schedule load
 	export function selectAllSchedules() {
 		return db
 			.select()
@@ -168,7 +179,7 @@ export namespace QueryUtils {
 			.returning().get();
 	}
 
-// Whitelisted
+	// Whitelisted
 
 	export function selectWhitelisted(by:
 		{ guildId: Snowflake, id: bigint } |
@@ -197,7 +208,7 @@ export namespace QueryUtils {
 		}
 	}
 
-// Blacklisted
+	// Blacklisted
 
 	export function selectBlacklisted(by:
 		{ guildId: Snowflake, id: bigint } |
@@ -226,7 +237,7 @@ export namespace QueryUtils {
 		}
 	}
 
-// Prioritized
+	// Prioritized
 
 	export function selectPrioritized(by:
 		{ guildId: Snowflake, id: bigint } |
@@ -255,7 +266,7 @@ export namespace QueryUtils {
 		}
 	}
 
-// Admins
+	// Admins
 
 	export function selectAdmin(by:
 		{ guildId: Snowflake, id: bigint } |
@@ -281,7 +292,7 @@ export namespace QueryUtils {
 		}
 	}
 
-// Archived Members
+	// Archived Members
 
 	export function selectArchivedMember(by:
 		{ guildId: Snowflake, id: bigint } |
@@ -310,7 +321,7 @@ export namespace QueryUtils {
 		}
 	}
 
-// Patch Notes
+	// Patch Notes
 
 	export function selectAllPatchNotes() {
 		return db
@@ -326,11 +337,11 @@ export namespace QueryUtils {
 			.returning().get();
 	}
 
-// ====================================================================
-//                           Prepared Selects
-// ====================================================================
+	// ====================================================================
+	//                           Prepared Selects
+	// ====================================================================
 
-// Guilds
+	// Guilds
 
 	const selectGuildById = db
 		.select()
@@ -340,7 +351,7 @@ export namespace QueryUtils {
 		)
 		.prepare();
 
-// Queues
+	// Queues
 
 	const selectQueueById = db
 		.select()
@@ -359,7 +370,26 @@ export namespace QueryUtils {
 		)
 		.prepare();
 
-// Displays
+	// Voice
+
+	const selectVoiceById = db
+		.select()
+		.from(VOICE_TABLE)
+		.where(and(
+			eq(VOICE_TABLE.guildId, sql.placeholder("guildId")),
+			eq(VOICE_TABLE.id, sql.placeholder("id")),
+		))
+		.prepare();
+
+	const selectManyVoicesByGuildId = db
+		.select()
+		.from(VOICE_TABLE)
+		.where(
+			eq(VOICE_TABLE.guildId, sql.placeholder("guildId")),
+		)
+		.prepare();
+
+	// Displays
 
 	const selectDisplayById = db
 		.select()
@@ -415,7 +445,7 @@ export namespace QueryUtils {
 		))
 		.prepare();
 
-// Members
+	// Members
 
 	const selectMemberById = db
 		.select()
@@ -448,15 +478,7 @@ export namespace QueryUtils {
 
 	const MEMBER_ORDER = [
 		// Raw SQL for CASE statement to handle NULL values
-		sql`CASE WHEN
-    ${MEMBER_TABLE.priority}
-    IS
-    NULL
-    THEN
-    1
-    ELSE
-    0
-    END`,
+		sql`CASE WHEN ${MEMBER_TABLE.priority} IS NULL THEN 1 ELSE 0 END`,
 		MEMBER_TABLE.priority,
 		MEMBER_TABLE.positionTime,
 	];
@@ -501,7 +523,7 @@ export namespace QueryUtils {
 		.orderBy(...MEMBER_ORDER)
 		.prepare();
 
-// Schedules
+	// Schedules
 
 	const selectScheduleById = db
 		.select()
@@ -528,7 +550,7 @@ export namespace QueryUtils {
 		))
 		.prepare();
 
-// Whitelisted
+	// Whitelisted
 
 	const selectWhitelistedById = db
 		.select()
@@ -575,7 +597,7 @@ export namespace QueryUtils {
 		))
 		.prepare();
 
-// Blacklisted
+	// Blacklisted
 
 	const selectBlacklistedById = db
 		.select()
@@ -622,7 +644,7 @@ export namespace QueryUtils {
 		))
 		.prepare();
 
-// Prioritized
+	// Prioritized
 
 	const selectPrioritizedById = db
 		.select()
@@ -669,7 +691,7 @@ export namespace QueryUtils {
 		))
 		.prepare();
 
-// Admins
+	// Admins
 
 	const selectAdminById = db
 		.select()
@@ -706,7 +728,7 @@ export namespace QueryUtils {
 		)
 		.prepare();
 
-// Archived Members
+	// Archived Members
 
 	const selectArchivedMemberById = db
 		.select()

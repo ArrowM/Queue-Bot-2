@@ -1,12 +1,11 @@
 import { type GuildMember, Role } from "discord.js";
 import { uniq } from "lodash-es";
 
-import type { Store } from "../core/store.ts";
-import type { DbBlacklisted, DbQueue } from "../db/schema.ts";
+import type { DbQueue } from "../db/schema.ts";
+import type { Store } from "../db/store.ts";
 import { ArchivedMemberReason } from "../types/db.types.ts";
 import type { ArrayOrCollection } from "../types/misc.types.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
-import { DisplayUtils } from "./display.utils.ts";
 import { MemberUtils } from "./member.utils.ts";
 import { filterDbObjectsOnJsMember, map } from "./misc.utils.ts";
 
@@ -20,20 +19,21 @@ export namespace BlacklistUtils {
 			isRole: mentionable instanceof Role,
 			reason,
 		}));
+		const updatedQueueIds = uniq(insertedBlacklisted.map(blacklisted => blacklisted.queueId));
 
-		const queuesToUpdate = uniq(
-			insertedBlacklisted.map(blacklisted => store.dbQueues().get(blacklisted.queueId)),
-		);
+		// delete members
 		const by = (mentionable instanceof Role) ? { roleId: mentionable.id } : { userId: mentionable.id };
 		MemberUtils.deleteMembers({ store, queues, reason: ArchivedMemberReason.Kicked, by, force: true });
-		DisplayUtils.requestDisplaysUpdate(store, map(queuesToUpdate, queue => queue.id));
 
-		return { insertedBlacklisted, updatedQueues: queuesToUpdate };
+		return { insertedBlacklisted, updatedQueueIds };
 	}
 
-	export function deleteBlacklisted(store: Store, blacklistedIds: bigint[]): DbBlacklisted[] {
+	export function deleteBlacklisted(store: Store, blacklistedIds: bigint[]) {
 		// delete from db
-		return blacklistedIds.map(id => store.deleteBlacklisted({ id }));
+		const deletedBlacklisted = blacklistedIds.map(id => store.deleteBlacklisted({ id }));
+		const updatedQueueIds = uniq(deletedBlacklisted.map(blacklisted => blacklisted.queueId));
+
+		return { deletedBlacklisted, updatedQueueIds };
 	}
 
 	export function isBlockedByBlacklist(store: Store, queueId: bigint, jsMember: GuildMember): boolean {

@@ -9,7 +9,6 @@ import { type AutoCompleteOptions, CustomOption } from "../base.options.ts";
 export class WhitelistedOption extends CustomOption {
 	static readonly ID = "whitelisted";
 	name = WhitelistedOption.ID;
-	autocomplete = true;
 
 	getAutocompletions = WhitelistedOption.getAutocompletions;
 
@@ -28,11 +27,11 @@ export class WhitelistedOption extends CustomOption {
 		return WhitelistedOption.findWhitelisted(whitelisteds, inputString);
 	}
 
-	static findWhitelisted(whitelisted: Collection<bigint, DbWhitelisted>, idString: string): DbWhitelisted {
+	static findWhitelisted(whitelisteds: Collection<bigint, DbWhitelisted>, idString: string): DbWhitelisted {
 		try {
-			const whitelistedEntry = whitelisted.find(entry => entry.id === BigInt(idString));
-			if (whitelistedEntry) {
-				return whitelistedEntry;
+			const whitelisted = whitelisteds.find(entry => entry.id === BigInt(idString));
+			if (whitelisted) {
+				return whitelisted;
 			}
 			else {
 				throw new WhitelistedNotFoundError();

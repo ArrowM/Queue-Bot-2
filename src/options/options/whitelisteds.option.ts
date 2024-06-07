@@ -1,16 +1,15 @@
 import { Collection } from "discord.js";
 
-import { SelectMenuTransactor } from "../../core/select-menu-transactor.ts";
 import type { DbWhitelisted } from "../../db/schema.ts";
 import type { AutocompleteInteraction, SlashInteraction } from "../../types/interaction.types.ts";
 import { CHOICE_ALL, CHOICE_SOME } from "../../types/parsing.types.ts";
+import { SelectMenuTransactor } from "../../utils/message-utils/select-menu-transactor.ts";
 import { CustomOption } from "../base.options.ts";
 import { WhitelistedOption } from "./whitelisted.option.ts";
 
 export class WhitelistedsOption extends CustomOption {
 	static readonly ID = "whitelisted";
 	name = WhitelistedsOption.ID;
-	autocomplete = true;
 	extraChoices = [CHOICE_ALL, CHOICE_SOME];
 
 	getAutocompletions = WhitelistedOption.getAutocompletions;
@@ -28,20 +27,20 @@ export class WhitelistedsOption extends CustomOption {
 		const whitelisteds = inter.parser.getScopedWhitelisted(queues);
 
 		switch (inputString) {
-		case CHOICE_ALL.value:
-			return whitelisteds;
-		case CHOICE_SOME.value:
-			return await this.getViaSelectMenu(inter as SlashInteraction, whitelisteds);
-		default:
-			const whitelisted = WhitelistedOption.findWhitelisted(whitelisteds, inputString);
-			return whitelisted ? new Collection([[whitelisted.id, whitelisted]]) : null;
+			case CHOICE_ALL.value:
+				return whitelisteds;
+			case CHOICE_SOME.value:
+				return await this.getViaSelectMenu(inter as SlashInteraction, whitelisteds);
+			default:
+				const whitelisted = WhitelistedOption.findWhitelisted(whitelisteds, inputString);
+				return whitelisted ? new Collection([[whitelisted.id, whitelisted]]) : null;
 		}
 	}
 
-	protected async getViaSelectMenu(inter: SlashInteraction, scopedWhitelisted: Collection<bigint, DbWhitelisted>): Promise<Collection<bigint, DbWhitelisted>> {
+	protected async getViaSelectMenu(inter: SlashInteraction, whitelisted: Collection<bigint, DbWhitelisted>): Promise<Collection<bigint, DbWhitelisted>> {
 		// build menu
 		const label = WhitelistedsOption.ID;
-		const options = scopedWhitelisted.map(whitelisted => ({
+		const options = whitelisted.map(whitelisted => ({
 			name: whitelisted.toString(),
 			value: whitelisted.id.toString(),
 		}));
@@ -52,7 +51,7 @@ export class WhitelistedsOption extends CustomOption {
 
 		// parse result
 		const whitelistedIds = result.map(id => BigInt(id));
-		const selectedWhitelisteds = scopedWhitelisted.filter(whitelisted => whitelistedIds.includes(whitelisted.id));
+		const selectedWhitelisteds = whitelisted.filter(whitelisted => whitelistedIds.includes(whitelisted.id));
 
 		// write result
 		await selectMenuTransactor.updateWithResult(label, selectedWhitelisteds);

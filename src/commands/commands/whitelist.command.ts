@@ -85,11 +85,12 @@ export class WhitelistCommand extends AdminCommand {
 		const mentionable = WhitelistCommand.ADD_OPTIONS.mentionable.get(inter);
 		const reason = WhitelistCommand.ADD_OPTIONS.reason.get(inter);
 
-		const insertedWhitedListed = WhitelistUtils.insertWhitelisted(inter.store, queues, mentionable, reason);
+		const {
+			updatedQueueIds,
+		} = WhitelistUtils.insertWhitelisted(inter.store, queues, mentionable, reason);
+		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
-		await inter.respond(`Whitelisted ${mentionable} in the '${queuesMention(queues)}' queue${queues.size ? "s" : ""}.`);
-
-		const updatedQueues = insertedWhitedListed.map(inserted => inter.store.dbQueues().get(inserted.queueId));
+		await inter.respond(`Whitelisted ${mentionable} in the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`);
 		await this.whitelist_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
@@ -107,11 +108,12 @@ export class WhitelistCommand extends AdminCommand {
 	static async whitelist_delete(inter: SlashInteraction) {
 		const whitelisteds = await WhitelistCommand.DELETE_OPTIONS.whitelisteds.get(inter);
 
-		const deletedWhitelisted = WhitelistUtils.deleteWhitelisted(inter.store, whitelisteds.map(whitelisted => whitelisted.id));
+		const {
+			updatedQueueIds,
+		} = WhitelistUtils.deleteWhitelisted(inter.store, whitelisteds.map(whitelisted => whitelisted.id));
+		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
 		await inter.respond(`Un-whitelisted ${whitelisteds.map(mentionableMention).join(", ")}.`);
-
-		const updatedQueues = deletedWhitelisted.map(deleted => inter.store.dbQueues().get(deleted.queueId));
 		await this.whitelist_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 }

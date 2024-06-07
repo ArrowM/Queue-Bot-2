@@ -1,7 +1,7 @@
 import { type GuildMember, PermissionsBitField, Role } from "discord.js";
 
-import type { Store } from "../core/store.ts";
 import type { DbAdmin } from "../db/schema.ts";
+import type { Store } from "../db/store.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
 import { AdminAccessError } from "./error.utils.ts";
 

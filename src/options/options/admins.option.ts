@@ -1,16 +1,15 @@
 import { Collection } from "discord.js";
 
-import { SelectMenuTransactor } from "../../core/select-menu-transactor.ts";
 import type { DbAdmin } from "../../db/schema.ts";
 import type { AutocompleteInteraction, SlashInteraction } from "../../types/interaction.types.ts";
 import { CHOICE_ALL, CHOICE_SOME } from "../../types/parsing.types.ts";
+import { SelectMenuTransactor } from "../../utils/message-utils/select-menu-transactor.ts";
 import { CustomOption } from "../base.options.ts";
 import { AdminOption } from "./admin.option.ts";
 
 export class AdminsOption extends CustomOption {
 	static readonly ID = "admins";
 	name = AdminsOption.ID;
-	autocomplete = true;
 	extraChoices = [CHOICE_ALL, CHOICE_SOME];
 
 	getAutocompletions = AdminOption.getAutocompletions;
@@ -27,13 +26,13 @@ export class AdminsOption extends CustomOption {
 		const admins = inter.store.dbAdmins();
 
 		switch (inputString) {
-		case CHOICE_ALL.value:
-			return admins;
-		case CHOICE_SOME.value:
-			return await this.getViaSelectMenu(inter as SlashInteraction, admins);
-		default:
-			const admin = AdminOption.findAdmin(admins, inputString);
-			return admin ? new Collection([[admin.id, admin]]) : null;
+			case CHOICE_ALL.value:
+				return admins;
+			case CHOICE_SOME.value:
+				return await this.getViaSelectMenu(inter as SlashInteraction, admins);
+			default:
+				const admin = AdminOption.findAdmin(admins, inputString);
+				return admin ? new Collection([[admin.id, admin]]) : null;
 		}
 	}
 

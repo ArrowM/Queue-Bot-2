@@ -1,16 +1,15 @@
 import { Collection } from "discord.js";
 
-import { SelectMenuTransactor } from "../../core/select-menu-transactor.ts";
 import type { DbSchedule } from "../../db/schema.ts";
 import type { AutocompleteInteraction, SlashInteraction } from "../../types/interaction.types.ts";
 import { CHOICE_ALL, CHOICE_SOME } from "../../types/parsing.types.ts";
+import { SelectMenuTransactor } from "../../utils/message-utils/select-menu-transactor.ts";
 import { CustomOption } from "../base.options.ts";
 import { ScheduleOption } from "./schedule.option.ts";
 
 export class SchedulesOption extends CustomOption {
 	static readonly ID = "schedules";
 	name = ScheduleOption.ID;
-	autocomplete = true;
 	extraChoices = [CHOICE_ALL, CHOICE_SOME];
 
 	getAutocompletions = ScheduleOption.getAutocompletions;
@@ -28,20 +27,20 @@ export class SchedulesOption extends CustomOption {
 		const schedules = inter.parser.getScopedSchedules(queues);
 
 		switch (inputString) {
-		case CHOICE_ALL.value:
-			return schedules;
-		case CHOICE_SOME.value:
-			return await this.getViaSelectMenu(inter as SlashInteraction, schedules);
-		default:
-			const schedule = ScheduleOption.findSchedule(schedules, inputString);
-			return schedule ? new Collection([[schedule.id, schedule]]) : null;
+			case CHOICE_ALL.value:
+				return schedules;
+			case CHOICE_SOME.value:
+				return await this.getViaSelectMenu(inter as SlashInteraction, schedules);
+			default:
+				const schedule = ScheduleOption.findSchedule(schedules, inputString);
+				return schedule ? new Collection([[schedule.id, schedule]]) : null;
 		}
 	}
 
-	protected async getViaSelectMenu(inter: SlashInteraction, scopedSchedules: Collection<bigint, DbSchedule>): Promise<Collection<bigint, DbSchedule>> {
+	protected async getViaSelectMenu(inter: SlashInteraction, schedules: Collection<bigint, DbSchedule>): Promise<Collection<bigint, DbSchedule>> {
 		// build menu
 		const label = SchedulesOption.ID;
-		const options = scopedSchedules.map(schedule => ({
+		const options = schedules.map(schedule => ({
 			name: schedule.toString(),
 			value: schedule.id.toString(),
 		}));
@@ -52,7 +51,7 @@ export class SchedulesOption extends CustomOption {
 
 		// parse result
 		const scheduleIds = result.map(id => BigInt(id));
-		const selectedSchedules = scopedSchedules.filter(schedule => scheduleIds.includes(schedule.id));
+		const selectedSchedules = schedules.filter(schedule => scheduleIds.includes(schedule.id));
 
 		// write result
 		await selectMenuTransactor.updateWithResult(label, selectedSchedules);

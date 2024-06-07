@@ -1,9 +1,9 @@
 import { Collection, EmbedBuilder, GuildMember, Role, roleMention, type Snowflake, userMention } from "discord.js";
 import { groupBy, isNil } from "lodash-es";
 
-import type { Store } from "../core/store.ts";
 import { db } from "../db/db.ts";
 import { type DbMember, type DbQueue } from "../db/schema.ts";
+import type { Store } from "../db/store.ts";
 import { ArchivedMemberReason } from "../types/db.types.ts";
 import type { MemberDeleteBy } from "../types/member.types.ts";
 import type { ArrayOrCollection } from "../types/misc.types.ts";
@@ -156,6 +156,7 @@ export namespace MemberUtils {
 				);
 			}
 			catch {
+				// Ignore
 			}
 		}
 

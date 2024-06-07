@@ -2,7 +2,6 @@ import { type Collection, EmbedBuilder, inlineCode, italic, type Role, SlashComm
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import { findKey, get, isNil, omitBy } from "lodash-es";
 
-import { SelectMenuTransactor } from "../../core/select-menu-transactor.ts";
 import { type DbQueue, QUEUE_TABLE } from "../../db/schema.ts";
 import { AutopullToggleOption } from "../../options/options/autopull-toggle.option.ts";
 import { ButtonsToggleOption } from "../../options/options/buttons-toggle.option.ts";
@@ -25,6 +24,7 @@ import { UpdateTypeOption } from "../../options/options/update-type.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { DisplayUtils } from "../../utils/display.utils.ts";
+import { SelectMenuTransactor } from "../../utils/message-utils/select-menu-transactor.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
 import { QueueUtils } from "../../utils/queue.utils.ts";
 import { commandMention, queueMention, queuesMention } from "../../utils/string.utils.ts";
@@ -93,12 +93,13 @@ export class QueuesCommand extends AdminCommand {
 		let embeds: EmbedBuilder[];
 
 		if (queues.size > 0) {
-			embeds = queues.map(queue => new EmbedBuilder()
-				.setColor(queue.color)
-				.addFields({
-					name: queueMention(queue),
-					value: QueueUtils.getQueueProperties(queue),
-				}),
+			embeds = queues.map(queue =>
+				new EmbedBuilder()
+					.setColor(queue.color)
+					.addFields({
+						name: queueMention(queue),
+						value: QueueUtils.describeQueue(inter.store, queue),
+					})
 			);
 			embeds.push(new EmbedBuilder().setDescription(italic(`Queue settings can be updated with ${commandMention("queues", "set")}`)));
 		}

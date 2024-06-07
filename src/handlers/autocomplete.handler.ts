@@ -1,8 +1,8 @@
-import { Parser } from "../core/parser.ts";
 import { OPTIONS } from "../options/options.loader.ts";
 import { type Handler, MAX_SLASH_COMMAND_OPTIONS, type UIOption } from "../types/handler.types.ts";
 import type { AnyInteraction, AutocompleteInteraction } from "../types/interaction.types.ts";
 import { CHOICE_ALL, CHOICE_SOME } from "../types/parsing.types.ts";
+import { Parser } from "../utils/message-utils/parser.ts";
 
 export class AutocompleteHandler implements Handler {
 	private readonly inter: AutocompleteInteraction;

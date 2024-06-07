@@ -9,7 +9,6 @@ import { type AutoCompleteOptions, CustomOption } from "../base.options.ts";
 export class TimezoneOption extends CustomOption {
 	static readonly ID = "timezone";
 	name = TimezoneOption.ID;
-	autocomplete = true;
 
 	getAutocompletions = TimezoneOption.getAutocompletions;
 

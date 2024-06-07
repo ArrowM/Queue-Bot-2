@@ -1,12 +1,12 @@
 import { type InteractionReplyOptions, MessagePayload } from "discord.js";
 
 import { COMMANDS } from "../commands/commands.loader.ts";
-import { Parser } from "../core/parser.ts";
 import { incrementGuildStat } from "../db/db.ts";
 import type { Handler } from "../types/handler.types.ts";
 import type { AnyInteraction, SlashInteraction } from "../types/interaction.types.ts";
 import { AdminUtils } from "../utils/admin.utils.ts";
 import { InteractionUtils } from "../utils/interaction.utils.ts";
+import { Parser } from "../utils/message-utils/parser.ts";
 
 export class CommandHandler implements Handler {
 	private readonly inter: SlashInteraction;
