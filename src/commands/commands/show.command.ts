@@ -33,7 +33,7 @@ export class ShowCommand extends EveryoneCommand {
 		if (!inter.replied) {
 			await inter.respond(italic("displaying..."));
 		}
-		setTimeout(async () => await inter.deleteReply().catch(() => null), 3000);
+		// setTimeout(async () => await inter.deleteReply().catch(() => null), 5000);
 
 		return result;
 	}

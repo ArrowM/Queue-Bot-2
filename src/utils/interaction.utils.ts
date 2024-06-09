@@ -19,17 +19,17 @@ import { CustomError } from "./error.utils.ts";
 
 export namespace InteractionUtils {
 	export async function respond(inter: AnyInteraction, response: (InteractionReplyOptions | string | MessagePayload)) {
-		if (typeof response === "string") {
-			response = { content: response, embeds: [] };
-		}
-		else if ("content" in response || "embeds" in response) {
-			response = {
-				...response,
-				content: response.content ?? "",
-				embeds: response.embeds ?? [],
-				components: response.components ?? [],
-			};
-		}
+		// if (typeof response === "string") {
+		// 	response = { content: response, embeds: [] };
+		// }
+		// else if ("content" in response || "embeds" in response) {
+		// 	response = {
+		// 		...response,
+		// 		content: response.content ?? "",
+		// 		embeds: response.embeds ?? [],
+		// 		components: response.components ?? [],
+		// 	};
+		// }
 
 		const interaction = inter as any;
 		if (interaction.deferred) {

@@ -42,13 +42,14 @@ export class InteractionHandler implements Handler {
 		if (message === "Unknown interaction") return;
 
 		try {
-			const embeds: EmbedBuilder[] = [
-				new EmbedBuilder()
-					.setTitle(ERROR_HEADER_LINE)
-					.setDescription(message ? `${codeBlock(message)}` : "")
-					.setFooter({ text: "This error has been logged and will be investigated by the developers." }),
-			];
+			const embed = new EmbedBuilder()
+				.setTitle(ERROR_HEADER_LINE)
+				.setDescription(message ? `${codeBlock(message)}` : "");
+			if (log) {
+				embed.setFooter({ text: "This error has been logged and will be investigated by the developers." });
+			}
 
+			const embeds = [embed];
 			if (extraEmbeds) {
 				embeds.push(...extraEmbeds);
 			}

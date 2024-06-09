@@ -1,7 +1,8 @@
-import { Collection, EmbedBuilder, GuildMember, Role, roleMention, type Snowflake, userMention } from "discord.js";
+import { Collection, EmbedBuilder, GuildMember, Role, roleMention, type Snowflake } from "discord.js";
 import { groupBy, isNil } from "lodash-es";
 
-import { db, QueryUtils } from "../db/queries.ts";
+import { db } from "../db/db.ts";
+import { QueryUtils } from "../db/queries.ts";
 import { type DbMember, type DbQueue } from "../db/schema.ts";
 import type { Store } from "../db/store.ts";
 import { ArchivedMemberReason } from "../types/db.types.ts";
@@ -21,7 +22,7 @@ import {
 import { find, map } from "./misc.utils.ts";
 import { NotificationUtils } from "./notification.utils.ts";
 import { PriorityUtils } from "./priority.utils.ts";
-import { queueMention } from "./string.utils.ts";
+import { membersMention, queueMention } from "./string.utils.ts";
 import { WhitelistUtils } from "./whitelist.utils.ts";
 
 export namespace MemberUtils {
@@ -66,7 +67,7 @@ export namespace MemberUtils {
 			priority,
 		});
 
-		await modifyRole(store, jsMember.id, queue.roleId, "add");
+		await modifyMemberRoles(store, jsMember.id, queue.roleId, "add");
 
 		DisplayUtils.requestDisplayUpdate(store, queue.id);
 
@@ -97,67 +98,67 @@ export namespace MemberUtils {
 		const { store, queues, reason, by, notification, force } = options;
 		const deletedMembers: DbMember[] = [];
 		const membersToNotify: DbMember[] = [];
-		const { userId, userIds, roleId, count } = by as any;
+		const { userId, userIds, roleId, count } = by ?? {} as any;
 
-		if (!isNil(userId) || !isNil(userIds)) {
-			const ids: Snowflake[] = !isNil(userId) ? [userId] : userIds;
-			queues.forEach((queue: DbQueue) => {
-				const deleted: DbMember[] = [];
-				ids.forEach(userId => {
-					const member = store.deleteMember({ queueId: queue.id, userId }, reason);
-					if (member) deleted.push(member);
+		db.transaction(() => {
+			if (!isNil(userId) || !isNil(userIds)) {
+				const ids: Snowflake[] = !isNil(userId) ? [userId] : userIds;
+				queues.forEach((queue: DbQueue) => {
+					const deleted: DbMember[] = [];
+					ids.forEach(userId => {
+						const member = store.deleteMember({ queueId: queue.id, userId }, reason);
+						if (member) deleted.push(member);
+					});
+					deletedMembers.push(...deleted);
+					if (queue.notificationsToggle) {
+						membersToNotify.push(...deletedMembers);
+					}
 				});
-				deletedMembers.push(...deleted);
-				if (queue.notificationsToggle) {
-					membersToNotify.push(...deletedMembers);
-				}
-			});
-		}
-		else if (!isNil(roleId)) {
-			const jsMembers = store.guild.roles.cache.get(roleId).members;
-			queues.forEach((queue: DbQueue) => {
-				jsMembers.forEach(jsMember => {
-					const member = store.deleteMember({ queueId: queue.id, userId: jsMember.id }, reason);
-					if (member) {
-						deletedMembers.push(member);
-						if (queue.notificationsToggle) {
-							membersToNotify.push(member);
+			}
+			else if (!isNil(roleId)) {
+				const jsMembers = store.guild.roles.cache.get(roleId).members;
+				queues.forEach((queue: DbQueue) => {
+					jsMembers.forEach(jsMember => {
+						const member = store.deleteMember({ queueId: queue.id, userId: jsMember.id }, reason);
+						if (member) {
+							deletedMembers.push(member);
+							if (queue.notificationsToggle) {
+								membersToNotify.push(member);
+							}
+						}
+					});
+				});
+			}
+			else {
+				queues.forEach((queue: DbQueue) => {
+					const deleted: DbMember[] = [];
+					const numToPull = count ?? queue.pullBatchSize ?? 1;
+					const members = store.dbMembers().filter(member => member.queueId === queue.id);
+					if (!force && (members.size < numToPull)) {
+						throw new Error("Not enough members to pull (< pullBatchSize of queue).");
+					}
+					for (let i = 0; i < numToPull; i++) {
+						const member = store.deleteMember({ queueId: queue.id }, reason);
+						if (member) {
+							deletedMembers.push(member);
+							if (queue.notificationsToggle) {
+								membersToNotify.push(...deleted);
+							}
 						}
 					}
 				});
-			});
-		}
-		else {
-			queues.forEach((queue: DbQueue) => {
-				const deleted: DbMember[] = [];
-				const numToPull = count ?? queue.pullBatchSize ?? 1;
-				const members = store.dbMembers().filter(member => member.queueId === queue.id);
-				if (!force && (members.size < numToPull)) {
-					throw new Error("Not enough members to pull (< pullBatchSize of queue).");
-				}
-				for (let i = 0; i < numToPull; i++) {
-					const member = store.deleteMember({ queueId: queue.id }, reason);
-					if (member) {
-						deletedMembers.push(member);
-						if (queue.notificationsToggle) {
-							membersToNotify.push(...deleted);
-						}
-					}
-				}
-			});
-		}
+			}
 
-		for (const member of deletedMembers) {
-			try {
-				const queue = find(queues, queue => queue.id === member.queueId);
-				store.jsMember(member.userId).then(jsMember =>
-					modifyRole(store, jsMember.id, queue.roleId, "remove"),
-				);
+			for (const member of deletedMembers) {
+				try {
+					const queue = find(queues, queue => queue.id === member.queueId);
+					modifyMemberRoles(store, member.userId, queue.roleId, "remove");
+				}
+				catch {
+					// Ignore
+				}
 			}
-			catch {
-				// Ignore
-			}
-		}
+		});
 
 		DisplayUtils.requestDisplaysUpdate(store, map(queues, queue => queue.id));
 
@@ -218,23 +219,22 @@ export namespace MemberUtils {
 		return members;
 	}
 
-	export async function getMemberPositionString(store: Store, queue: DbQueue, userId: Snowflake) {
+	export async function describePulledMember(store: Store, queue: DbQueue, userId: Snowflake) {
 		const { position, member } = getMemberPosition(store, queue, userId);
-		const jsMember = await store.jsMember(userId);
 		return new EmbedBuilder()
 			.setTitle(queueMention(queue))
 			.setColor(queue.color)
-			.setDescription(DisplayUtils.createMemberDisplayLine(queue, member, jsMember, position));
+			.setDescription(await DisplayUtils.createMemberDisplayLine(store, queue, member, position));
 	}
 
-	export function formatPulledMemberEmbeds(queues: ArrayOrCollection<bigint, DbQueue>, pulledMembers: DbMember[]) {
+	export async function describePulledMembers(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, pulledMembers: DbMember[]) {
 		const embeds: EmbedBuilder[] = [];
 		const grouped = groupBy(pulledMembers, "queueId");
 		for (const [queueId, pulledMembers] of Object.entries(grouped)) {
 			const queue = find(queues, queue => queue.id === BigInt(queueId));
-			const membersStr = pulledMembers.map((member) => userMention(member.userId)).join(", ");
+			const membersStr = await membersMention(store, pulledMembers);
 			const description = pulledMembers.length
-				? `Pulled ${membersStr} from the '${queueMention(queue)}' queue!`
+				? `Pulled from the '${queueMention(queue)}' queue:\n${membersStr}`
 				: `No members were pulled from the '${queueMention(queue)}' queue`;
 			embeds.push(
 				new EmbedBuilder()
@@ -246,12 +246,12 @@ export namespace MemberUtils {
 		return embeds;
 	}
 
-	export async function getPositions(store: Store, userId: Snowflake) {
+	export async function describeMyPositions(store: Store, userId: Snowflake) {
 		const members = QueryUtils.selectManyMembers({ guildId: store.guild.id, userId });
 		const queues = members.map(member => QueryUtils.selectQueue({ guildId: store.guild.id, id: member.queueId }));
 
 		const embeds = await Promise.all(queues.map(queue =>
-			MemberUtils.getMemberPositionString(store, queue, userId),
+			MemberUtils.describePulledMember(store, queue, userId),
 		));
 
 		if (!embeds.length) {
@@ -261,7 +261,7 @@ export namespace MemberUtils {
 		return embeds;
 	}
 
-	export async function modifyRole(store: Store, memberId: Snowflake, roleId: Snowflake, modification: "add" | "remove") {
+	export async function modifyMemberRoles(store: Store, memberId: Snowflake, roleId: Snowflake, modification: "add" | "remove") {
 		if (!roleId) return;
 		const member = await store.jsMember(memberId);
 		try {
@@ -284,6 +284,19 @@ export namespace MemberUtils {
 				throw e;
 			}
 		}
+	}
+
+	export async function updateMembersForModifiedQueueRole(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, roleId: Snowflake, modification: "add" | "remove") {
+		await Promise.all(
+			map(queues, async (queue) => {
+				const members = store.dbMembers().filter(member => member.queueId === queue.id);
+				return Promise.all(
+					members.map((member) =>
+						MemberUtils.modifyMemberRoles(store, member.userId, queue.roleId, modification)
+					),
+				);
+			})
+		);
 	}
 
 	// ====================================================================

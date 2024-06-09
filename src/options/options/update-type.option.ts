@@ -5,7 +5,7 @@ import { StringOption } from "../base.options.ts";
 
 export class UpdateTypeOption extends StringOption {
 	static readonly ID = "update_type";
-	name = UpdateTypeOption.ID;
+	id = UpdateTypeOption.ID;
 	defaultValue = DisplayUpdateType.Edit;
 	choices = toChoices(DisplayUpdateType);
 

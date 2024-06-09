@@ -1,11 +1,20 @@
 import { chatInputApplicationCommandMention } from "@discordjs/formatters";
 import cronstrue from "cronstrue";
-import { bold, EmbedBuilder, type GuildMember, roleMention, type Snowflake, userMention } from "discord.js";
+import {
+	bold,
+	Collection,
+	EmbedBuilder,
+	roleMention,
+	type Snowflake,
+	time,
+	type TimestampStylesString,
+	userMention,
+} from "discord.js";
 import { concat, get, groupBy, partition } from "lodash-es";
 
-import { type DbQueue, type DbSchedule } from "../db/schema.ts";
+import { type DbMember, type DbQueue, type DbSchedule } from "../db/schema.ts";
 import type { Store } from "../db/store.ts";
-import { Color, MemberDisplayType } from "../types/db.types.ts";
+import { Color, MemberDisplayType, TimestampType } from "../types/db.types.ts";
 import type { ArrayOrCollection } from "../types/misc.types.ts";
 import { ClientUtils } from "./client.utils.ts";
 import { map } from "./misc.utils.ts";
@@ -24,6 +33,27 @@ export function queuesMention(queues: ArrayOrCollection<bigint, DbQueue>): strin
 	return map(queues, queue => queueMention(queue)).sort().join(", ");
 }
 
+export async function membersMention(store: Store, members: ArrayOrCollection<bigint, DbMember>) {
+	return (await Promise.all(
+		map(members, member => memberMention(store, member))
+	)).join("\n");
+}
+
+export async function memberMention(store: Store, member: DbMember) {
+	const { timestampType, memberDisplayType } = store.dbQueues().get(member.queueId);
+	const timeStr = formatTimestamp(member.joinTime, timestampType);
+	const prioStr = member.priority ? "✨" : "";
+	const msgStr = member.message ? ` -- ${member.message}` : "";
+
+	const jsMember = await store.jsMember(member.userId);
+	const discriminator = jsMember?.user?.discriminator ? ("#" + jsMember?.user?.discriminator) : "";
+	const username = jsMember.user?.username;
+	const isPlaintextMention = memberDisplayType === MemberDisplayType.Plaintext && username;
+	const nameStr = isPlaintextMention ? `${username}${discriminator}` : jsMember;
+
+	return `${timeStr}${prioStr}${nameStr}${msgStr}`;
+}
+
 export function mentionableMention(mentionable: { isRole: boolean, subjectId: Snowflake }): string {
 	return mentionable.isRole ? roleMention(mentionable.subjectId) : userMention(mentionable.subjectId);
 }
@@ -36,13 +66,6 @@ export function commandMention(commandName: string, subcommandName?: string) {
 	else {
 		return chatInputApplicationCommandMention(commandName, liveCommand.id);
 	}
-}
-
-export function queueMemberMention(jsMember: GuildMember, memberDisplayType: MemberDisplayType) {
-	const discriminator = jsMember?.user?.discriminator ? ("#" + jsMember?.user?.discriminator) : "";
-	const username = jsMember.user?.username;
-	const isPlaintextMention = memberDisplayType === MemberDisplayType.Plaintext && username;
-	return isPlaintextMention ? `${username}${discriminator}` : jsMember;
 }
 
 export function scheduleMention(schedule: DbSchedule) {
@@ -97,13 +120,29 @@ export function describeTable<T>(options: {
 			.setTitle(`${tableName} of ${queue ? `the '${queueMention(queue)}' queue` : "all queues"}`)
 			.setColor(color)
 			.setDescription(itemStrings.length ? itemStrings.join("\n") : `No ${tableName.toLowerCase()}.`);
-
 		embeds.push(embed);
 	}
 
 	if (!embeds.length) {
-		embeds.push(new EmbedBuilder().setDescription(`No ${tableName.toLowerCase()}.`));
+		const embed = new EmbedBuilder()
+			.setTitle(tableName)
+			.setColor(color)
+			.setDescription(`No ${tableName.toLowerCase()}.`);
+		embeds.push(embed);
 	}
 
 	return embeds;
+}
+
+const timestampToStyle = new Collection<string, TimestampStylesString>([
+	[TimestampType.Date, "d"],
+	[TimestampType.Time, "T"],
+	[TimestampType.DateAndTime, "f"],
+	[TimestampType.Relative, "R"],
+]);
+
+function formatTimestamp(joinTime: bigint, timestampType: TimestampType) {
+	return (timestampType !== TimestampType.Off)
+		? time(new Date(Number(joinTime)), timestampToStyle.get(timestampType))
+		: "";
 }

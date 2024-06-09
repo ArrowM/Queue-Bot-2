@@ -3,6 +3,6 @@ import { ChannelOption } from "../base.options.ts";
 
 export class LogChannelOption extends ChannelOption {
 	static readonly ID = "log_channel";
-	name = LogChannelOption.ID;
+	id = LogChannelOption.ID;
 	channelTypes = TEXT_CHANNELS;
 }

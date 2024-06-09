@@ -1,6 +1,12 @@
-import { NodeSignalHandler } from "./handlers/node-signal.handler.ts";
-import { ClientUtils } from "./utils/client.utils.ts";
+// 1. Load signal handlers
+import * as NodeSignalHandler from "./handlers/node-signal.handler.ts";
+// 2. Load database connection
+import * as DB from "./db/db.ts";
+// 3. Start client
+import * as Client from "./client/client.ts";
 
 NodeSignalHandler.load();
 
-ClientUtils.start();
+DB.load();
+
+Client.start();

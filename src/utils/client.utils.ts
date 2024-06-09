@@ -3,10 +3,7 @@ import * as fs from "node:fs";
 import {
 	ActivityType,
 	ApplicationCommand,
-	Client as DiscordClient,
 	type Collection,
-	Events,
-	GatewayIntentBits,
 	type GuildResolvable,
 	REST,
 	Routes,
@@ -15,65 +12,14 @@ import {
 } from "discord.js";
 import AutoPoster from "topgg-autoposter";
 
+import { CLIENT } from "../client/client.ts";
 import { COMMANDS } from "../commands/commands.loader.ts";
 import { QueryUtils } from "../db/queries.ts";
-import { ClientHandler } from "../handlers/client.handler.ts";
-import { InteractionHandler } from "../handlers/interaction.handler.ts";
 import { Color } from "../types/db.types.ts";
-import { ScheduleUtils } from "./schedule.utils.ts";
 
 export namespace ClientUtils {
-	const CLIENT = new DiscordClient({
-		intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
-	});
 	// indexed by `id`
 	let LIVE_COMMANDS: Collection<Snowflake, ApplicationCommand<{ guild: GuildResolvable }>>;
-
-	export async function start() {
-		try {
-			console.time("READY");
-			checkRequiredEnvironmentVariables();
-
-			console.time("Logged in");
-			await CLIENT.login(process.env.TOKEN);
-			console.timeEnd("Logged in");
-
-			// Repeat Events
-
-			CLIENT.on(Events.InteractionCreate, inter => new InteractionHandler(inter).handle());
-			CLIENT.on(Events.GuildCreate, ClientHandler.handleGuildCreate);
-			CLIENT.on(Events.GuildDelete, ClientHandler.handleGuildDelete);
-
-			// Startup Events
-
-			CLIENT.user.setActivity({ name: "ready to /help", type: ActivityType.Custom });
-
-			// Startup Functions
-
-			await registerCommands();
-
-			ScheduleUtils.loadSchedules();
-
-			// Top.gg AutoPoster
-
-			if (process.env.TOP_GG_TOKEN) {
-				console.time("Linked Top.gg AutoPoster");
-				AutoPoster(process.env.TOP_GG_TOKEN, CLIENT).on("error", () => null);
-				console.timeEnd("Linked Top.gg AutoPoster");
-			}
-
-			console.timeEnd("READY");
-
-			await checkPatchNotes();
-
-		}
-		catch (e) {
-			const { message, stack } = e as Error;
-			console.error("Failed to start bot:");
-			console.error(`Error: ${message}`);
-			console.error(`Stack Trace: ${stack}`);
-		}
-	}
 
 	export async function registerCommands() {
 		try {
@@ -100,7 +46,14 @@ export namespace ClientUtils {
 		return await CLIENT.guilds.fetch(guildId);
 	}
 
-	function checkRequiredEnvironmentVariables() {
+	export async function login() {
+		console.time("Logged in");
+		await CLIENT.login(process.env.TOKEN);
+		CLIENT.user.setActivity({ name: "ready to /help", type: ActivityType.Custom });
+		console.timeEnd("Logged in");
+	}
+
+	export function checkRequiredEnvironmentVariables() {
 		[
 			"TOKEN",
 			"CLIENT_ID",
@@ -116,7 +69,7 @@ export namespace ClientUtils {
 		}
 	}
 
-	async function checkPatchNotes() {
+	export async function checkPatchNotes() {
 		// Check if any patch notes have not been read
 		const dbPatchNotes = QueryUtils.selectAllPatchNotes();
 		const unreadFileNames = fs.readdirSync("./patch-notes")
@@ -131,6 +84,14 @@ export namespace ClientUtils {
 			const { embeds } = await import(`../../patch-notes/${fileName}`);
 			await patchNoteChannel.send({ embeds });
 			QueryUtils.insertPatchNotes({ fileName });
+		}
+	}
+
+	export function loadTopGGAutoPoster() {
+		if (process.env.TOP_GG_TOKEN) {
+			console.time("Linked Top.gg AutoPoster");
+			AutoPoster(process.env.TOP_GG_TOKEN, CLIENT).on("error", () => null);
+			console.timeEnd("Linked Top.gg AutoPoster");
 		}
 	}
 }

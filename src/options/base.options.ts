@@ -20,8 +20,10 @@ import type { Option, OptionParams } from "../types/option.types.ts";
 import { type CHOICE_ALL, CHOICE_SOME, type Mentionable } from "../types/parsing.types.ts";
 
 abstract class BaseOptions<BuilderType extends ApplicationCommandOptionBase = any> implements Option {
+	// id
+	id: string;
 	// display name of option in Discord UI
-	abstract name: string;
+	_name: string;
 	// description of option in Discord UI
 	description: string;
 	// whether the option should be autocompleted
@@ -37,7 +39,12 @@ abstract class BaseOptions<BuilderType extends ApplicationCommandOptionBase = an
 	// whether the option is required
 	required?: boolean;
 
+	get name() {
+		return this._name ?? this.id;
+	}
+
 	constructor(config?: OptionParams) {
+		this._name = config?.name;
 		this.description = config?.description;
 		this.autocomplete = config?.autocomplete ?? this.autocomplete;
 		this.channelTypes = config?.channelTypes ?? this.channelTypes;
@@ -97,6 +104,7 @@ export interface AutoCompleteOptions {
 }
 
 export abstract class CustomOption extends BaseOptions<SlashCommandStringOption> {
+	abstract id: string;
 	autocomplete = true;
 
 	addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void {
@@ -109,6 +117,8 @@ export abstract class CustomOption extends BaseOptions<SlashCommandStringOption>
 }
 
 export abstract class StringOption extends BaseOptions<SlashCommandStringOption> {
+	abstract id: string;
+
 	addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void {
 		command.addStringOption(this.build);
 	}
@@ -124,6 +134,8 @@ export abstract class StringOption extends BaseOptions<SlashCommandStringOption>
 }
 
 export abstract class BooleanOption extends BaseOptions<SlashCommandBooleanOption> {
+	abstract id: string;
+
 	addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void {
 		command.addBooleanOption(this.build);
 	}
@@ -139,6 +151,8 @@ export abstract class BooleanOption extends BaseOptions<SlashCommandBooleanOptio
 }
 
 export abstract class IntegerOption extends BaseOptions<SlashCommandIntegerOption> {
+	abstract id: string;
+
 	addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void {
 		command.addIntegerOption(this.build);
 	}
@@ -154,6 +168,8 @@ export abstract class IntegerOption extends BaseOptions<SlashCommandIntegerOptio
 }
 
 export abstract class ChannelOption extends BaseOptions<SlashCommandChannelOption> {
+	abstract id: string;
+
 	addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void {
 		command.addChannelOption(this.build);
 	}
@@ -169,6 +185,8 @@ export abstract class ChannelOption extends BaseOptions<SlashCommandChannelOptio
 }
 
 export abstract class RoleOption extends BaseOptions<SlashCommandRoleOption> {
+	abstract id: string;
+
 	addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void {
 		command.addRoleOption(this.build);
 	}
@@ -184,6 +202,8 @@ export abstract class RoleOption extends BaseOptions<SlashCommandRoleOption> {
 }
 
 export abstract class MentionableOption extends BaseOptions<SlashCommandMentionableOption> {
+	abstract id: string;
+
 	addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void {
 		command.addMentionableOption(this.build);
 	}

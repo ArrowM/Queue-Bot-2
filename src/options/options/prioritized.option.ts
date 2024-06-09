@@ -8,7 +8,7 @@ import { type AutoCompleteOptions, CustomOption } from "../base.options.ts";
 
 export class PrioritizedOption extends CustomOption {
 	static readonly ID = "prioritized";
-	name = PrioritizedOption.ID;
+	id = PrioritizedOption.ID;
 
 	getAutocompletions = PrioritizedOption.getAutocompletions;
 

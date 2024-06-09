@@ -3,6 +3,6 @@ import { ChannelOption } from "../base.options.ts";
 
 export class NewDisplayChannelOption extends ChannelOption {
 	static readonly ID = "new_display_channel";
-	name = NewDisplayChannelOption.ID;
+	id = NewDisplayChannelOption.ID;
 	channelTypes = TEXT_CHANNELS;
 }

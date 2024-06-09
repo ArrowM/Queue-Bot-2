@@ -8,27 +8,24 @@ import {
 	codeBlock,
 	EmbedBuilder,
 	type GuildBasedChannel,
-	type GuildMember,
 	type GuildTextBasedChannel,
 	inlineCode,
 	type Message,
 	roleMention,
 	type Snowflake,
-	time,
-	type TimestampStylesString,
 } from "discord.js";
-import { isNil, uniq } from "lodash-es";
+import { compact, isNil, uniq } from "lodash-es";
 
 import { BUTTONS } from "../buttons/buttons.loader.ts";
 import { JoinButton } from "../buttons/buttons/join.button.ts";
 import { LeaveButton } from "../buttons/buttons/leave.button.ts";
 import { MyPositionsButton } from "../buttons/buttons/my-positions.button.ts";
 import { PullButton } from "../buttons/buttons/pull.button.ts";
-import { incrementGuildStat } from "../db/queries.ts";
+import { incrementGuildStat } from "../db/db-scheduled-tasks.ts";
 import { type DbDisplay, type DbMember, type DbQueue } from "../db/schema.ts";
 import type { Store } from "../db/store.ts";
 import type { Button } from "../types/button.types.ts";
-import { ArchivedMemberReason, Color, DisplayUpdateType, MemberDisplayType, TimestampType } from "../types/db.types.ts";
+import { Color, DisplayUpdateType } from "../types/db.types.ts";
 import type { ArrayOrCollection } from "../types/misc.types.ts";
 import type { CustomError } from "./error.utils.ts";
 import { InteractionUtils } from "./interaction.utils.ts";
@@ -37,7 +34,7 @@ import {
 	commandMention,
 	convertSecondsToMinutesAndSeconds,
 	ERROR_HEADER_LINE,
-	queueMemberMention,
+	memberMention,
 	queueMention,
 	scheduleMention,
 } from "./string.utils.ts";
@@ -110,22 +107,15 @@ export namespace DisplayUtils {
 		return uniq(queueIds).map(id => requestDisplayUpdate(store, id, opts));
 	}
 
-	export function createMemberDisplayLine(
+	export async function createMemberDisplayLine(
+		store: Store,
 		queue: DbQueue,
 		member: DbMember,
-		jsMember: GuildMember,
 		position: number,
 		rightPadding = 0,
-	): string {
+	) {
 		const idxStr = inlineCode(position.toString().padEnd(rightPadding));
-		const timeStr = (queue.timestampType !== TimestampType.Off)
-			? time(new Date(Number(member.joinTime)), queue.timestampType as TimestampStylesString)
-			: "";
-		const prioStr = member.priority ? "✨" : "";
-		const nameStr = queueMemberMention(jsMember, queue.memberDisplayType);
-		const msgStr = member.message ? ` -- ${member.message}` : "";
-
-		return `${idxStr}${timeStr}${prioStr}${nameStr}${msgStr}\n`;
+		return `${idxStr}${await memberMention(store, member)}\n`;
 	}
 
 	async function updateDisplays(store: Store, queueId: bigint, opts?: { displayIds?: bigint[], forceNew?: boolean }) {
@@ -167,14 +157,14 @@ export namespace DisplayUtils {
 							embeds: embedBuilders,
 							components: getButtonRow(store, queue),
 							allowedMentions: { users: [] },
-						}).catch(console.error);
+						});
 						if (message) {
 							// Remove buttons on the previous message
 							await lastMessage?.edit({
 								embeds: embedBuilders,
 								components: [],
 								allowedMentions: { users: [] },
-							}).catch(console.error);
+							}).catch(() => null);
 							// Update the display
 							store.updateDisplay({
 								guildId: store.guild.id,
@@ -203,18 +193,18 @@ export namespace DisplayUtils {
 					}
 
 					async function replaceDisplay() {
-						await lastMessage?.delete().catch(console.error);
+						await lastMessage?.delete().catch(() => null);
 						await newDisplay();
 					}
 
-					if (queue.updateType === DisplayUpdateType.New || opts?.forceNew) {
+					if (opts?.forceNew || queue.updateType === DisplayUpdateType.Replace) {
+						await replaceDisplay();
+					}
+					else if (queue.updateType === DisplayUpdateType.New) {
 						await newDisplay();
 					}
 					else if (queue.updateType === DisplayUpdateType.Edit) {
 						await editDisplay();
-					}
-					else if (queue.updateType === DisplayUpdateType.Replace) {
-						await replaceDisplay();
 					}
 				}
 				catch (e: any) {
@@ -266,7 +256,7 @@ export namespace DisplayUtils {
 	}
 
 	async function generateQueueDisplay(store: Store, queue: DbQueue): Promise<EmbedBuilder[]> {
-		const { color, inlineToggle, memberDisplayType } = queue;
+		const { color, inlineToggle } = queue;
 
 		// Get voice channels if applicable
 		const { sourceChannelId, destinationChannelId } = store.dbVoices().get(queue.id) ?? {};
@@ -293,21 +283,14 @@ export namespace DisplayUtils {
 		}
 
 		// Build member strings
-		const memberDisplayLines: string[] = [];
 		const members = store.dbMembers().filter(member => member.queueId === queue.id);
-		const jsMembers = await store.jsMembers(members.map(member => member.userId));
 		const rightPadding = members.size.toString().length;
 
-		[...members.values()].forEach((member, position) => {
-			const jsMember = memberDisplayType === MemberDisplayType.Mention ? jsMembers.get(member.userId) : null;
-
-			if (memberDisplayType === MemberDisplayType.Mention && !jsMember) {
-				store.deleteMember({ queueId: member.queueId, userId: member.userId }, ArchivedMemberReason.NotFound);
-			}
-			else {
-				memberDisplayLines.push(createMemberDisplayLine(queue, member, jsMember, position + 1, rightPadding));
-			}
-		});
+		const memberDisplayLines = compact(await Promise.all(
+			members.map(async (member, index) =>
+				createMemberDisplayLine(store, queue, member, Number(index) + 1, rightPadding)
+			)
+		));
 
 		/**
 		 * Q: What is happening below?

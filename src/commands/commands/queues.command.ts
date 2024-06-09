@@ -1,7 +1,8 @@
-import { type Collection, EmbedBuilder, inlineCode, italic, type Role, SlashCommandBuilder } from "discord.js";
+import { type Collection, EmbedBuilder, inlineCode, italic, SlashCommandBuilder } from "discord.js";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
-import { findKey, get, isNil, omitBy } from "lodash-es";
+import { findKey, isNil, omitBy } from "lodash-es";
 
+import { db } from "../../db/db.ts";
 import { type DbQueue, QUEUE_TABLE } from "../../db/schema.ts";
 import { AutopullToggleOption } from "../../options/options/autopull-toggle.option.ts";
 import { ButtonsToggleOption } from "../../options/options/buttons-toggle.option.ts";
@@ -12,6 +13,7 @@ import { InlineToggleOption } from "../../options/options/inline-toggle.option.t
 import { LockToggleOption } from "../../options/options/lock-toggle.option.ts";
 import { LogChannelOption } from "../../options/options/log-channel.option.ts";
 import { LogLevelOption } from "../../options/options/log-level.option.ts";
+import { MemberDisplayTypeOption } from "../../options/options/member-display-type.option.ts";
 import { NameOption } from "../../options/options/name.option.ts";
 import { NotificationsToggleOption } from "../../options/options/notifications-enable.option.ts";
 import { PullBatchSizeOption } from "../../options/options/pull-batch-size.option.ts";
@@ -24,6 +26,7 @@ import { UpdateTypeOption } from "../../options/options/update-type.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { DisplayUtils } from "../../utils/display.utils.ts";
+import { MemberUtils } from "../../utils/member.utils.ts";
 import { SelectMenuTransactor } from "../../utils/message-utils/select-menu-transactor.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
 import { QueueUtils } from "../../utils/queue.utils.ts";
@@ -125,6 +128,7 @@ export class QueuesCommand extends AdminCommand {
 		lockToggle: new LockToggleOption({ description: "Toggle queue locked status (prevents new joins)" }),
 		logChannel: new LogChannelOption({ description: "Channel to write logs to" }),
 		logLevel: new LogLevelOption({ description: "Level of logging" }),
+		memberDisplayType: new MemberDisplayTypeOption({ description: "How to display members" }),
 		notificationsToggle: new NotificationsToggleOption({ description: "Toggle whether users are DM-ed on pull" }),
 		pullBatchSize: new PullBatchSizeOption({ description: "How many queue members to include in a pull" }),
 		role: new RoleOption({ description: "Role to assign members of the queue" }),
@@ -147,6 +151,7 @@ export class QueuesCommand extends AdminCommand {
 				lockToggle: QueuesCommand.ADD_OPTIONS.lockToggle.get(inter),
 				logChannel: QueuesCommand.ADD_OPTIONS.logChannel.get(inter),
 				logLevel: QueuesCommand.ADD_OPTIONS.logLevel.get(inter),
+				memberDisplayType: QueuesCommand.ADD_OPTIONS.memberDisplayType.get(inter),
 				notificationsToggle: QueuesCommand.ADD_OPTIONS.notificationsToggle.get(inter),
 				pullBatchSize: QueuesCommand.ADD_OPTIONS.pullBatchSize.get(inter),
 				roleId: QueuesCommand.ADD_OPTIONS.role.get(inter)?.id,
@@ -156,14 +161,7 @@ export class QueuesCommand extends AdminCommand {
 			}, isNil),
 		};
 
-		QueueUtils.validateQueueProperties(queue);
-
-		const insertedQueue = inter.store.insertQueue(queue);
-
-		const role = get(queue, "role") as Role;
-		if (role) {
-			await QueueUtils.addQueueRole(inter.store, insertedQueue);
-		}
+		const { insertedQueue } = await QueueUtils.insertQueue(inter.store, queue);
 
 		DisplayUtils.insertDisplays(inter.store, [insertedQueue], inter.channelId);
 
@@ -185,6 +183,7 @@ export class QueuesCommand extends AdminCommand {
 		lockToggle: new LockToggleOption({ description: "Toggle queue locked status (prevents new joins)" }),
 		logChannel: new LogChannelOption({ description: "Channel to write logs to" }),
 		logLevel: new LogLevelOption({ description: "Level of logging" }),
+		memberDisplayType: new MemberDisplayTypeOption({ description: "How to display members" }),
 		name: new NameOption({ description: "Name of the queue" }),
 		notificationsToggle: new NotificationsToggleOption({ description: "Toggle whether users are DM-ed on pull" }),
 		pullBatchSize: new PullBatchSizeOption({ description: "How many queue members to include in a pull" }),
@@ -206,6 +205,7 @@ export class QueuesCommand extends AdminCommand {
 			lockToggle: QueuesCommand.SET_OPTIONS.lockToggle.get(inter),
 			logChannel: QueuesCommand.SET_OPTIONS.logChannel.get(inter),
 			logLevel: QueuesCommand.SET_OPTIONS.logLevel.get(inter),
+			memberDisplayType: QueuesCommand.SET_OPTIONS.memberDisplayType.get(inter),
 			name: QueuesCommand.SET_OPTIONS.name.get(inter),
 			notificationsToggle: QueuesCommand.SET_OPTIONS.notificationsToggle.get(inter),
 			pullBatchSize: QueuesCommand.SET_OPTIONS.pullBatchSize.get(inter),
@@ -213,19 +213,9 @@ export class QueuesCommand extends AdminCommand {
 			size: QueuesCommand.SET_OPTIONS.size.get(inter),
 			timestampType: QueuesCommand.SET_OPTIONS.timestampType.get(inter),
 			updateType: QueuesCommand.SET_OPTIONS.updateType.get(inter),
-		}, isNil);
+		}, isNil) as Partial<DbQueue>;
 
-		QueueUtils.validateQueueProperties(update);
-
-		const updatedQueues = queues.map(queue =>
-			inter.store.updateQueue({ id: queue.id, ...update }),
-		);
-
-		if (update.roleId) {
-			updatedQueues.forEach(queue => QueueUtils.addQueueRole(inter.store, queue));
-		}
-
-		DisplayUtils.requestDisplaysUpdate(inter.store, updatedQueues.map(queue => queue.id));
+		const { updatedQueues } = await QueueUtils.updateQueues(inter.store, queues, update);
 
 		await QueuesCommand.queues_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
@@ -242,22 +232,23 @@ export class QueuesCommand extends AdminCommand {
 		const queues = await QueuesCommand.RESET_OPTIONS.queues.get(inter);
 
 		const selectMenuOptions = [
-			{ name: "autopull_toggle", value: QUEUE_TABLE.autopullToggle.name },
-			{ name: "buttons_toggle", value: QUEUE_TABLE.buttonsToggle.name },
-			{ name: "color", value: QUEUE_TABLE.color.name },
-			{ name: "grace_period", value: QUEUE_TABLE.gracePeriod.name },
-			{ name: "header", value: QUEUE_TABLE.header.name },
-			{ name: "inline_toggle", value: QUEUE_TABLE.inlineToggle.name },
-			{ name: "lock_toggle", value: QUEUE_TABLE.lockToggle.name },
-			{ name: "log_channel", value: QUEUE_TABLE.logChannelId.name },
-			{ name: "log_level", value: QUEUE_TABLE.logLevel.name },
-			{ name: "member_display_type", value: QUEUE_TABLE.name.name },
-			{ name: "notifications_toggle", value: QUEUE_TABLE.notificationsToggle.name },
-			{ name: "pull_batch_size", value: QUEUE_TABLE.pullBatchSize.name },
-			{ name: "role", value: QUEUE_TABLE.roleId.name },
-			{ name: "size", value: QUEUE_TABLE.size.name },
-			{ name: "time_display_type", value: QUEUE_TABLE.timestampType.name },
-			{ name: "update_type", value: QUEUE_TABLE.updateType.name },
+			{ name: AutopullToggleOption.ID, value: QUEUE_TABLE.autopullToggle.name },
+			{ name: ButtonsToggleOption.ID, value: QUEUE_TABLE.buttonsToggle.name },
+			{ name: ColorOption.ID, value: QUEUE_TABLE.color.name },
+			{ name: GracePeriodOption.ID, value: QUEUE_TABLE.gracePeriod.name },
+			{ name: HeaderOption.ID, value: QUEUE_TABLE.header.name },
+			{ name: InlineToggleOption.ID, value: QUEUE_TABLE.inlineToggle.name },
+			{ name: LockToggleOption.ID, value: QUEUE_TABLE.lockToggle.name },
+			{ name: LogChannelOption.ID, value: QUEUE_TABLE.logChannelId.name },
+			{ name: LogLevelOption.ID, value: QUEUE_TABLE.logLevel.name },
+			{ name: MemberDisplayTypeOption.ID, value: QUEUE_TABLE.memberDisplayType.name },
+			{ name: NameOption.ID, value: QUEUE_TABLE.name.name },
+			{ name: NotificationsToggleOption.ID, value: QUEUE_TABLE.notificationsToggle.name },
+			{ name: PullBatchSizeOption.ID, value: QUEUE_TABLE.pullBatchSize.name },
+			{ name: RoleOption.ID, value: QUEUE_TABLE.roleId.name },
+			{ name: SizeOption.ID, value: QUEUE_TABLE.size.name },
+			{ name: TimestampTypeOption.ID, value: QUEUE_TABLE.timestampType.name },
+			{ name: UpdateTypeOption.ID, value: QUEUE_TABLE.updateType.name },
 		];
 		const selectMenuTransactor = new SelectMenuTransactor(inter);
 		const settingsToReset = await selectMenuTransactor.sendAndReceive("Queue settings to reset", selectMenuOptions);
@@ -268,10 +259,17 @@ export class QueuesCommand extends AdminCommand {
 			updatedSettings[columnKey] = (QUEUE_TABLE as any)[columnKey]?.default;
 		}
 
-		const updatedQueues = queues.map((queue) => {
-			QueueUtils.removeQueueRole(inter.store, queue);
-			return inter.store.updateQueue({ id: queue.id, ...updatedSettings });
-		});
+		const updatedQueues = db.transaction(() =>
+			queues.map((queue) => inter.store.updateQueue({ id: queue.id, ...updatedSettings }))
+		);
+
+		if (updatedSettings.roleId) {
+			await Promise.all(
+				queues.map(queue => {
+					return MemberUtils.updateMembersForModifiedQueueRole(inter.store, [queue], queue.roleId, "remove");
+				})
+			);
+		}
 
 		const settingsStr = settingsToReset.map(inlineCode).join(", ");
 		const settingsWord = settingsToReset.length === 1 ? "setting" : "settings";

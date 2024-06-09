@@ -9,7 +9,7 @@ import { WhitelistedOption } from "./whitelisted.option.ts";
 
 export class WhitelistedsOption extends CustomOption {
 	static readonly ID = "whitelisted";
-	name = WhitelistedsOption.ID;
+	id = WhitelistedsOption.ID;
 	extraChoices = [CHOICE_ALL, CHOICE_SOME];
 
 	getAutocompletions = WhitelistedOption.getAutocompletions;

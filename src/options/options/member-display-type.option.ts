@@ -5,7 +5,7 @@ import { StringOption } from "../base.options.ts";
 
 export class MemberDisplayTypeOption extends StringOption {
 	static readonly ID = "member_display_type";
-	name = MemberDisplayTypeOption.ID;
+	id = MemberDisplayTypeOption.ID;
 	defaultValue = MemberDisplayType.Mention;
 	choices = toChoices(MemberDisplayType);
 

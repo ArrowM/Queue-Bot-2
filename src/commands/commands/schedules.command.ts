@@ -1,7 +1,7 @@
-import { type Collection, EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { type Collection, EmbedBuilder, italic, SlashCommandBuilder } from "discord.js";
 import { isNil, omitBy } from "lodash-es";
 
-import type { DbQueue } from "../../db/schema.ts";
+import type { DbQueue, DbSchedule } from "../../db/schema.ts";
 import { CommandOption } from "../../options/options/command.option.ts";
 import { CronOption } from "../../options/options/cron.option.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
@@ -13,7 +13,7 @@ import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
 import { ScheduleUtils } from "../../utils/schedule.utils.ts";
-import { describeTable, queuesMention, scheduleMention } from "../../utils/string.utils.ts";
+import { commandMention, describeTable, queuesMention, scheduleMention } from "../../utils/string.utils.ts";
 
 export class SchedulesCommand extends AdminCommand {
 	static readonly ID = "schedules";
@@ -86,6 +86,8 @@ export class SchedulesCommand extends AdminCommand {
 			entries: schedules,
 		});
 
+		embeds.push(new EmbedBuilder().setDescription(italic(`Schedules can be updated with ${commandMention("schedules", "set")}`)));
+
 		await inter.respond({ embeds });
 	}
 
@@ -139,7 +141,7 @@ export class SchedulesCommand extends AdminCommand {
 			cron: SchedulesCommand.SET_OPTIONS.cron.get(inter),
 			timezone: SchedulesCommand.SET_OPTIONS.timezone.get(inter),
 			reason: SchedulesCommand.SET_OPTIONS.reason.get(inter),
-		}, isNil);
+		}, isNil) as Partial<DbSchedule>;
 
 		const {
 			updatedQueueIds,

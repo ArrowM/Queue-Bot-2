@@ -8,7 +8,7 @@ import { type AutoCompleteOptions, CustomOption } from "../base.options.ts";
 
 export class VoiceOption extends CustomOption {
 	static readonly ID = "voice";
-	name = VoiceOption.ID;
+	id = VoiceOption.ID;
 
 	getAutocompletions = VoiceOption.getAutocompletions;
 

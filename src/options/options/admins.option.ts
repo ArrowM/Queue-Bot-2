@@ -9,7 +9,7 @@ import { AdminOption } from "./admin.option.ts";
 
 export class AdminsOption extends CustomOption {
 	static readonly ID = "admins";
-	name = AdminsOption.ID;
+	id = AdminsOption.ID;
 	extraChoices = [CHOICE_ALL, CHOICE_SOME];
 
 	getAutocompletions = AdminOption.getAutocompletions;

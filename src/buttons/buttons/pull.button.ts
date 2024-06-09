@@ -27,7 +27,7 @@ export class PullButton extends AdminButton {
 
 		await Promise.all([
 			inter.deleteReply(),
-			inter.channel.send({ embeds: MemberUtils.formatPulledMemberEmbeds([queue], pulledMembers) }),
+			inter.channel.send({ embeds: await MemberUtils.describePulledMembers(inter.store, [queue], pulledMembers) }),
 		]);
 	}
 }

@@ -8,7 +8,7 @@ import { type AutoCompleteOptions, CustomOption } from "../base.options.ts";
 
 export class AdminOption extends CustomOption {
 	static readonly ID = "admin";
-	name = AdminOption.ID;
+	id = AdminOption.ID;
 
 	getAutocompletions = AdminOption.getAutocompletions;
 

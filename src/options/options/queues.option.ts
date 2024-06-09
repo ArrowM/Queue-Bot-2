@@ -9,7 +9,7 @@ import { QueueOption } from "./queue.option.ts";
 
 export class QueuesOption extends CustomOption {
 	static ID = "queues";
-	name = QueuesOption.ID;
+	id = QueuesOption.ID;
 	extraChoices = [CHOICE_ALL, CHOICE_SOME];
 
 	getAutocompletions = QueueOption.getAutocompletions;

@@ -17,7 +17,7 @@ export namespace WhitelistUtils {
 			isRole: mentionable instanceof Role,
 			reason,
 		}));
-		const updatedQueueIds = insertedWhitelisted.map(whitelisted => whitelisted.queueId);
+		const updatedQueueIds = uniq(insertedWhitelisted.map(whitelisted => whitelisted.queueId));
 
 		return { insertedWhitelisted, updatedQueueIds };
 	}

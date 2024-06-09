@@ -5,7 +5,7 @@ import { StringOption } from "../base.options.ts";
 
 export class CommandOption extends StringOption {
 	static readonly ID = "command";
-	name = CommandOption.ID;
+	id = CommandOption.ID;
 	choices = toChoices(ScheduleCommand);
 
 	// force return type to be ScheduleCommand

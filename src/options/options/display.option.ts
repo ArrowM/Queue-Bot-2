@@ -8,7 +8,7 @@ import { type AutoCompleteOptions, CustomOption } from "../base.options.ts";
 
 export class DisplayOption extends CustomOption {
 	static readonly ID = "display_channel";
-	name = DisplayOption.ID;
+	id = DisplayOption.ID;
 
 	getAutocompletions = DisplayOption.getAutocompletions;
 

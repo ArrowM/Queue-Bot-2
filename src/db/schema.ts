@@ -266,7 +266,7 @@ export const PRIORITIZED_TABLE = sqliteTable("prioritized", ({
 	queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
 	subjectId: text("subject_id").$type<Snowflake>().notNull(),
 	isRole: integer("is_role", { mode: "boolean" }).notNull(),
-	priorityOrder: integer("priority_order").notNull().default(1),
+	priorityOrder: integer("priority_order").default(5),
 	reason: text("reason"),
 }),
 (table) => ({

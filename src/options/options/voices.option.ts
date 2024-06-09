@@ -9,7 +9,7 @@ import { VoiceOption } from "./voice.option.ts";
 
 export class VoicesOption extends CustomOption {
 	static readonly ID = "voices";
-	name = VoicesOption.ID;
+	id = VoicesOption.ID;
 	extraChoices = [CHOICE_ALL, CHOICE_SOME];
 
 	getAutocompletions = VoiceOption.getAutocompletions;

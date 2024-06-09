@@ -3,6 +3,6 @@ import { ChannelOption } from "../base.options.ts";
 
 export class VoiceDestinationChannelOption extends ChannelOption {
 	static readonly ID = "voice_destination_channel";
-	name = VoiceDestinationChannelOption.ID;
+	id = VoiceDestinationChannelOption.ID;
 	channelTypes = VOICE_CHANNELS;
 }

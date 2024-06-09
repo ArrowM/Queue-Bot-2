@@ -5,7 +5,7 @@ import { StringOption } from "../base.options.ts";
 
 export class TimestampTypeOption extends StringOption {
 	static readonly ID = "timestamp_type";
-	name = TimestampTypeOption.ID;
+	id = TimestampTypeOption.ID;
 	defaultValue = TimestampType.Off;
 	choices = toChoices(TimestampType);
 

@@ -1,9 +1,13 @@
-import { bold, channelMention, inlineCode, roleMention, strikethrough } from "discord.js";
-import { compact, isNil, omit } from "lodash-es";
+import { bold, channelMention, inlineCode, type Role, roleMention, strikethrough } from "discord.js";
+import { compact, get, isNil, omit } from "lodash-es";
 
-import { type DbQueue, type DbVoice, QUEUE_TABLE } from "../db/schema.ts";
+import { db } from "../db/db.ts";
+import { type DbQueue, type DbVoice, type NewQueue, QUEUE_TABLE } from "../db/schema.ts";
 import type { Store } from "../db/store.ts";
+import type { ArrayOrCollection } from "../types/misc.types.ts";
+import { DisplayUtils } from "./display.utils.ts";
 import { MemberUtils } from "./member.utils.ts";
+import { map } from "./misc.utils.ts";
 
 export namespace QueueUtils {
 	const INDESCRIBABLE_QUEUE_PROPERTIES = ["id", "name", "guildId", "queueId"];
@@ -15,6 +19,36 @@ export namespace QueueUtils {
 		sourceChannelId: channelMention,
 		destinationChannelId: channelMention,
 	};
+
+	export async function insertQueue(store: Store, queue: NewQueue) {
+		QueueUtils.validateQueueProperties(queue);
+
+		const insertedQueue = store.insertQueue(queue);
+
+		const role = get(queue, "role") as Role;
+		if (role) {
+			await MemberUtils.updateMembersForModifiedQueueRole(store, [insertedQueue], role.id, "add");
+		}
+
+		return { insertedQueue };
+	}
+
+	export async function updateQueues(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, update: Partial<DbQueue>) {
+		QueueUtils.validateQueueProperties(update);
+
+		const updatedQueues = db.transaction(() =>
+			map(queues, queue => store.updateQueue({ id: queue.id, ...update }))
+		);
+		const updatedQueueIds = updatedQueues.map(queue => queue.id);
+
+		DisplayUtils.requestDisplaysUpdate(store, updatedQueueIds);
+
+		if (update.roleId) {
+			await MemberUtils.updateMembersForModifiedQueueRole(store, updatedQueues, update.roleId, "add");
+		}
+
+		return { updatedQueues };
+	}
 
 	export function describeQueue(store: Store, queue: DbQueue) {
 		const describableProperties = omit(queue, INDESCRIBABLE_QUEUE_PROPERTIES);
@@ -40,28 +74,6 @@ export namespace QueueUtils {
 		if (queue.size && queue.size < 1) {
 			throw new Error("Size must be a positive number.");
 		}
-	}
-
-	export async function addQueueRole(store: Store, queue: DbQueue) {
-		const memberIds = store.dbMembers()
-			.filter(member => member.queueId === queue.id)
-			.map(member => member.userId);
-		await Promise.all(
-			memberIds.map(async (memberId) => {
-				await MemberUtils.modifyRole(store, memberId, queue.roleId, "add");
-			}),
-		);
-	}
-
-	export async function removeQueueRole(store: Store, queue: DbQueue) {
-		const memberIds = store.dbMembers()
-			.filter(member => member.queueId === queue.id)
-			.map(member => member.userId);
-		await Promise.all(
-			memberIds.map(async (memberId) => {
-				await MemberUtils.modifyRole(store, memberId, queue.roleId, "remove");
-			}),
-		);
 	}
 
 	function describeProperty(queue: DbQueue, setting: string) {

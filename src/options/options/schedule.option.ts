@@ -9,7 +9,7 @@ import { type AutoCompleteOptions, CustomOption } from "../base.options.ts";
 
 export class ScheduleOption extends CustomOption {
 	static readonly ID = "schedule";
-	name = ScheduleOption.ID;
+	id = ScheduleOption.ID;
 
 	getAutocompletions = ScheduleOption.getAutocompletions;
 

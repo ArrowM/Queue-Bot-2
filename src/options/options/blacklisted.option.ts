@@ -8,7 +8,7 @@ import { type AutoCompleteOptions, CustomOption } from "../base.options.ts";
 
 export class BlacklistedOption extends CustomOption {
 	static readonly ID = "blacklisted";
-	name = BlacklistedOption.ID;
+	id = BlacklistedOption.ID;
 
 	getAutocompletions = BlacklistedOption.getAutocompletions;
 

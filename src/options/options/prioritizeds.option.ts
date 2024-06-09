@@ -9,7 +9,7 @@ import { PrioritizedOption } from "./prioritized.option.ts";
 
 export class PrioritizedsOption extends CustomOption {
 	static readonly ID = "prioritizeds";
-	name = PrioritizedsOption.ID;
+	id = PrioritizedsOption.ID;
 	extraChoices = [CHOICE_ALL, CHOICE_SOME];
 
 	getAutocompletions = PrioritizedOption.getAutocompletions;

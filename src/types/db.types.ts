@@ -52,10 +52,10 @@ export enum DisplayUpdateType {
 
 export enum TimestampType {
 	Off = "off",
-	Date = "d",
-	Time = "T",
-	DateAndTime = "f",
-	Relative = "R",
+	Date = "date",
+	Time = "time",
+	DateAndTime = "date and time",
+	Relative = "relative",
 }
 
 export enum ArchivedMemberReason {

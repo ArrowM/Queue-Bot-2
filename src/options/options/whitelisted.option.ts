@@ -8,7 +8,7 @@ import { type AutoCompleteOptions, CustomOption } from "../base.options.ts";
 
 export class WhitelistedOption extends CustomOption {
 	static readonly ID = "whitelisted";
-	name = WhitelistedOption.ID;
+	id = WhitelistedOption.ID;
 
 	getAutocompletions = WhitelistedOption.getAutocompletions;
 

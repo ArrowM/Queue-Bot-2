@@ -9,7 +9,7 @@ import { BlacklistedOption } from "./blacklisted.option.ts";
 
 export class BlacklistedsOption extends CustomOption {
 	static readonly ID = "blacklisteds";
-	name = BlacklistedsOption.ID;
+	id = BlacklistedsOption.ID;
 	extraChoices = [CHOICE_ALL, CHOICE_SOME];
 
 	getAutocompletions = BlacklistedOption.getAutocompletions;

@@ -17,7 +17,7 @@ export class PullCommand extends AdminCommand {
 	static readonly PULL_OPTIONS = {
 		queues: new QueuesOption({ required: true, description: "Queue to pull members from" }),
 		count: new NumberOption({ description: "Number of queue members to pull", defaultValue: 1 }),
-		members: new MembersOption({ description: "Pull a specific user instead of the next user" }),
+		members: new MembersOption({ description: "Pull specific members instead of the next member" }),
 	};
 
 	data = new SlashCommandBuilder()
@@ -51,7 +51,7 @@ export class PullCommand extends AdminCommand {
 
 		await Promise.all([
 			inter.deleteReply(),
-			inter.channel.send({ embeds: MemberUtils.formatPulledMemberEmbeds(queues, pulledMembers) }),
+			inter.channel.send({ embeds: await MemberUtils.describePulledMembers(inter.store, queues, pulledMembers) }),
 		]);
 	}
 }

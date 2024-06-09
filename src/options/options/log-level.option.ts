@@ -5,7 +5,7 @@ import { StringOption } from "../base.options.ts";
 
 export class LogLevelOption extends StringOption {
 	static readonly ID = "log_level";
-	name = LogLevelOption.ID;
+	id = LogLevelOption.ID;
 	defaultValue = LogLevel.Default;
 	choices = toChoices(LogLevel);
 

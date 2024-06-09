@@ -8,7 +8,7 @@ import { type AutoCompleteOptions, CustomOption } from "../base.options.ts";
 
 export class QueueOption extends CustomOption {
 	static readonly ID = "queue";
-	name = QueueOption.ID;
+	id = QueueOption.ID;
 
 	getAutocompletions = QueueOption.getAutocompletions;
 

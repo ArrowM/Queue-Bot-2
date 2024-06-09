@@ -7,7 +7,7 @@ import {
 	type Snowflake,
 } from "discord.js";
 import { and, eq, isNull, or } from "drizzle-orm";
-import { compact, isNil } from "lodash-es";
+import { compact, isNil, omitBy } from "lodash-es";
 import moize from "moize";
 
 import { ArchivedMemberReason, type GuildStat } from "../types/db.types.ts";
@@ -19,9 +19,10 @@ import {
 	ScheduleAlreadyExistsError,
 	WhitelistedAlreadyExistsError,
 } from "../utils/error.utils.ts";
-import { MemberUtils } from "../utils/member.utils.ts";
 import { toCollection } from "../utils/misc.utils.ts";
-import { db, incrementGuildStat as _incrementGuildStat, QueryUtils } from "./queries.ts";
+import { db } from "./db.ts";
+import { incrementGuildStat as _incrementGuildStat } from "./db-scheduled-tasks.ts";
+import { QueryUtils } from "./queries.ts";
 import {
 	ADMIN_TABLE,
 	ARCHIVED_MEMBER_TABLE,
@@ -56,7 +57,6 @@ import {
 	VOICE_TABLE,
 	WHITELISTED_TABLE,
 } from "./schema.ts";
-import deleteMembers = MemberUtils.deleteMembers;
 
 /**
  * The `Store` class is responsible for all database operations initiated by users, including insert, update, and delete operations.
@@ -164,7 +164,7 @@ export class Store {
 	insertGuild(dbGuild: NewGuild) {
 		return db
 			.insert(GUILD_TABLE)
-			.values(dbGuild)
+			.values(omitBy(dbGuild, isNil) as NewGuild)
 			.onConflictDoNothing()
 			.returning().get();
 	}
@@ -177,7 +177,7 @@ export class Store {
 				this.dbQueues.clear();
 				return db
 					.insert(QUEUE_TABLE)
-					.values(newQueue)
+					.values(omitBy(newQueue, isNil) as NewQueue)
 					.returning().get();
 			});
 		}
@@ -195,7 +195,7 @@ export class Store {
 			this.dbVoices.clear();
 			return db
 				.insert(VOICE_TABLE)
-				.values(newVoice)
+				.values(omitBy(newVoice, isNil) as NewVoice)
 				.onConflictDoUpdate({
 					target: [VOICE_TABLE.queueId, VOICE_TABLE.sourceChannelId],
 					set: newVoice,
@@ -211,7 +211,7 @@ export class Store {
 			this.dbDisplays.clear();
 			return db
 				.insert(DISPLAY_TABLE)
-				.values(newDisplay)
+				.values(omitBy(newDisplay, isNil) as NewDisplay)
 				.onConflictDoUpdate({
 					target: [DISPLAY_TABLE.queueId, DISPLAY_TABLE.displayChannelId],
 					set: newDisplay,
@@ -227,7 +227,7 @@ export class Store {
 			this.dbMembers.clear();
 			return db
 				.insert(MEMBER_TABLE)
-				.values(newMember)
+				.values(omitBy(newMember, isNil) as NewMember)
 				.onConflictDoUpdate({
 					target: [MEMBER_TABLE.queueId, MEMBER_TABLE.userId],
 					set: newMember,
@@ -244,7 +244,7 @@ export class Store {
 				this.dbSchedules.clear();
 				return db
 					.insert(SCHEDULE_TABLE)
-					.values(newSchedule)
+					.values(omitBy(newSchedule, isNil) as NewSchedule)
 					.returning().get();
 			});
 		}
@@ -263,7 +263,7 @@ export class Store {
 				this.dbWhitelisted.clear();
 				return db
 					.insert(WHITELISTED_TABLE)
-					.values(newWhitelisted)
+					.values(omitBy(newWhitelisted, isNil) as NewWhitelisted)
 					.returning().get();
 			});
 		}
@@ -282,7 +282,7 @@ export class Store {
 				this.dbBlacklisted.clear();
 				return db
 					.insert(BLACKLISTED_TABLE)
-					.values(newBlacklisted)
+					.values(omitBy(newBlacklisted, isNil) as NewBlacklisted)
 					.returning().get();
 			});
 		}
@@ -301,7 +301,7 @@ export class Store {
 				this.dbPrioritized.clear();
 				return db
 					.insert(PRIORITIZED_TABLE)
-					.values(newPrioritized)
+					.values(omitBy(newPrioritized, isNil) as NewPrioritized)
 					.returning().get();
 			});
 		}
@@ -320,7 +320,7 @@ export class Store {
 				this.dbAdmins.clear();
 				return db
 					.insert(ADMIN_TABLE)
-					.values(newAdmin)
+					.values(omitBy(newAdmin, isNil) as NewAdmin)
 					.returning().get();
 			});
 		}
@@ -383,7 +383,7 @@ export class Store {
 		this.dbQueues.clear();
 		return db
 			.update(QUEUE_TABLE)
-			.set(queue)
+			.set(omitBy(queue, isNil))
 			.where(and(
 				eq(QUEUE_TABLE.id, queue.id),
 				eq(QUEUE_TABLE.guildId, this.guild.id),
@@ -395,7 +395,7 @@ export class Store {
 		this.dbVoices.clear();
 		return db
 			.update(VOICE_TABLE)
-			.set(voice)
+			.set(omitBy(voice, isNil))
 			.where(and(
 				eq(VOICE_TABLE.id, voice.id),
 				eq(VOICE_TABLE.guildId, this.guild.id),
@@ -407,7 +407,7 @@ export class Store {
 		this.dbDisplays.clear();
 		return db
 			.update(DISPLAY_TABLE)
-			.set(display)
+			.set(omitBy(display, isNil))
 			.where(and(
 				eq(DISPLAY_TABLE.id, display.id),
 				eq(DISPLAY_TABLE.guildId, this.guild.id),
@@ -419,7 +419,7 @@ export class Store {
 		this.dbMembers.clear();
 		return db
 			.update(MEMBER_TABLE)
-			.set(member)
+			.set(omitBy(member, isNil))
 			.where(and(
 				eq(MEMBER_TABLE.id, member.id),
 				eq(MEMBER_TABLE.guildId, this.guild.id),
@@ -431,7 +431,7 @@ export class Store {
 		this.dbSchedules.clear();
 		return db
 			.update(SCHEDULE_TABLE)
-			.set(schedule)
+			.set(omitBy(schedule, isNil))
 			.where(and(
 				eq(SCHEDULE_TABLE.id, schedule.id),
 				eq(SCHEDULE_TABLE.guildId, this.guild.id),
@@ -443,7 +443,7 @@ export class Store {
 		this.dbWhitelisted.clear();
 		return db
 			.update(WHITELISTED_TABLE)
-			.set(whitelisted)
+			.set(omitBy(whitelisted, isNil))
 			.where(and(
 				eq(WHITELISTED_TABLE.id, whitelisted.id),
 				eq(WHITELISTED_TABLE.guildId, this.guild.id),
@@ -455,7 +455,7 @@ export class Store {
 		this.dbBlacklisted.clear();
 		return db
 			.update(BLACKLISTED_TABLE)
-			.set(blacklisted)
+			.set(omitBy(blacklisted, isNil))
 			.where(and(
 				eq(BLACKLISTED_TABLE.id, blacklisted.id),
 				eq(BLACKLISTED_TABLE.guildId, this.guild.id),
@@ -467,7 +467,7 @@ export class Store {
 		this.dbPrioritized.clear();
 		return db
 			.update(PRIORITIZED_TABLE)
-			.set(prioritized)
+			.set(omitBy(prioritized, isNil))
 			.where(and(
 				eq(PRIORITIZED_TABLE.id, prioritized.id),
 				eq(PRIORITIZED_TABLE.guildId, this.guild.id),
@@ -528,8 +528,18 @@ export class Store {
 	reason: ArchivedMemberReason,
 	) {
 		this.dbMembers.clear();
-		const cond = this.createCondition(MEMBER_TABLE, by);
-		const deletedMember = db.delete(MEMBER_TABLE).where(cond).returning().get();
+		const deletedMember = db.transaction(() => {
+			if ("userId" in by) {
+				const cond = this.createCondition(MEMBER_TABLE, by);
+				return db.delete(MEMBER_TABLE).where(cond).returning().get();
+			}
+			else {
+				const member = QueryUtils.selectMember({ ...by, guildId: this.guild.id });
+				if (member) {
+					return db.delete(MEMBER_TABLE).where(eq(MEMBER_TABLE.id, member.id)).returning().get();
+				}
+			}
+		});
 
 		if (deletedMember) {
 			this.insertArchivedMember({ ...deletedMember, reason });
@@ -543,20 +553,22 @@ export class Store {
 			{ queueId: bigint, count?: number },
 	reason: ArchivedMemberReason,
 	) {
-		this.dbMembers.clear();
-		const cond = ("count" in by)
-			? or(...QueryUtils.selectManyMembers({
-				...by,
-				guildId: this.guild.id,
-			}).map(member => eq(MEMBER_TABLE.id, member.id)))
-			: this.createCondition(MEMBER_TABLE, by);
-		const deletedMembers = db.delete(MEMBER_TABLE).where(cond).returning().all();
+		let deletedMembers: DbMember[];
+		db.transaction(() => {
+			this.dbMembers.clear();
+			const cond = ("count" in by)
+				? or(...QueryUtils.selectManyMembers({
+					...by,
+					guildId: this.guild.id,
+				}).map(member => eq(MEMBER_TABLE.id, member.id)))
+				: this.createCondition(MEMBER_TABLE, by);
+			deletedMembers = db.delete(MEMBER_TABLE).where(cond).returning().all();
 
-		deletedMembers.forEach(deletedMember =>
-			this.insertArchivedMember({ ...deletedMember, reason }),
-		);
-
-		return deleteMembers;
+			deletedMembers.forEach(deletedMember =>
+				this.insertArchivedMember({ ...deletedMember, reason }),
+			);
+		});
+		return deletedMembers;
 	}
 
 	deleteSchedule(by: { id: bigint }) {

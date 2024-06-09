@@ -9,7 +9,7 @@ import { DisplayOption } from "./display.option.ts";
 
 export class DisplaysOption extends CustomOption {
 	static readonly ID = "display_channels";
-	name = DisplayOption.ID;
+	id = DisplayOption.ID;
 	extraChoices = [CHOICE_ALL, CHOICE_SOME];
 
 	getAutocompletions = DisplayOption.getAutocompletions;

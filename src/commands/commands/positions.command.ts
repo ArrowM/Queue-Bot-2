@@ -18,6 +18,6 @@ export class PositionsCommand extends EveryoneCommand {
 	// ====================================================================
 
 	static async positions(inter: SlashInteraction) {
-		await inter.respond({ embeds: await MemberUtils.getPositions(inter.store, inter.member.id) });
+		await inter.respond({ embeds: await MemberUtils.describeMyPositions(inter.store, inter.member.id) });
 	}
 }
