@@ -8,7 +8,6 @@ import { AutopullToggleOption } from "../../options/options/autopull-toggle.opti
 import { ButtonsToggleOption } from "../../options/options/buttons-toggle.option.ts";
 import { ColorOption } from "../../options/options/color.option.ts";
 import { DisplayUpdateTypeOption } from "../../options/options/display-update-type.option.ts";
-import { GracePeriodOption } from "../../options/options/grace-period.option.ts";
 import { HeaderOption } from "../../options/options/header.option.ts";
 import { InlineToggleOption } from "../../options/options/inline-toggle.option.ts";
 import { LockToggleOption } from "../../options/options/lock-toggle.option.ts";
@@ -20,6 +19,8 @@ import { NotificationsToggleOption } from "../../options/options/notifications-e
 import { PullBatchSizeOption } from "../../options/options/pull-batch-size.option.ts";
 import { QueueOption } from "../../options/options/queue.option.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
+import { RejoinCooldownPeriodOption } from "../../options/options/rejoin-cooldown-period.option.ts";
+import { RejoinGracePeriodOption } from "../../options/options/rejoin-grace-period.option.ts";
 import { RoleInQueueOption } from "../../options/options/role-in-queue.option.ts";
 import { RoleOnPullOption } from "../../options/options/role-on-pull.option.ts";
 import { SizeOption } from "../../options/options/size.option.ts";
@@ -123,10 +124,11 @@ export class QueuesCommand extends AdminCommand {
 		autopullToggle: new AutopullToggleOption({ description: "Toggle automatic pulling of queue members" }),
 		buttonsToggle: new ButtonsToggleOption({ description: "Toggle buttons beneath queue displays" }),
 		color: new ColorOption({ description: "Color of the queue" }),
-		gracePeriod: new GracePeriodOption({ description: "Grace period in seconds" }),
+		rejoinCooldownPeriod: new RejoinCooldownPeriodOption({ description: "# of seconds a member must wait before re-queueing after being pulled" }),
+		rejoinGracePeriod: new RejoinGracePeriodOption({ description: "# of seconds a member has to reclaim their queue spot after leaving" }),
 		header: new HeaderOption({ description: "Header of the queue display" }),
 		inlineToggle: new InlineToggleOption({ description: "Toggle inline display of queue members" }),
-		lockToggle: new LockToggleOption({ description: "Toggle queue locked status (prevents new joins)" }),
+		lockToggle: new LockToggleOption({ description: "Toggle queue locked status (prevents joining)" }),
 		logChannel: new LogChannelOption({ description: "Channel to write logs to" }),
 		logLevel: new LogLevelOption({ description: "Level of logging" }),
 		memberDisplayType: new MemberDisplayTypeOption({ description: "How to display members" }),
@@ -147,7 +149,8 @@ export class QueuesCommand extends AdminCommand {
 				autopullToggle: QueuesCommand.ADD_OPTIONS.autopullToggle.get(inter),
 				buttonsToggle: QueuesCommand.ADD_OPTIONS.buttonsToggle.get(inter),
 				color: QueuesCommand.ADD_OPTIONS.color.get(inter),
-				gracePeriod: QueuesCommand.ADD_OPTIONS.gracePeriod.get(inter),
+				rejoinCooldownPeriod: QueuesCommand.ADD_OPTIONS.rejoinCooldownPeriod.get(inter),
+				rejoinGracePeriod: QueuesCommand.ADD_OPTIONS.rejoinGracePeriod.get(inter),
 				header: QueuesCommand.ADD_OPTIONS.header.get(inter),
 				inlineToggle: QueuesCommand.ADD_OPTIONS.inlineToggle.get(inter),
 				lockToggle: QueuesCommand.ADD_OPTIONS.lockToggle.get(inter),
@@ -180,10 +183,11 @@ export class QueuesCommand extends AdminCommand {
 		autopullToggle: new AutopullToggleOption({ description: "Toggle automatic pulling of queue members" }),
 		buttonsToggle: new ButtonsToggleOption({ description: "Toggle buttons beneath queue displays" }),
 		color: new ColorOption({ description: "Color of the queue" }),
-		gracePeriod: new GracePeriodOption({ description: "Grace period in seconds" }),
+		rejoinCooldownPeriod: new RejoinCooldownPeriodOption({ description: "# of seconds a  member must wait before re-queueing after being pulled" }),
+		rejoinGracePeriod: new RejoinGracePeriodOption({ description: "# of seconds a  member has to reclaim their queue spot after leaving" }),
 		header: new HeaderOption({ description: "Header of the queue display" }),
 		inlineToggle: new InlineToggleOption({ description: "Toggle inline display of queue members" }),
-		lockToggle: new LockToggleOption({ description: "Toggle queue locked status (prevents new joins)" }),
+		lockToggle: new LockToggleOption({ description: "Toggle queue locked status (prevents joining)" }),
 		logChannel: new LogChannelOption({ description: "Channel to write logs to" }),
 		logLevel: new LogLevelOption({ description: "Level of logging" }),
 		memberDisplayType: new MemberDisplayTypeOption({ description: "How to display members" }),
@@ -203,7 +207,8 @@ export class QueuesCommand extends AdminCommand {
 			autopullToggle: QueuesCommand.SET_OPTIONS.autopullToggle.get(inter),
 			buttonsToggle: QueuesCommand.SET_OPTIONS.buttonsToggle.get(inter),
 			color: QueuesCommand.SET_OPTIONS.color.get(inter),
-			gracePeriod: QueuesCommand.SET_OPTIONS.gracePeriod.get(inter),
+			rejoinCooldownPeriod: QueuesCommand.SET_OPTIONS.rejoinCooldownPeriod.get(inter),
+			rejoinGracePeriod: QueuesCommand.SET_OPTIONS.rejoinGracePeriod.get(inter),
 			header: QueuesCommand.SET_OPTIONS.header.get(inter),
 			inlineToggle: QueuesCommand.SET_OPTIONS.inlineToggle.get(inter),
 			lockToggle: QueuesCommand.SET_OPTIONS.lockToggle.get(inter),
@@ -240,7 +245,8 @@ export class QueuesCommand extends AdminCommand {
 			{ name: AutopullToggleOption.ID, value: QUEUE_TABLE.autopullToggle.name },
 			{ name: ButtonsToggleOption.ID, value: QUEUE_TABLE.buttonsToggle.name },
 			{ name: ColorOption.ID, value: QUEUE_TABLE.color.name },
-			{ name: GracePeriodOption.ID, value: QUEUE_TABLE.gracePeriod.name },
+			{ name: RejoinCooldownPeriodOption.ID, value: QUEUE_TABLE.rejoinCooldownPeriod.name },
+			{ name: RejoinGracePeriodOption.ID, value: QUEUE_TABLE.rejoinGracePeriod.name },
 			{ name: HeaderOption.ID, value: QUEUE_TABLE.header.name },
 			{ name: InlineToggleOption.ID, value: QUEUE_TABLE.inlineToggle.name },
 			{ name: LockToggleOption.ID, value: QUEUE_TABLE.lockToggle.name },

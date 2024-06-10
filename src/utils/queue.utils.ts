@@ -8,6 +8,7 @@ import type { ArrayOrCollection } from "../types/misc.types.ts";
 import { DisplayUtils } from "./display.utils.ts";
 import { MemberUtils } from "./member.utils.ts";
 import { map } from "./misc.utils.ts";
+import { timeMention } from "./string.utils.ts";
 
 export namespace QueueUtils {
 	const INDESCRIBABLE_QUEUE_PROPERTIES = ["id", "name", "guildId", "queueId"];
@@ -18,11 +19,13 @@ export namespace QueueUtils {
 
 	type FormattingFunctions = Partial<Record<keyof DbQueue | keyof DbVoice, (value: any) => string>>;
 	const formattingFunctions: FormattingFunctions = {
+		destinationChannelId: channelMention,
 		logChannelId: channelMention,
 		roleInQueueId: roleMention,
 		roleOnPullId: roleMention,
 		sourceChannelId: channelMention,
-		destinationChannelId: channelMention,
+		rejoinCooldownPeriod: timeMention,
+		rejoinGracePeriod: timeMention,
 	};
 
 	export async function insertQueue(store: Store, queue: NewQueue) {
@@ -70,11 +73,14 @@ export namespace QueueUtils {
 	}
 
 	export function validateQueueProperties(queue: Partial<DbQueue>) {
-		if (queue.gracePeriod && queue.gracePeriod < 0) {
-			throw new Error("Grace period must be a positive number.");
-		}
 		if (queue.pullBatchSize && queue.pullBatchSize < 1) {
 			throw new Error("Pull batch size must be a positive number.");
+		}
+		if (queue.rejoinCooldownPeriod && queue.rejoinCooldownPeriod < 0) {
+			throw new Error("Rejoin cooldown period be a positive number.");
+		}
+		if (queue.rejoinGracePeriod && queue.rejoinGracePeriod < 0) {
+			throw new Error("Rejoin grace period must be a positive number.");
 		}
 		if (queue.size && queue.size < 1) {
 			throw new Error("Size must be a positive number.");

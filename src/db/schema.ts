@@ -47,6 +47,7 @@ export const GUILD_RELATIONS = relations(GUILD_TABLE, ({ many }) => ({
 export type NewGuild = typeof GUILD_TABLE.$inferInsert;
 export type DbGuild = typeof GUILD_TABLE.$inferSelect;
 
+
 export const QUEUE_TABLE = sqliteTable("queue", ({
 	id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),
 
@@ -57,7 +58,6 @@ export const QUEUE_TABLE = sqliteTable("queue", ({
 	autopullToggle: integer("autopull_toggle", { mode: "boolean" }).notNull().default(false),
 	buttonsToggle: integer("buttons_toggle", { mode: "boolean" }).notNull().default(true),
 	color: text("color").$type<ColorResolvable>().notNull().default(get(Color, process.env.DEFAULT_COLOR) as ColorResolvable),
-	gracePeriod: integer("grace_period").notNull().default(0),
 	header: text("header"),
 	inlineToggle: integer("inline_toggle", { mode: "boolean" }).notNull().default(false),
 	lockToggle: integer("lock_toggle", { mode: "boolean" }).notNull().default(false),
@@ -66,6 +66,8 @@ export const QUEUE_TABLE = sqliteTable("queue", ({
 	memberDisplayType: text("member_display_type").$type<MemberDisplayType>().notNull().default(MemberDisplayType.Mention),
 	notificationsToggle: integer("notifications_toggle", { mode: "boolean" }).notNull().default(true),
 	pullBatchSize: integer("pull_batch_size").notNull().default(1),
+	rejoinCooldownPeriod: integer("rejoin_cooldown_period").notNull().default(0),
+	rejoinGracePeriod: integer("rejoin_grace_period").notNull().default(0),
 	roleInQueueId: text("role_in_queue_id").$type<Snowflake | null>(),
 	roleOnPullId: text("role_on_pull_id").$type<Snowflake | null>(),
 	size: integer("size"),
@@ -311,6 +313,7 @@ export const ADMIN_RELATIONS = relations(ADMIN_TABLE, ({ one }) => ({
 
 export type NewAdmin = typeof ADMIN_TABLE.$inferInsert;
 export type DbAdmin = typeof ADMIN_TABLE.$inferSelect;
+
 
 export const ARCHIVED_MEMBER_TABLE = sqliteTable("archived_member", ({
 	id: integer("id").$type<bigint>().primaryKey({ autoIncrement: true }),

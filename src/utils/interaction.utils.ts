@@ -91,12 +91,15 @@ export namespace InteractionUtils {
 
 	export async function verifyCanSendMessages(jsChannel: GuildTextBasedChannel) {
 		function throwError(permissionName: string) {
-			throw new CustomError("Missing Permissions",
-				[
+			throw new CustomError({
+				message: "Missing Permissions",
+				embeds: [
 					new EmbedBuilder()
 						.setTitle(`⚠️ I am missing the ${inlineCode(permissionName)} permission in ${jsChannel} ⚠️ ️️️️`)
 						.setDescription(`Please open the '${bold(jsChannel.guild.name)}' server, hover over ${jsChannel}, click the gear, click 'Permissions', and ensure I have the ${inlineCode(permissionName)} permission.`)
-						.setColor(Color.Red)],
+						.setColor(Color.Red),
+				],
+			},
 			);
 		}
 

@@ -37,7 +37,7 @@ export class InteractionHandler implements Handler {
 	}
 
 	private async handleInteractionError(error: Error) {
-		const { message, stack, extraEmbeds, log } = error as CustomError;
+		let { message, stack, embeds, log } = error as CustomError;
 
 		if (message === "Unknown interaction") return;
 
@@ -49,10 +49,8 @@ export class InteractionHandler implements Handler {
 				embed.setFooter({ text: "This error has been logged and will be investigated by the developers." });
 			}
 
-			const embeds = [embed];
-			if (extraEmbeds) {
-				embeds.push(...extraEmbeds);
-			}
+			embeds = embeds ?? [];
+			embeds.push(embed);
 
 			if ("respond" in this.inter) {
 				await this.inter.respond({ embeds, ephemeral: true });

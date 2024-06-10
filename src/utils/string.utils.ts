@@ -74,16 +74,16 @@ export function scheduleMention(schedule: DbSchedule) {
 	return `will ${schedule.command} ${humanReadableSchedule} (${schedule.timezone})${schedule.reason ? ` - ${schedule.reason}` : ""}`;
 }
 
-export function convertSecondsToMinutesAndSeconds(secondsIn: number) {
-	if (!secondsIn) return "";
-
-	const minutes = Math.floor(secondsIn / 60);
-	const seconds = secondsIn % 60;
-	return (minutes > 0 ? minutes + " minute" : "") +
-		(minutes > 1 ? "s" : "") +
-		(minutes > 0 && seconds > 0 ? " and " : "") +
-		(seconds > 0 ? seconds + " second" : "") +
-		(seconds > 1 ? "s" : "");
+export function timeMention(seconds: number) {
+	if (!seconds) return "";
+	seconds = Number(seconds);
+	const numMinutes = Math.floor(seconds / 60);
+	const numSecondsRemainder = seconds % 60;
+	return (numMinutes > 0 ? bold(numMinutes.toString()) + " minute" : "") +
+		(numMinutes > 1 ? "s" : "") +
+		(numMinutes > 0 && numSecondsRemainder > 0 ? " and " : "") +
+		(numSecondsRemainder > 0 ? bold(numSecondsRemainder.toString()) + " second" : "") +
+		(numSecondsRemainder > 1 ? "s" : "");
 }
 
 export function describeTable<T>(options: {

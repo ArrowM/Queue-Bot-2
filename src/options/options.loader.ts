@@ -12,7 +12,6 @@ import { CommandOption } from "./options/command.option.ts";
 import { CronOption } from "./options/cron.option.ts";
 import { DisplayUpdateTypeOption } from "./options/display-update-type.option.ts";
 import { DisplaysOption } from "./options/displays.option.ts";
-import { GracePeriodOption } from "./options/grace-period.option.ts";
 import { HeaderOption } from "./options/header.option.ts";
 import { InlineToggleOption } from "./options/inline-toggle.option.ts";
 import { LockToggleOption } from "./options/lock-toggle.option.ts";
@@ -35,6 +34,7 @@ import { PullBatchSizeOption } from "./options/pull-batch-size.option.ts";
 import { QueueOption } from "./options/queue.option.ts";
 import { QueuesOption } from "./options/queues.option.ts";
 import { ReasonOption } from "./options/reason.option.ts";
+import { RejoinGracePeriodOption } from "./options/rejoin-grace-period.option.ts";
 import { RoleInQueueOption } from "./options/role-in-queue.option.ts";
 import { RoleOnPullOption } from "./options/role-on-pull.option.ts";
 import { ScheduleOption } from "./options/schedule.option.ts";
@@ -60,7 +60,7 @@ export const OPTIONS = new Collection<string, Option>([
 	[CommandOption.ID, new CommandOption()],
 	[CronOption.ID, new CronOption()],
 	[DisplaysOption.ID, new DisplaysOption()],
-	[GracePeriodOption.ID, new GracePeriodOption()],
+	[RejoinGracePeriodOption.ID, new RejoinGracePeriodOption()],
 	[HeaderOption.ID, new HeaderOption()],
 	[InlineToggleOption.ID, new InlineToggleOption()],
 	[LockToggleOption.ID, new LockToggleOption()],

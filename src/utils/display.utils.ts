@@ -29,13 +29,7 @@ import type { ArrayOrCollection } from "../types/misc.types.ts";
 import type { CustomError } from "./error.utils.ts";
 import { InteractionUtils } from "./interaction.utils.ts";
 import { map } from "./misc.utils.ts";
-import {
-	commandMention,
-	convertSecondsToMinutesAndSeconds,
-	memberMention,
-	queueMention,
-	scheduleMention,
-} from "./string.utils.ts";
+import { commandMention, memberMention, queueMention, scheduleMention, timeMention } from "./string.utils.ts";
 
 export namespace DisplayUtils {
 	export async function insertDisplays(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, displayChannelId: Snowflake) {
@@ -135,7 +129,7 @@ export namespace DisplayUtils {
 					catch (e) {
 						store.deleteDisplay(display);
 						if (store.initiator) {
-							await store.initiator.send({ embeds: (e as CustomError).extraEmbeds });
+							await store.initiator.send({ embeds: (e as CustomError).embeds });
 						}
 						return;
 					}
@@ -323,7 +317,7 @@ export namespace DisplayUtils {
 	async function buildDescription(store: Store, queue: DbQueue) {
 		const schedules = store.dbSchedules().filter(schedule => queue.id === schedule.queueId);
 		const members = store.dbMembers().filter(member => member.queueId === queue.id);
-		const { lockToggle, header, gracePeriod, autopullToggle, roleInQueueId, roleOnPullId } = queue;
+		const { autopullToggle, header, lockToggle, rejoinCooldownPeriod, rejoinGracePeriod, roleInQueueId, roleOnPullId } = queue;
 		const descriptionParts = [];
 
 		if (header) {
@@ -351,8 +345,12 @@ export namespace DisplayUtils {
 				descriptionParts.push(`${commandMention("join")} or ${commandMention("leave")}.`);
 			}
 
-			if (gracePeriod) {
-				descriptionParts.push(`- If you leave, you have '${bold(convertSecondsToMinutesAndSeconds(gracePeriod))}' to reclaim your spot.`);
+			if (rejoinGracePeriod) {
+				descriptionParts.push(`- After leaving, rejoin within ${timeMention(rejoinGracePeriod)} to reclaim your spot.`);
+			}
+
+			if (rejoinCooldownPeriod) {
+				descriptionParts.push(`- After being pulled, you must wait ${timeMention(rejoinCooldownPeriod)} to requeue.`);
 			}
 		}
 

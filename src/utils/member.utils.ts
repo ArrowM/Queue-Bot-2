@@ -30,7 +30,7 @@ import {
 import { map } from "./misc.utils.ts";
 import { NotificationUtils } from "./notification.utils.ts";
 import { PriorityUtils } from "./priority.utils.ts";
-import { membersMention, queueMention } from "./string.utils.ts";
+import { membersMention, queueMention, timeMention } from "./string.utils.ts";
 import { WhitelistUtils } from "./whitelist.utils.ts";
 
 export namespace MemberUtils {
@@ -61,25 +61,51 @@ export namespace MemberUtils {
 	}) {
 		const { store, queue, jsMember, message, force } = options;
 
-		if (!force) {
-			verifyMemberEligibility(store, queue, jsMember);
-		}
+		return await db.transaction(async () => {
+			if (!force) {
+				verifyMemberEligibility(store, queue, jsMember);
+			}
 
-		const priority = PriorityUtils.getMemberPriority(store, queue.id, jsMember);
+			const priority = PriorityUtils.getMemberPriority(store, queue.id, jsMember);
+			const archivedMember = store.dbArchivedMembers().find(member => member.queueId === queue.id && member.userId === jsMember.id);
+			let positionTime = BigInt(Date.now());
 
-		const member = store.insertMember({
-			guildId: store.guild.id,
-			queueId: queue.id,
-			userId: jsMember.id,
-			message,
-			priority,
+			if (queue.rejoinCooldownPeriod && archivedMember?.reason === ArchivedMemberReason.Pulled) {
+				const msSincePulled = BigInt(Date.now()) - archivedMember.archivedTime;
+				const msCooldownRemaining = BigInt(queue.rejoinCooldownPeriod * 1000) - msSincePulled;
+				if (msCooldownRemaining > 0) {
+					throw new CustomError({
+						message: "You are currently in a cooldown period and cannot rejoin the queue.",
+						embeds: [
+							new EmbedBuilder()
+								.setDescription(`You can rejoin the queue in ${timeMention(Number(msCooldownRemaining / 1000n))}.`),
+						],
+					});
+				}
+			}
+
+			if (queue.rejoinGracePeriod && archivedMember?.reason === ArchivedMemberReason.Left) {
+				if (BigInt(Date.now()) - archivedMember.archivedTime <= queue.rejoinGracePeriod) {
+					// Reuse the positionTime
+					positionTime = archivedMember.positionTime;
+				}
+			}
+
+			const insertedMember = store.insertMember({
+				guildId: store.guild.id,
+				queueId: queue.id,
+				userId: jsMember.id,
+				message,
+				priority,
+				positionTime,
+			});
+
+			await modifyMemberRoles(store, jsMember.id, queue.roleInQueueId, "add");
+
+			DisplayUtils.requestDisplayUpdate(store, queue.id);
+
+			return insertedMember;
 		});
-
-		await modifyMemberRoles(store, jsMember.id, queue.roleInQueueId, "add");
-
-		DisplayUtils.requestDisplayUpdate(store, queue.id);
-
-		return member;
 	}
 
 	export function updateMembers(store: Store, members: ArrayOrCollection<bigint, DbMember>, message: string) {
@@ -282,10 +308,13 @@ export namespace MemberUtils {
 		catch (e) {
 			const { message } = e as Error;
 			if (message.includes("Missing Permissions")) {
-				throw new CustomError(
-					"Missing Permissions",
-					[new EmbedBuilder().setDescription(`I can not manage the ${roleMention(roleId)} role. Please check my permissions.`)],
-				);
+				throw new CustomError({
+					message: "Missing Permissions",
+					embeds: [
+						new EmbedBuilder()
+							.setDescription(`I can not manage the ${roleMention(roleId)} role. Please check my permissions.`),
+					],
+				});
 			}
 			else {
 				throw e;
