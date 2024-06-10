@@ -30,8 +30,16 @@ export namespace ClientHandler {
 
 	export async function handleRoleDelete(role: Role) {
 		const store = new Store(role.guild);
-		const queues = store.dbQueues().filter(queue => queue.roleId === role.id);
-		await QueueUtils.updateQueues(store, queues, { roleId: null });
+		await QueueUtils.updateQueues(
+			store,
+			store.dbQueues().filter(queue => queue.roleInQueueId === role.id),
+			{ roleInQueueId: null }
+		);
+		await QueueUtils.updateQueues(
+			store,
+			store.dbQueues().filter(queue => queue.roleOnPullId === role.id),
+			{ roleOnPullId: null }
+		);
 	}
 
 	export async function handleGuildMemberRemove(member: GuildMember | PartialGuildMember) {

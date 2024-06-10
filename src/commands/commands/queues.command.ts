@@ -20,7 +20,7 @@ import { NotificationsToggleOption } from "../../options/options/notifications-e
 import { PullBatchSizeOption } from "../../options/options/pull-batch-size.option.ts";
 import { QueueOption } from "../../options/options/queue.option.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
-import { RoleOption } from "../../options/options/role.option.ts";
+import { RoleInQueueOption } from "../../options/options/role-in-queue.option.ts";
 import { SizeOption } from "../../options/options/size.option.ts";
 import { TimestampTypeOption } from "../../options/options/timestamp-type.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
@@ -31,6 +31,7 @@ import { SelectMenuTransactor } from "../../utils/message-utils/select-menu-tran
 import { toCollection } from "../../utils/misc.utils.ts";
 import { QueueUtils } from "../../utils/queue.utils.ts";
 import { commandMention, queueMention, queuesMention } from "../../utils/string.utils.ts";
+import { RoleOnPullOption } from "../../options/options/role-on-pull.option.ts";
 
 export class QueuesCommand extends AdminCommand {
 	static readonly ID = "queues";
@@ -131,7 +132,8 @@ export class QueuesCommand extends AdminCommand {
 		memberDisplayType: new MemberDisplayTypeOption({ description: "How to display members" }),
 		notificationsToggle: new NotificationsToggleOption({ description: "Toggle whether users are DM-ed on pull" }),
 		pullBatchSize: new PullBatchSizeOption({ description: "How many queue members to include in a pull" }),
-		role: new RoleOption({ description: "Role to assign members of the queue" }),
+		roleInQueue: new RoleInQueueOption({ description: "Role to assign members of the queue" }),
+		roleOnPull: new RoleOnPullOption({ description: "Role to assign members when they are pulled" }),
 		size: new SizeOption({ description: "Limit the size of the queue" }),
 		timestampType: new TimestampTypeOption({ description: "How to display timestamps" }),
 		displayUpdateType: new DisplayUpdateTypeOption({ description: "How to update displays" }),
@@ -154,7 +156,8 @@ export class QueuesCommand extends AdminCommand {
 				memberDisplayType: QueuesCommand.ADD_OPTIONS.memberDisplayType.get(inter),
 				notificationsToggle: QueuesCommand.ADD_OPTIONS.notificationsToggle.get(inter),
 				pullBatchSize: QueuesCommand.ADD_OPTIONS.pullBatchSize.get(inter),
-				roleId: QueuesCommand.ADD_OPTIONS.role.get(inter)?.id,
+				roleInQueueId: QueuesCommand.ADD_OPTIONS.roleInQueue.get(inter)?.id,
+				roleOnPullId: QueuesCommand.ADD_OPTIONS.roleOnPull.get(inter)?.id,
 				size: QueuesCommand.ADD_OPTIONS.size.get(inter),
 				timestampType: QueuesCommand.ADD_OPTIONS.timestampType.get(inter),
 				displayUpdateType: QueuesCommand.ADD_OPTIONS.displayUpdateType.get(inter),
@@ -187,7 +190,8 @@ export class QueuesCommand extends AdminCommand {
 		name: new NameOption({ description: "Name of the queue" }),
 		notificationsToggle: new NotificationsToggleOption({ description: "Toggle whether users are DM-ed on pull" }),
 		pullBatchSize: new PullBatchSizeOption({ description: "How many queue members to include in a pull" }),
-		role: new RoleOption({ description: "Role to assign members of the queue" }),
+		roleInQueue: new RoleInQueueOption({ description: "Role to assign members of the queue" }),
+		roleOnPull: new RoleOnPullOption({ description: "Role to assign members when they are pulled" }),
 		size: new SizeOption({ description: "Limit the size of the queue" }),
 		timestampType: new TimestampTypeOption({ description: "How to display timestamps" }),
 		displayUpdateType: new DisplayUpdateTypeOption({ description: "How to update displays" }),
@@ -209,7 +213,8 @@ export class QueuesCommand extends AdminCommand {
 			name: QueuesCommand.SET_OPTIONS.name.get(inter),
 			notificationsToggle: QueuesCommand.SET_OPTIONS.notificationsToggle.get(inter),
 			pullBatchSize: QueuesCommand.SET_OPTIONS.pullBatchSize.get(inter),
-			roleId: QueuesCommand.SET_OPTIONS.role.get(inter)?.id,
+			roleInQueueId: QueuesCommand.SET_OPTIONS.roleInQueue.get(inter)?.id,
+			roleOnPullId: QueuesCommand.SET_OPTIONS.roleOnPull.get(inter)?.id,
 			size: QueuesCommand.SET_OPTIONS.size.get(inter),
 			timestampType: QueuesCommand.SET_OPTIONS.timestampType.get(inter),
 			displayUpdateType: QueuesCommand.SET_OPTIONS.displayUpdateType.get(inter),
@@ -245,7 +250,8 @@ export class QueuesCommand extends AdminCommand {
 			{ name: NameOption.ID, value: QUEUE_TABLE.name.name },
 			{ name: NotificationsToggleOption.ID, value: QUEUE_TABLE.notificationsToggle.name },
 			{ name: PullBatchSizeOption.ID, value: QUEUE_TABLE.pullBatchSize.name },
-			{ name: RoleOption.ID, value: QUEUE_TABLE.roleId.name },
+			{ name: RoleInQueueOption.ID, value: QUEUE_TABLE.roleInQueueId.name },
+			{ name: RoleOnPullOption.ID, value: QUEUE_TABLE.roleOnPullId.name },
 			{ name: SizeOption.ID, value: QUEUE_TABLE.size.name },
 			{ name: TimestampTypeOption.ID, value: QUEUE_TABLE.timestampType.name },
 			{ name: DisplayUpdateTypeOption.ID, value: QUEUE_TABLE.displayUpdateType.name },
@@ -266,7 +272,7 @@ export class QueuesCommand extends AdminCommand {
 		if (updatedSettings.roleId) {
 			await Promise.all(
 				queues.map(queue => {
-					return MemberUtils.updateMembersForModifiedQueueRole(inter.store, [queue], queue.roleId, "remove");
+					return MemberUtils.updateInQueueRole(inter.store, [queue], updatedSettings.roleId, "remove");
 				})
 			);
 		}

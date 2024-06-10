@@ -35,7 +35,7 @@ import { PullBatchSizeOption } from "./options/pull-batch-size.option.ts";
 import { QueueOption } from "./options/queue.option.ts";
 import { QueuesOption } from "./options/queues.option.ts";
 import { ReasonOption } from "./options/reason.option.ts";
-import { RoleOption } from "./options/role.option.ts";
+import { RoleInQueueOption } from "./options/role-in-queue.option.ts";
 import { ScheduleOption } from "./options/schedule.option.ts";
 import { SchedulesOption } from "./options/schedules.option.ts";
 import { SizeOption } from "./options/size.option.ts";
@@ -47,6 +47,7 @@ import { VoiceSourceChannelOption } from "./options/voice-source-channel.option.
 import { VoicesOption } from "./options/voices.option.ts";
 import { WhitelistedOption } from "./options/whitelisted.option.ts";
 import { WhitelistedsOption } from "./options/whitelisteds.option.ts";
+import { RoleOnPullOption } from "./options/role-on-pull.option.ts";
 
 export const OPTIONS = new Collection<string, Option>([
 	[AdminOption.ID, new AdminOption()],
@@ -82,7 +83,8 @@ export const OPTIONS = new Collection<string, Option>([
 	[QueueOption.ID, new QueueOption()],
 	[QueuesOption.ID, new QueuesOption()],
 	[ReasonOption.ID, new ReasonOption()],
-	[RoleOption.ID, new RoleOption()],
+	[RoleInQueueOption.ID, new RoleInQueueOption()],
+	[RoleOnPullOption.ID, new RoleOnPullOption()],
 	[ScheduleOption.ID, new ScheduleOption()],
 	[SchedulesOption.ID, new SchedulesOption()],
 	[SizeOption.ID, new SizeOption()],

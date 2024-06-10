@@ -75,7 +75,7 @@ export namespace MemberUtils {
 			priority,
 		});
 
-		await modifyMemberRoles(store, jsMember.id, queue.roleId, "add");
+		await modifyMemberRoles(store, jsMember.id, queue.roleInQueueId, "add");
 
 		DisplayUtils.requestDisplayUpdate(store, queue.id);
 
@@ -116,7 +116,7 @@ export namespace MemberUtils {
 				.map(userId => store.deleteMember({ queueId: queue.id, userId }, reason))
 				.filter(Boolean);
 
-			userIds.forEach(userId => modifyMemberRoles(store, userId, queue.roleId, "remove").catch(() => null));
+			userIds.forEach(userId => modifyMemberRoles(store, userId, queue.roleInQueueId, "remove").catch(() => null));
 
 			// Pull members to the destination channel if they are in a voice channel
 			if (reason === ArchivedMemberReason.Pulled) {
@@ -128,6 +128,9 @@ export namespace MemberUtils {
 							jsMember.voice?.setChannel(destinationChannelId).catch(() => null);
 						}
 					}
+				}
+				if (queue.roleOnPullId) {
+					userIds.forEach(userId => modifyMemberRoles(store, userId, queue.roleOnPullId, "add").catch(() => null));
 				}
 			}
 
@@ -290,7 +293,7 @@ export namespace MemberUtils {
 		}
 	}
 
-	export async function updateMembersForModifiedQueueRole(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, roleId: Snowflake, modification: "add" | "remove") {
+	export async function updateInQueueRole(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, roleId: Snowflake, modification: "add" | "remove") {
 		await Promise.all(
 			map(queues, async (queue) => {
 				const members = store.dbMembers().filter(member => member.queueId === queue.id);

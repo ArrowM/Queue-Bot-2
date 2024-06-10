@@ -327,7 +327,7 @@ export namespace DisplayUtils {
 	async function buildDescription(store: Store, queue: DbQueue) {
 		const schedules = store.dbSchedules().filter(schedule => queue.id === schedule.queueId);
 		const members = store.dbMembers().filter(member => member.queueId === queue.id);
-		const { lockToggle, header, gracePeriod, autopullToggle, roleId } = queue;
+		const { lockToggle, header, gracePeriod, autopullToggle, roleInQueueId, roleOnPullId } = queue;
 		const descriptionParts = [];
 
 		if (header) {
@@ -364,8 +364,12 @@ export namespace DisplayUtils {
 			descriptionParts.push("- '✨' indicates priority.");
 		}
 
-		if (roleId) {
-			descriptionParts.push(`- Members are assigned the ${roleMention(roleId)} role.`);
+		if (roleInQueueId) {
+			descriptionParts.push(`- Members are assigned ${roleMention(roleInQueueId)} while in queue.`);
+		}
+
+		if (roleOnPullId) {
+			descriptionParts.push(`- Members are assigned ${roleMention(roleOnPullId)} when pulled from queue.`);
 		}
 
 		if (schedules.size) {

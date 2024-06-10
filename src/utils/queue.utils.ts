@@ -15,7 +15,8 @@ export namespace QueueUtils {
 	type FormattingFunctions = Partial<Record<keyof DbQueue | keyof DbVoice, (value: any) => string>>;
 	const formattingFunctions: FormattingFunctions = {
 		logChannelId: channelMention,
-		roleId: roleMention,
+		roleInQueueId: roleMention,
+		roleOnPullId: roleMention,
 		sourceChannelId: channelMention,
 		destinationChannelId: channelMention,
 	};
@@ -27,7 +28,7 @@ export namespace QueueUtils {
 
 		const role = get(queue, "role") as Role;
 		if (role) {
-			await MemberUtils.updateMembersForModifiedQueueRole(store, [insertedQueue], role.id, "add");
+			await MemberUtils.updateInQueueRole(store, [insertedQueue], role.id, "add");
 		}
 
 		return { insertedQueue };
@@ -43,8 +44,8 @@ export namespace QueueUtils {
 
 		DisplayUtils.requestDisplaysUpdate(store, updatedQueueIds);
 
-		if (update.roleId) {
-			await MemberUtils.updateMembersForModifiedQueueRole(store, updatedQueues, update.roleId, "add");
+		if (update.roleInQueueId) {
+			await MemberUtils.updateInQueueRole(store, updatedQueues, update.roleInQueueId, "add");
 		}
 
 		return { updatedQueues };
