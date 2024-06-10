@@ -50,8 +50,6 @@ export class VoiceCommand extends AdminCommand {
 	//                           /voice get
 	// ====================================================================
 
-	// TODO redo all of these to be like sch,bl,wl,pr
-
 	static readonly GET_OPTIONS = {
 		queues: new QueuesOption({ required: true, description: "Get voice integrations of specific queue(s)" }),
 	};
