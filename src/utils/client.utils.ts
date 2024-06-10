@@ -11,13 +11,14 @@ import {
 	type Snowflake,
 	TextChannel,
 } from "discord.js";
+import { chunk } from "lodash-es";
 import AutoPoster from "topgg-autoposter";
 
 import { CLIENT } from "../client/client.ts";
 import { COMMANDS } from "../commands/commands.loader.ts";
 import { QueryUtils } from "../db/queries.ts";
-import { Color, DisplayUpdateType } from "../types/db.types.ts";
 import { Store } from "../db/store.ts";
+import { Color, DisplayUpdateType } from "../types/db.types.ts";
 import { DisplayUtils } from "./display.utils.ts";
 
 export namespace ClientUtils {
@@ -90,7 +91,7 @@ export namespace ClientUtils {
 			console.log(`Patch notes for ${fileName} have not been read.`);
 			console.log("Type 'confirm' to send the patch notes:");
 			const userInput = (await new Promise(resolve => process.stdin.once("data", resolve))).toString().trim();
-			if (userInput === "confirm") {
+			if (userInput.toLowerCase() === "confirm") {
 				await patchNoteChannel.send({ embeds });
 				QueryUtils.insertPatchNotes({ fileName });
 			}
@@ -115,31 +116,38 @@ export namespace ClientUtils {
 
 	export async function checkForOfflineGuildChanges() {
 		console.time("Checked for offline changes");
-
-		// 1. Force fetch of all guilds
+		// Force fetch of all guilds
 		const guilds = await CLIENT.guilds.fetch();
 
-		const guildIds = guilds.map(guild => guild.id);
-		for (let i = 0; i < guildIds.length; i++) {
-			// Print progress
-			if (i % 20 === 0) console.log(`Checking for offline changes... [Completed: ${i}/${guildIds.length} guilds]`);
+		// Split guildIds into chunks of 10
+		const guildIdChunks = chunk(guilds.map(guild => guild.id), 10);
 
-			const guildId = guildIds[i];
-			const guild = await getGuild(guildId);
-			const store = new Store(guild);
+		// Update guilds in chunks of 10 with a 3-second pause between each chunk
+		for (let i = 0; i < guildIdChunks.length; i++) {
+			if (i % 10 === 0) console.log(`Checking for offline changes... [Completed: ${i * 10}/${guilds.size} guilds]`);
 
-			// 2. Force fetch of all members per guild
-			await refetchMembers(guild);
+			// Create an array of promises for the current chunk
+			const promises = guildIdChunks[i].map(async guildId => {
+				const guild = await getGuild(guildId);
+				const store = new Store(guild);
 
-			// 3. Update all queues
-			const queueIds = store.dbQueues().map(queue => queue.id);
-			DisplayUtils.requestDisplaysUpdate(store, queueIds, { updateTypeOverride: DisplayUpdateType.Edit});
+				// Force fetch of all members per guild
+				await refetchMembers(guild);
 
-			// Pause for 2 seconds every 20 iterations
-			if ((i + 1) % 20 === 0) {
-				await new Promise(resolve => setTimeout(resolve, 2000));
+				// Update all queues
+				const queueIds = store.dbQueues().map(queue => queue.id);
+				DisplayUtils.requestDisplaysUpdate(store, queueIds, { updateTypeOverride: DisplayUpdateType.Edit });
+			});
+
+			if (i < guildIdChunks.length - 1) {
+				// Pause for 5 seconds after each chunk
+				promises.push(new Promise(resolve => setTimeout(resolve, 3000)));
 			}
+
+			// Execute all promises in the chunk concurrently
+			await Promise.all(promises);
 		}
+
 		console.timeEnd("Checked for offline changes");
 	}
 }

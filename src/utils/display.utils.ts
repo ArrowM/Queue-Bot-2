@@ -26,6 +26,7 @@ import type { Store } from "../db/store.ts";
 import type { Button } from "../types/button.types.ts";
 import { Color, DisplayUpdateType } from "../types/db.types.ts";
 import type { ArrayOrCollection } from "../types/misc.types.ts";
+import { ClientUtils } from "./client.utils.ts";
 import type { CustomError } from "./error.utils.ts";
 import { InteractionUtils } from "./interaction.utils.ts";
 import { map } from "./misc.utils.ts";
@@ -36,7 +37,6 @@ import {
 	queueMention,
 	scheduleMention,
 } from "./string.utils.ts";
-import { ClientUtils } from "./client.utils.ts";
 
 export namespace DisplayUtils {
 	export async function insertDisplays(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, displayChannelId: Snowflake) {
@@ -258,7 +258,7 @@ export namespace DisplayUtils {
 
 		// Build member strings
 		const members = [...store.dbMembers().filter(member => member.queueId === queue.id).values()];
-		const rightPadding = members.length;
+		const rightPadding = `${members.length}`.length;
 
 		const memberDisplayLines = compact(await Promise.all(
 			members.map(async (member, index) =>
