@@ -1,4 +1,4 @@
-import { bold, channelMention, inlineCode, type Role, roleMention, strikethrough } from "discord.js";
+import { bold, channelMention, Collection, inlineCode, type Role, roleMention, strikethrough } from "discord.js";
 import { compact, get, isNil, omit } from "lodash-es";
 
 import { db } from "../db/db.ts";
@@ -11,6 +11,10 @@ import { map } from "./misc.utils.ts";
 
 export namespace QueueUtils {
 	const INDESCRIBABLE_QUEUE_PROPERTIES = ["id", "name", "guildId", "queueId"];
+	const LABEL_REPLACEMENTS = new Collection([
+		["roleInQueueId", "role_in_queue"],
+		["roleOnPullId", "role_on_pull"],
+	]);
 
 	type FormattingFunctions = Partial<Record<keyof DbQueue | keyof DbVoice, (value: any) => string>>;
 	const formattingFunctions: FormattingFunctions = {
@@ -85,7 +89,8 @@ export namespace QueueUtils {
 
 		if (isNil(value) && isNil(defaultValue)) return;
 
-		const settingStr = isDefaultValue ? dbQueueCol.name : bold(dbQueueCol.name);
+		let settingStr = LABEL_REPLACEMENTS.get(setting) ?? setting;
+		if (!isDefaultValue) settingStr = bold(settingStr);
 		const valueStr = formatValue(value, setting as keyof DbQueue);
 		const defaultValueStr = isDefaultValue ? "" : strikethrough(inlineCode(defaultValue as string));
 

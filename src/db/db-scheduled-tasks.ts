@@ -92,8 +92,8 @@ cron("*/5 * * * *", async () => {
 //                    Database Cleanup and Backup
 // ====================================================================
 
-// Database backup (every 3 hours)
-cron("0 */3 * * *", async () => {
+// Backup database every 2 hours
+cron("0 */2 * * *", async () => {
 	try {
 		backupPrep();
 		deleteOldBackups();
@@ -116,12 +116,12 @@ function backupPrep() {
 	}
 }
 
-// Delete backups older than 2 days
+// Delete backups older than 4 days
 function deleteOldBackups() {
 	fs.readdirSync(DB_BACKUP_DIRECTORY).forEach(file => {
 		const filePath = `${DB_BACKUP_DIRECTORY}/${file}`;
 		const stats = fs.statSync(filePath);
-		if (stats.isFile() && stats.mtime < subDays(new Date(), 2)) {
+		if (stats.isFile() && stats.mtime < subDays(new Date(), 4)) {
 			fs.unlinkSync(filePath);
 			console.log(`Deleted old backup: ${filePath}`);
 		}

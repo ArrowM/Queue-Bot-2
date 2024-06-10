@@ -10,8 +10,6 @@ export const CLIENT = new Client({
 		GatewayIntentBits.Guilds,
 		// Required for voice updates
 		GatewayIntentBits.GuildVoiceStates,
-		// Required for fetching full member lists to check for offline changes
-		GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildPresences,
 	],
 });
 
@@ -33,7 +31,7 @@ export async function start() {
 
 		console.timeEnd("READY");
 
-		ClientUtils.checkForOfflineGuildChanges();
+		ClientUtils.checkForOfflineVoiceChanges();
 
 		ClientUtils.checkForPatchNotes();
 	}

@@ -21,6 +21,7 @@ import { PullBatchSizeOption } from "../../options/options/pull-batch-size.optio
 import { QueueOption } from "../../options/options/queue.option.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
 import { RoleInQueueOption } from "../../options/options/role-in-queue.option.ts";
+import { RoleOnPullOption } from "../../options/options/role-on-pull.option.ts";
 import { SizeOption } from "../../options/options/size.option.ts";
 import { TimestampTypeOption } from "../../options/options/timestamp-type.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
@@ -31,7 +32,6 @@ import { SelectMenuTransactor } from "../../utils/message-utils/select-menu-tran
 import { toCollection } from "../../utils/misc.utils.ts";
 import { QueueUtils } from "../../utils/queue.utils.ts";
 import { commandMention, queueMention, queuesMention } from "../../utils/string.utils.ts";
-import { RoleOnPullOption } from "../../options/options/role-on-pull.option.ts";
 
 export class QueuesCommand extends AdminCommand {
 	static readonly ID = "queues";

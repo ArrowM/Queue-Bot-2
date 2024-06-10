@@ -4,7 +4,6 @@ import {
 	ActivityType,
 	ApplicationCommand,
 	type Collection,
-	type Guild,
 	type GuildResolvable,
 	REST,
 	Routes,
@@ -109,45 +108,25 @@ export namespace ClientUtils {
 		}
 	}
 
-	export async function refetchMembers(guild: Guild) {
-		guild.members.cache.clear();
-		await guild.members.fetch();
-	}
-
-	export async function checkForOfflineGuildChanges() {
-		console.time("Checked for offline changes");
+	export async function checkForOfflineVoiceChanges() {
+		console.time("Checked for offline voice changes");
 		// Force fetch of all guilds
-		const guilds = await CLIENT.guilds.fetch();
-
-		// Split guildIds into chunks of 10
-		const guildIdChunks = chunk(guilds.map(guild => guild.id), 10);
-
-		// Update guilds in chunks of 10 with a 3-second pause between each chunk
-		for (let i = 0; i < guildIdChunks.length; i++) {
-			if (i % 10 === 0) console.log(`Checking for offline changes... [Completed: ${i * 10}/${guilds.size} guilds]`);
-
-			// Create an array of promises for the current chunk
-			const promises = guildIdChunks[i].map(async guildId => {
-				const guild = await getGuild(guildId);
+		await CLIENT.guilds.fetch();
+		const voices = QueryUtils.selectAllVoices();
+		const chunkedVoices = chunk(voices, 10);
+		for (let i = 0; i < chunkedVoices.length; i++) {
+			const voiceChunk = chunkedVoices[i];
+			const promises = voiceChunk.map(async voice => {
+				const guild = await getGuild(voice.guildId);
 				const store = new Store(guild);
-
-				// Force fetch of all members per guild
-				await refetchMembers(guild);
-
-				// Update all queues
 				const queueIds = store.dbQueues().map(queue => queue.id);
 				DisplayUtils.requestDisplaysUpdate(store, queueIds, { updateTypeOverride: DisplayUpdateType.Edit });
 			});
-
-			if (i < guildIdChunks.length - 1) {
-				// Pause for 5 seconds after each chunk
+			if (i < chunkedVoices.length - 1) {
 				promises.push(new Promise(resolve => setTimeout(resolve, 3000)));
 			}
-
-			// Execute all promises in the chunk concurrently
 			await Promise.all(promises);
 		}
-
-		console.timeEnd("Checked for offline changes");
+		console.timeEnd("Checked for offline voice changes");
 	}
 }

@@ -36,6 +36,7 @@ import { QueueOption } from "./options/queue.option.ts";
 import { QueuesOption } from "./options/queues.option.ts";
 import { ReasonOption } from "./options/reason.option.ts";
 import { RoleInQueueOption } from "./options/role-in-queue.option.ts";
+import { RoleOnPullOption } from "./options/role-on-pull.option.ts";
 import { ScheduleOption } from "./options/schedule.option.ts";
 import { SchedulesOption } from "./options/schedules.option.ts";
 import { SizeOption } from "./options/size.option.ts";
@@ -47,7 +48,6 @@ import { VoiceSourceChannelOption } from "./options/voice-source-channel.option.
 import { VoicesOption } from "./options/voices.option.ts";
 import { WhitelistedOption } from "./options/whitelisted.option.ts";
 import { WhitelistedsOption } from "./options/whitelisteds.option.ts";
-import { RoleOnPullOption } from "./options/role-on-pull.option.ts";
 
 export const OPTIONS = new Collection<string, Option>([
 	[AdminOption.ID, new AdminOption()],

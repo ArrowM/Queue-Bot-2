@@ -26,7 +26,6 @@ import type { Store } from "../db/store.ts";
 import type { Button } from "../types/button.types.ts";
 import { Color, DisplayUpdateType } from "../types/db.types.ts";
 import type { ArrayOrCollection } from "../types/misc.types.ts";
-import { ClientUtils } from "./client.utils.ts";
 import type { CustomError } from "./error.utils.ts";
 import { InteractionUtils } from "./interaction.utils.ts";
 import { map } from "./misc.utils.ts";
@@ -47,9 +46,6 @@ export namespace DisplayUtils {
 			displayChannelId,
 		}));
 		const updatedQueueIds = uniq(insertedDisplays.map(display => display.queueId));
-
-		// We reset the member cache in case the bot has missed a member leaving the guild
-		await ClientUtils.refetchMembers(store.guild);
 
 		DisplayUtils.requestDisplaysUpdate(
 			store,

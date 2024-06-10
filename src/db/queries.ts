@@ -66,6 +66,13 @@ export namespace QueryUtils {
 		return selectManyVoicesByGuildId.all(by);
 	}
 
+	export function selectAllVoices() {
+		return db
+			.select()
+			.from(VOICE_TABLE)
+			.all();
+	}
+
 	// Displays
 
 	export function selectDisplay(by:
