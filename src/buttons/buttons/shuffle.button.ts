@@ -15,10 +15,11 @@ export class ShuffleButton extends AdminButton {
 
 	async handle(inter: ButtonInteraction) {
 		const { queue } = await ButtonUtils.getButtonContext(inter);
-		MemberUtils.shuffleMembers(inter.store, queue);
 
 		const confirmed = await inter.promptConfirmOrCancel(`Are you sure you want to shuffle the '${queueMention(queue)}' queue?`);
 		if (!confirmed) return;
+
+		MemberUtils.shuffleMembers(inter.store, queue);
 
 		await Promise.all([
 			inter.deleteReply(),

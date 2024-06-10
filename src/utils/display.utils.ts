@@ -36,9 +36,10 @@ import {
 	queueMention,
 	scheduleMention,
 } from "./string.utils.ts";
+import { ClientUtils } from "./client.utils.ts";
 
 export namespace DisplayUtils {
-	export function insertDisplays(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, displayChannelId: Snowflake) {
+	export async function insertDisplays(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, displayChannelId: Snowflake) {
 		// insert into db
 		const insertedDisplays = map(queues, (queue) => store.insertDisplay({
 			guildId: store.guild.id,
@@ -48,14 +49,14 @@ export namespace DisplayUtils {
 		const updatedQueueIds = uniq(insertedDisplays.map(display => display.queueId));
 
 		// We reset the member cache in case the bot has missed a member leaving the guild
-		store.guild.members.cache.clear();
+		await ClientUtils.refetchMembers(store.guild);
 
 		DisplayUtils.requestDisplaysUpdate(
 			store,
 			updatedQueueIds,
 			{
 				displayIds: insertedDisplays.map(display => display.id),
-				forceNew: true,
+				updateTypeOverride: DisplayUpdateType.Replace,
 			});
 
 		return { insertedDisplays, updatedQueueIds };
@@ -88,7 +89,7 @@ export namespace DisplayUtils {
 
 	export function requestDisplayUpdate(store: Store, queueId: bigint, opts?: {
 		displayIds?: bigint[],
-		forceNew?: boolean
+		updateTypeOverride?: DisplayUpdateType,
 	}) {
 		if (UPDATED_QUEUE_IDS.has(queueId)) {
 			PENDING_QUEUE_IDS.set(queueId, store);
@@ -100,9 +101,9 @@ export namespace DisplayUtils {
 
 	export function requestDisplaysUpdate(store: Store, queueIds: bigint[], opts?: {
 		displayIds?: bigint[],
-		forceNew?: boolean
+		updateTypeOverride?: DisplayUpdateType,
 	}) {
-		return uniq(queueIds).map(id => requestDisplayUpdate(store, id, opts));
+		return uniq(queueIds).map(queueId => requestDisplayUpdate(store, queueId, opts));
 	}
 
 	export async function createMemberDisplayLine(
@@ -115,7 +116,7 @@ export namespace DisplayUtils {
 		return `${idxStr}${await memberMention(store, member)}\n`;
 	}
 
-	async function updateDisplays(store: Store, queueId: bigint, opts?: { displayIds?: bigint[], forceNew?: boolean }) {
+	async function updateDisplays(store: Store, queueId: bigint, opts?: { displayIds?: bigint[], updateTypeOverride?: DisplayUpdateType }) {
 		try {
 			UPDATED_QUEUE_IDS.set(queueId, store);
 
@@ -191,14 +192,17 @@ export namespace DisplayUtils {
 						await newDisplay();
 					}
 
-					if (opts?.forceNew || queue.displayUpdateType === DisplayUpdateType.Replace) {
-						await replaceDisplay();
-					}
-					else if (queue.displayUpdateType === DisplayUpdateType.New) {
-						await newDisplay();
-					}
-					else if (queue.displayUpdateType === DisplayUpdateType.Edit) {
-						await editDisplay();
+					const updateType = opts?.updateTypeOverride ?? queue.displayUpdateType;
+					switch (updateType) {
+						case DisplayUpdateType.New:
+							await newDisplay();
+							break;
+						case DisplayUpdateType.Edit:
+							await editDisplay();
+							break;
+						case DisplayUpdateType.Replace:
+							await replaceDisplay();
+							break;
 					}
 				}
 				catch (e: any) {

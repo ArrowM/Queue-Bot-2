@@ -5,7 +5,7 @@ import { schedule as cron, type ScheduledTask, validate } from "node-cron";
 import { QueryUtils } from "../db/queries.ts";
 import { type DbQueue, type DbSchedule, type NewSchedule } from "../db/schema.ts";
 import { Store } from "../db/store.ts";
-import { ArchivedMemberReason, ScheduleCommand } from "../types/db.types.ts";
+import { ArchivedMemberReason, DisplayUpdateType, ScheduleCommand } from "../types/db.types.ts";
 import { type ArrayOrCollection, TIMEZONES } from "../types/misc.types.ts";
 import { ClientUtils } from "./client.utils.ts";
 import { DisplayUtils } from "./display.utils.ts";
@@ -139,7 +139,7 @@ export namespace ScheduleUtils {
 				});
 				break;
 			case ScheduleCommand.Show:
-				DisplayUtils.requestDisplayUpdate(store, queue.id, { forceNew: true });
+				DisplayUtils.requestDisplayUpdate(store, queue.id, { updateTypeOverride: DisplayUpdateType.Replace });
 				break;
 			case ScheduleCommand.Shuffle:
 				MemberUtils.shuffleMembers(store, queue);

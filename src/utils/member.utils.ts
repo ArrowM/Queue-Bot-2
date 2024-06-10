@@ -7,7 +7,7 @@ import {
 	roleMention,
 	type Snowflake,
 } from "discord.js";
-import { isNil } from "lodash-es";
+import { isNil, shuffle } from "lodash-es";
 
 import { db } from "../db/db.ts";
 import { QueryUtils } from "../db/queries.ts";
@@ -210,9 +210,7 @@ export namespace MemberUtils {
 
 	export function shuffleMembers(store: Store, queue: DbQueue) {
 		const members = store.dbMembers().filter(member => member.queueId === queue.id);
-		const shuffledPositionTimes = members
-			.map(member => member.positionTime)
-			.sort(() => Math.random() - 0.5);
+		const shuffledPositionTimes = shuffle(members.map(member => member.positionTime));
 
 		db.transaction(() => {
 			members.forEach((member) =>

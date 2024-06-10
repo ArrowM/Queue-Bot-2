@@ -28,7 +28,7 @@ export class ShowCommand extends EveryoneCommand {
 	static async show(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
 		queues = queues ?? await DisplaysCommand.GET_OPTIONS.queues.get(inter);
 
-		const result = DisplayUtils.insertDisplays(inter.store, queues, inter.channel.id);
+		const result = await DisplayUtils.insertDisplays(inter.store, queues, inter.channel.id);
 
 		if (!inter.replied) {
 			await inter.respond(italic("displaying..."));

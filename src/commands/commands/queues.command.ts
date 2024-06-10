@@ -163,7 +163,7 @@ export class QueuesCommand extends AdminCommand {
 
 		const { insertedQueue } = await QueueUtils.insertQueue(inter.store, queue);
 
-		DisplayUtils.insertDisplays(inter.store, [insertedQueue], inter.channelId);
+		await DisplayUtils.insertDisplays(inter.store, [insertedQueue], inter.channelId);
 
 		await QueuesCommand.queues_get(inter, toCollection<bigint, DbQueue>("id", [insertedQueue]));
 	}

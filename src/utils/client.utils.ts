@@ -4,6 +4,7 @@ import {
 	ActivityType,
 	ApplicationCommand,
 	type Collection,
+	type Guild,
 	type GuildResolvable,
 	REST,
 	Routes,
@@ -15,7 +16,9 @@ import AutoPoster from "topgg-autoposter";
 import { CLIENT } from "../client/client.ts";
 import { COMMANDS } from "../commands/commands.loader.ts";
 import { QueryUtils } from "../db/queries.ts";
-import { Color } from "../types/db.types.ts";
+import { Color, DisplayUpdateType } from "../types/db.types.ts";
+import { Store } from "../db/store.ts";
+import { DisplayUtils } from "./display.utils.ts";
 
 export namespace ClientUtils {
 	// indexed by `id`
@@ -69,7 +72,7 @@ export namespace ClientUtils {
 		}
 	}
 
-	export async function checkPatchNotes() {
+	export async function checkForPatchNotes() {
 		// Check if any patch notes have not been read
 		const dbPatchNotes = QueryUtils.selectAllPatchNotes();
 		const unreadFileNames = fs.readdirSync("./patch-notes")
@@ -103,5 +106,40 @@ export namespace ClientUtils {
 			AutoPoster(process.env.TOP_GG_TOKEN, CLIENT).on("error", () => null);
 			console.timeEnd("Linked Top.gg AutoPoster");
 		}
+	}
+
+	export async function refetchMembers(guild: Guild) {
+		guild.members.cache.clear();
+		await guild.members.fetch();
+	}
+
+	export async function checkForOfflineGuildChanges() {
+		console.time("Checked for offline changes");
+
+		// 1. Force fetch of all guilds
+		const guilds = await CLIENT.guilds.fetch();
+
+		const guildIds = guilds.map(guild => guild.id);
+		for (let i = 0; i < guildIds.length; i++) {
+			// Print progress
+			if (i % 20 === 0) console.log(`Checking for offline changes... [Completed: ${i}/${guildIds.length} guilds]`);
+
+			const guildId = guildIds[i];
+			const guild = await getGuild(guildId);
+			const store = new Store(guild);
+
+			// 2. Force fetch of all members per guild
+			await refetchMembers(guild);
+
+			// 3. Update all queues
+			const queueIds = store.dbQueues().map(queue => queue.id);
+			DisplayUtils.requestDisplaysUpdate(store, queueIds, { updateTypeOverride: DisplayUpdateType.Edit});
+
+			// Pause for 2 seconds every 20 iterations
+			if ((i + 1) % 20 === 0) {
+				await new Promise(resolve => setTimeout(resolve, 2000));
+			}
+		}
+		console.timeEnd("Checked for offline changes");
 	}
 }

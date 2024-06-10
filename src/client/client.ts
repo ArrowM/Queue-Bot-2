@@ -1,11 +1,18 @@
-import { Client as DiscordClient, GatewayIntentBits } from "discord.js";
+import { Client, GatewayIntentBits } from "discord.js";
 
 import { ClientUtils } from "../utils/client.utils.ts";
 import { ScheduleUtils } from "../utils/schedule.utils.ts";
 import { ClientListeners } from "./client-listeners.ts";
 
-export const CLIENT = new DiscordClient({
-	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+export const CLIENT = new Client({
+	intents: [
+		// Required for guild / channel updates
+		GatewayIntentBits.Guilds,
+		// Required for voice updates
+		GatewayIntentBits.GuildVoiceStates,
+		// Required for fetching full member lists to check for offline changes
+		GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildPresences,
+	],
 });
 
 export async function start() {
@@ -26,8 +33,9 @@ export async function start() {
 
 		console.timeEnd("READY");
 
-		await ClientUtils.checkPatchNotes();
+		ClientUtils.checkForOfflineGuildChanges();
 
+		ClientUtils.checkForPatchNotes();
 	}
 	catch (e) {
 		const { message, stack } = e as Error;
