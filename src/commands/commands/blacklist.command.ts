@@ -55,16 +55,13 @@ export class BlacklistCommand extends AdminCommand {
 	static async blacklist_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
 		queues = queues ?? await BlacklistCommand.GET_OPTIONS.queues.get(inter);
 
-		let blacklisted = [...inter.store.dbBlacklisted().values()];
-		if (queues) {
-			blacklisted = blacklisted.filter(blacklisted => queues.has(blacklisted.queueId));
-		}
+		const blacklisted = inter.store.dbBlacklisted().filter(blacklisted => queues.has(blacklisted.queueId));
 
 		const embeds = describeTable({
 			store: inter.store,
 			tableName: "Blacklisted members and roles",
 			color: Color.Black,
-			entries: blacklisted,
+			entries: [...blacklisted.values()],
 		});
 
 		await inter.respond({ embeds });
@@ -87,7 +84,7 @@ export class BlacklistCommand extends AdminCommand {
 
 		const {
 			updatedQueueIds,
-		} = BlacklistUtils.insertBlacklisted(inter.store, queues, mentionable, reason);
+		} = await BlacklistUtils.insertBlacklisted(inter.store, queues, mentionable, reason);
 		const updatedQueues = updatedQueueIds.map(id => inter.store.dbQueues().get(id));
 
 		await inter.respond(`Blacklisted ${mentionable} from the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`);

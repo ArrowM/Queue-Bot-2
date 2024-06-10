@@ -6,7 +6,6 @@ import { QueuesOption } from "../../options/options/queues.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
 import { ArchivedMemberReason } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
-import { NotificationType } from "../../types/notification.types.ts";
 import { MemberUtils } from "../../utils/member.utils.ts";
 
 export class PullCommand extends AdminCommand {
@@ -40,18 +39,20 @@ export class PullCommand extends AdminCommand {
 			throw new Error("Count must be a positive number.");
 		}
 
-		const pulledMembers = MemberUtils.deleteMembers({
+		const pulledMembers = await MemberUtils.deleteMembers({
 			store: inter.store,
 			queues: queues,
 			reason: ArchivedMemberReason.Pulled,
 			by: { userIds: members?.map((member) => member.userId), count },
-			notification: { type: NotificationType.PULLED_FROM_QUEUE, channelToLink: inter.channel },
+			channelToLink: inter.channel,
 			force: true,
 		});
 
 		await Promise.all([
 			inter.deleteReply(),
-			inter.channel.send({ embeds: await MemberUtils.describePulledMembers(inter.store, queues, pulledMembers) }),
+			inter.channel.send({
+				embeds: await MemberUtils.describePulledMembers(inter.store, queues, pulledMembers),
+			}),
 		]);
 	}
 }

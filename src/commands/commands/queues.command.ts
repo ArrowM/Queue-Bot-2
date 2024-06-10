@@ -7,6 +7,7 @@ import { type DbQueue, QUEUE_TABLE } from "../../db/schema.ts";
 import { AutopullToggleOption } from "../../options/options/autopull-toggle.option.ts";
 import { ButtonsToggleOption } from "../../options/options/buttons-toggle.option.ts";
 import { ColorOption } from "../../options/options/color.option.ts";
+import { DisplayUpdateTypeOption } from "../../options/options/display-update-type.option.ts";
 import { GracePeriodOption } from "../../options/options/grace-period.option.ts";
 import { HeaderOption } from "../../options/options/header.option.ts";
 import { InlineToggleOption } from "../../options/options/inline-toggle.option.ts";
@@ -22,7 +23,6 @@ import { QueuesOption } from "../../options/options/queues.option.ts";
 import { RoleOption } from "../../options/options/role.option.ts";
 import { SizeOption } from "../../options/options/size.option.ts";
 import { TimestampTypeOption } from "../../options/options/timestamp-type.option.ts";
-import { UpdateTypeOption } from "../../options/options/update-type.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { DisplayUtils } from "../../utils/display.utils.ts";
@@ -134,7 +134,7 @@ export class QueuesCommand extends AdminCommand {
 		role: new RoleOption({ description: "Role to assign members of the queue" }),
 		size: new SizeOption({ description: "Limit the size of the queue" }),
 		timestampType: new TimestampTypeOption({ description: "How to display timestamps" }),
-		updateType: new UpdateTypeOption({ description: "How to update displays" }),
+		displayUpdateType: new DisplayUpdateTypeOption({ description: "How to update displays" }),
 	};
 
 	static async queues_add(inter: SlashInteraction) {
@@ -157,7 +157,7 @@ export class QueuesCommand extends AdminCommand {
 				roleId: QueuesCommand.ADD_OPTIONS.role.get(inter)?.id,
 				size: QueuesCommand.ADD_OPTIONS.size.get(inter),
 				timestampType: QueuesCommand.ADD_OPTIONS.timestampType.get(inter),
-				updateType: QueuesCommand.ADD_OPTIONS.updateType.get(inter),
+				displayUpdateType: QueuesCommand.ADD_OPTIONS.displayUpdateType.get(inter),
 			}, isNil),
 		};
 
@@ -190,7 +190,7 @@ export class QueuesCommand extends AdminCommand {
 		role: new RoleOption({ description: "Role to assign members of the queue" }),
 		size: new SizeOption({ description: "Limit the size of the queue" }),
 		timestampType: new TimestampTypeOption({ description: "How to display timestamps" }),
-		updateType: new UpdateTypeOption({ description: "How to update displays" }),
+		displayUpdateType: new DisplayUpdateTypeOption({ description: "How to update displays" }),
 	};
 
 	static async queues_set(inter: SlashInteraction) {
@@ -212,7 +212,7 @@ export class QueuesCommand extends AdminCommand {
 			roleId: QueuesCommand.SET_OPTIONS.role.get(inter)?.id,
 			size: QueuesCommand.SET_OPTIONS.size.get(inter),
 			timestampType: QueuesCommand.SET_OPTIONS.timestampType.get(inter),
-			updateType: QueuesCommand.SET_OPTIONS.updateType.get(inter),
+			displayUpdateType: QueuesCommand.SET_OPTIONS.displayUpdateType.get(inter),
 		}, isNil) as Partial<DbQueue>;
 
 		const { updatedQueues } = await QueueUtils.updateQueues(inter.store, queues, update);
@@ -248,7 +248,7 @@ export class QueuesCommand extends AdminCommand {
 			{ name: RoleOption.ID, value: QUEUE_TABLE.roleId.name },
 			{ name: SizeOption.ID, value: QUEUE_TABLE.size.name },
 			{ name: TimestampTypeOption.ID, value: QUEUE_TABLE.timestampType.name },
-			{ name: UpdateTypeOption.ID, value: QUEUE_TABLE.updateType.name },
+			{ name: DisplayUpdateTypeOption.ID, value: QUEUE_TABLE.displayUpdateType.name },
 		];
 		const selectMenuTransactor = new SelectMenuTransactor(inter);
 		const settingsToReset = await selectMenuTransactor.sendAndReceive("Queue settings to reset", selectMenuOptions);

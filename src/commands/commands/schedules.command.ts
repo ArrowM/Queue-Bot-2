@@ -73,17 +73,14 @@ export class SchedulesCommand extends AdminCommand {
 	static async schedules_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
 		queues = queues ?? await SchedulesCommand.GET_OPTIONS.queues.get(inter);
 
-		const schedules = [...inter.store.dbSchedules().values()];
-		if (queues) {
-			schedules.filter(schedule => queues.has(schedule.queueId));
-		}
+		const schedules = inter.store.dbSchedules().filter(schedule => queues.has(schedule.queueId));
 
 		const embeds = describeTable({
 			store: inter.store,
 			tableName: "Schedules",
 			color: Color.Raspberry,
 			mentionFn: scheduleMention,
-			entries: schedules,
+			entries: [...schedules.values()],
 		});
 
 		embeds.push(new EmbedBuilder().setDescription(italic(`Schedules can be updated with ${commandMention("schedules", "set")}`)));

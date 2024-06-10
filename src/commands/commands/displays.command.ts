@@ -54,17 +54,14 @@ export class DisplaysCommand extends AdminCommand {
 	static async displays_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
 		queues = queues ?? await DisplaysCommand.GET_OPTIONS.queues.get(inter);
 
-		let displays = [...inter.store.dbDisplays().values()];
-		if (queues) {
-			displays = displays.filter(display => queues.has(display.queueId));
-		}
+		const displays = inter.store.dbDisplays().filter(display => queues.has(display.queueId));
 
 		const embeds = describeTable({
 			store: inter.store,
 			tableName: "Displays",
 			color: Color.SkyBlue,
 			mentionFn: (display: DbDisplay) => channelMention(display.displayChannelId),
-			entries: displays,
+			entries: [...displays.values()],
 		});
 
 		await inter.respond({ embeds });

@@ -57,16 +57,13 @@ export class PrioritizeCommand extends AdminCommand {
 	static async prioritize_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
 		queues = queues ?? await PrioritizeCommand.GET_OPTIONS.queues.get(inter);
 
-		const prioritized = [...inter.store.dbPrioritized().values()];
-		if (queues) {
-			prioritized.filter(prioritized => queues.has(prioritized.queueId));
-		}
+		const prioritized = inter.store.dbPrioritized().filter(prioritized => queues.has(prioritized.queueId));
 
 		const embeds = describeTable({
 			store: inter.store,
 			tableName: "Prioritized members and roles",
 			color: Color.Gold,
-			entries: prioritized,
+			entries: [...prioritized.values()],
 		});
 
 		await inter.respond({ embeds });

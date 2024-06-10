@@ -10,6 +10,7 @@ import { ButtonsToggleOption } from "./options/buttons-toggle.option.ts";
 import { ColorOption } from "./options/color.option.ts";
 import { CommandOption } from "./options/command.option.ts";
 import { CronOption } from "./options/cron.option.ts";
+import { DisplayUpdateTypeOption } from "./options/display-update-type.option.ts";
 import { DisplaysOption } from "./options/displays.option.ts";
 import { GracePeriodOption } from "./options/grace-period.option.ts";
 import { HeaderOption } from "./options/header.option.ts";
@@ -40,7 +41,6 @@ import { SchedulesOption } from "./options/schedules.option.ts";
 import { SizeOption } from "./options/size.option.ts";
 import { TimestampTypeOption } from "./options/timestamp-type.option.ts";
 import { TimezoneOption } from "./options/timezone.option.ts";
-import { UpdateTypeOption } from "./options/update-type.option.ts";
 import { VoiceOption } from "./options/voice.option.ts";
 import { VoiceDestinationChannelOption } from "./options/voice-destination-channel.option.ts";
 import { VoiceSourceChannelOption } from "./options/voice-source-channel.option.ts";
@@ -88,7 +88,7 @@ export const OPTIONS = new Collection<string, Option>([
 	[SizeOption.ID, new SizeOption()],
 	[TimestampTypeOption.ID, new TimestampTypeOption()],
 	[TimezoneOption.ID, new TimezoneOption()],
-	[UpdateTypeOption.ID, new UpdateTypeOption()],
+	[DisplayUpdateTypeOption.ID, new DisplayUpdateTypeOption()],
 	[VoiceOption.ID, new VoiceOption()],
 	[VoicesOption.ID, new VoicesOption()],
 	[VoiceDestinationChannelOption.ID, new VoiceDestinationChannelOption()],

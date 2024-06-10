@@ -64,12 +64,12 @@ export const QUEUE_TABLE = sqliteTable("queue", ({
 	logChannelId: text("log_channel_id").$type<Snowflake | null>(),
 	logLevel: text("log_level").$type<LogLevel>().notNull().default(LogLevel.Default),
 	memberDisplayType: text("member_display_type").$type<MemberDisplayType>().notNull().default(MemberDisplayType.Mention),
-	notificationsToggle: integer("notifications_toggle", { mode: "boolean" }).notNull().default(false),
+	notificationsToggle: integer("notifications_toggle", { mode: "boolean" }).notNull().default(true),
 	pullBatchSize: integer("pull_batch_size").notNull().default(1),
 	roleId: text("role_id").$type<Snowflake | null>(),
 	size: integer("size"),
 	timestampType: text("time_display_type").$type<TimestampType>().default(TimestampType.Off),
-	updateType: text("update_type").$type<DisplayUpdateType>().notNull().default(DisplayUpdateType.Edit),
+	displayUpdateType: text("display_update_type").$type<DisplayUpdateType>().notNull().default(DisplayUpdateType.Edit),
 }),
 (table) => ({
 	unq: unique().on(table.name, table.guildId),
@@ -266,7 +266,7 @@ export const PRIORITIZED_TABLE = sqliteTable("prioritized", ({
 	queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
 	subjectId: text("subject_id").$type<Snowflake>().notNull(),
 	isRole: integer("is_role", { mode: "boolean" }).notNull(),
-	priorityOrder: integer("priority_order").default(5),
+	priorityOrder: integer("priority_order").notNull().default(5),
 	reason: text("reason"),
 }),
 (table) => ({

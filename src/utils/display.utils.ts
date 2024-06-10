@@ -7,7 +7,6 @@ import {
 	channelMention,
 	codeBlock,
 	EmbedBuilder,
-	type GuildBasedChannel,
 	type GuildTextBasedChannel,
 	inlineCode,
 	type Message,
@@ -33,7 +32,6 @@ import { map } from "./misc.utils.ts";
 import {
 	commandMention,
 	convertSecondsToMinutesAndSeconds,
-	ERROR_HEADER_LINE,
 	memberMention,
 	queueMention,
 	scheduleMention,
@@ -109,7 +107,6 @@ export namespace DisplayUtils {
 
 	export async function createMemberDisplayLine(
 		store: Store,
-		queue: DbQueue,
 		member: DbMember,
 		position: number,
 		rightPadding = 0,
@@ -156,14 +153,12 @@ export namespace DisplayUtils {
 						const message = await jsChannel.send({
 							embeds: embedBuilders,
 							components: getButtonRow(store, queue),
-							allowedMentions: { users: [] },
 						});
 						if (message) {
 							// Remove buttons on the previous message
 							await lastMessage?.edit({
 								embeds: embedBuilders,
 								components: [],
-								allowedMentions: { users: [] },
 							}).catch(() => null);
 							// Update the display
 							store.updateDisplay({
@@ -180,7 +175,6 @@ export namespace DisplayUtils {
 								await lastMessage.edit({
 									embeds: embedBuilders,
 									components: lastMessage.components,
-									allowedMentions: { users: [] },
 								});
 							}
 							catch {
@@ -197,13 +191,13 @@ export namespace DisplayUtils {
 						await newDisplay();
 					}
 
-					if (opts?.forceNew || queue.updateType === DisplayUpdateType.Replace) {
+					if (opts?.forceNew || queue.displayUpdateType === DisplayUpdateType.Replace) {
 						await replaceDisplay();
 					}
-					else if (queue.updateType === DisplayUpdateType.New) {
+					else if (queue.displayUpdateType === DisplayUpdateType.New) {
 						await newDisplay();
 					}
-					else if (queue.updateType === DisplayUpdateType.Edit) {
+					else if (queue.displayUpdateType === DisplayUpdateType.Edit) {
 						await editDisplay();
 					}
 				}
@@ -258,38 +252,14 @@ export namespace DisplayUtils {
 	async function generateQueueDisplay(store: Store, queue: DbQueue): Promise<EmbedBuilder[]> {
 		const { color, inlineToggle } = queue;
 
-		// Get voice channels if applicable
-		const { sourceChannelId, destinationChannelId } = store.dbVoices().get(queue.id) ?? {};
-		let voiceSourceChannel, voiceDestinationChannel;
-
-		if (sourceChannelId && destinationChannelId) {
-			voiceSourceChannel = await store.jsChannel(sourceChannelId);
-			voiceDestinationChannel = await store.jsChannel(destinationChannelId);
-			if (!voiceSourceChannel || !voiceDestinationChannel) {
-				let errorMessage = ERROR_HEADER_LINE + "\n";
-				if (!voiceSourceChannel) {
-					errorMessage += `Source voice channel ${channelMention(sourceChannelId)} not found.`;
-				}
-				if (!voiceDestinationChannel) {
-					errorMessage += `Destination voice channel ${channelMention(destinationChannelId)} not found.`;
-				}
-				return [
-					new EmbedBuilder()
-						.setTitle(queueMention(queue))
-						.setColor(color)
-						.setDescription(errorMessage),
-				];
-			}
-		}
-
 		// Build member strings
-		const members = store.dbMembers().filter(member => member.queueId === queue.id);
-		const rightPadding = members.size.toString().length;
+		const members = [...store.dbMembers().filter(member => member.queueId === queue.id).values()];
+		const rightPadding = members.length;
 
 		const memberDisplayLines = compact(await Promise.all(
 			members.map(async (member, index) =>
-				createMemberDisplayLine(store, queue, member, Number(index) + 1, rightPadding)
-			)
+				createMemberDisplayLine(store, member, index + 1, rightPadding),
+			),
 		));
 
 		/**
@@ -302,7 +272,7 @@ export namespace DisplayUtils {
 		// Build embeds
 		const embeds: EmbedBuilder[] = [];
 		const title = queueMention(queue);
-		const description = await buildDescription(store, queue, voiceSourceChannel, voiceDestinationChannel);
+		const description = await buildDescription(store, queue);
 		const sizeStr = `size: ${memberDisplayLines.length}${queue.size ? ` / ${queue.size}` : ""}`;
 		let fields: RestOrArray<APIEmbedField> = [];
 		let fieldIdx = 1;
@@ -350,7 +320,7 @@ export namespace DisplayUtils {
 		return embeds;
 	}
 
-	async function buildDescription(store: Store, queue: DbQueue, sourceVoiceChannel: GuildBasedChannel, destinationVoiceChannel: GuildBasedChannel) {
+	async function buildDescription(store: Store, queue: DbQueue) {
 		const schedules = store.dbSchedules().filter(schedule => queue.id === schedule.queueId);
 		const members = store.dbMembers().filter(member => member.queueId === queue.id);
 		const { lockToggle, header, gracePeriod, autopullToggle, roleId } = queue;
@@ -364,11 +334,15 @@ export namespace DisplayUtils {
 			descriptionParts.push("- Queue is locked.");
 		}
 		else {
-			if (sourceVoiceChannel && destinationVoiceChannel) {
-				descriptionParts.push(
-					`Join ${sourceVoiceChannel} to enter the queue.\n` +
-					`${autopullToggle ? "Automatically pulling" : "Manually pulling"} members from ${sourceVoiceChannel} to ${destinationVoiceChannel}.`,
-				);
+			const { sourceChannelId, destinationChannelId } = store.dbVoices().find(voice => voice.queueId === queue.id) ?? {};
+			if (sourceChannelId && destinationChannelId) {
+				const sourceChannel = await store.jsChannel(sourceChannelId);
+				const destinationChannel = await store.jsChannel(destinationChannelId);
+				if (sourceChannel && destinationChannel) {
+					descriptionParts.push(
+						`- ${autopullToggle ? "Automatically pulling" : "Manually pulling"} members from ${sourceChannel} to ${destinationChannel}.`,
+					);
+				}
 			}
 			else if (queue.buttonsToggle) {
 				descriptionParts.push(`${commandMention("join")}, ${commandMention("leave")}, or click the buttons below.`);

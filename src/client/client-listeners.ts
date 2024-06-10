@@ -6,9 +6,16 @@ import { CLIENT } from "./client.ts";
 
 export namespace ClientListeners {
 	export function load() {
-		CLIENT.on(Events.GuildCreate, ClientHandler.handleGuildCreate);
 		CLIENT.on(Events.GuildDelete, ClientHandler.handleGuildDelete);
 
 		CLIENT.on(Events.InteractionCreate, inter => new InteractionHandler(inter).handle());
+
+		CLIENT.on(Events.GuildRoleDelete, ClientHandler.handleRoleDelete);
+
+		CLIENT.on(Events.GuildMemberRemove, ClientHandler.handleGuildMemberRemove);
+
+		CLIENT.on(Events.ChannelDelete, ClientHandler.handleChannelDelete);
+
+		CLIENT.on(Events.VoiceStateUpdate, ClientHandler.handleVoiceStateUpdate);
 	}
 }

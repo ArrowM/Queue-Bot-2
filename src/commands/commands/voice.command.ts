@@ -1,15 +1,16 @@
-import { type Collection, SlashCommandBuilder } from "discord.js";
+import { channelMention, type Collection, SlashCommandBuilder } from "discord.js";
 
-import type { DbQueue } from "../../db/schema.ts";
+import type { DbQueue, DbVoice } from "../../db/schema.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
 import { VoiceDestinationChannelOption } from "../../options/options/voice-destination-channel.option.ts";
 import { VoiceSourceChannelOption } from "../../options/options/voice-source-channel.option.ts";
 import { VoicesOption } from "../../options/options/voices.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
-import { Color } from "../../types/db.types.ts";
+import { ArchivedMemberReason, Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
+import { MemberUtils } from "../../utils/member.utils.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
-import { describeTable } from "../../utils/string.utils.ts";
+import { describeTable, queueMention } from "../../utils/string.utils.ts";
 import { VoiceUtils } from "../../utils/voice.utils.ts";
 
 export class VoiceCommand extends AdminCommand {
@@ -58,16 +59,14 @@ export class VoiceCommand extends AdminCommand {
 	static async voice_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
 		queues = queues ?? await VoiceCommand.GET_OPTIONS.queues.get(inter);
 
-		let voices = [...inter.store.dbVoices().values()];
-		if (queues) {
-			voices = voices.filter(voice => queues.has(voice.queueId));
-		}
+		const voices = inter.store.dbVoices().filter(voice => queues.has(voice.queueId));
 
 		const embeds = describeTable({
 			store: inter.store,
 			tableName: "Voice integrations",
 			color: Color.Purple,
-			entries: voices,
+			entries: [...voices.values()],
+			mentionFn: (voice: DbVoice) => `${channelMention(voice.sourceChannelId)} -> ${channelMention(voice.destinationChannelId)}`,
 		});
 
 		await inter.respond({ embeds });
@@ -87,6 +86,18 @@ export class VoiceCommand extends AdminCommand {
 		const queues = await VoiceCommand.ADD_OPTIONS.queues.get(inter);
 		const sourceVoiceChannel = VoiceCommand.ADD_OPTIONS.sourceVoiceChannel.get(inter);
 		const destinationVoiceChannel = VoiceCommand.ADD_OPTIONS.destinationVoiceChannel.get(inter);
+
+		for (const queue of queues.values()) {
+			const members = inter.store.dbMembers().filter(member => member.queueId === queue.id);
+			if (members.size) {
+				const confirmed = await inter.promptConfirmOrCancel(
+					`There are ${members.size} member${members.size === 1 ? "" : "s"} in the queue${members.size === 1 ? "" : "s"} ${queueMention(queue)} that will be cleared if you proceed. Do you want to proceed?`
+				);
+				if (confirmed) {
+					await MemberUtils.deleteMembers({ store: inter.store, queues: [queue], reason: ArchivedMemberReason.Kicked });
+				}
+			}
+		}
 
 		const {
 			updatedQueueIds,

@@ -10,7 +10,7 @@ import { MemberUtils } from "./member.utils.ts";
 import { filterDbObjectsOnJsMember, map } from "./misc.utils.ts";
 
 export namespace BlacklistUtils {
-	export function insertBlacklisted(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, mentionable: Mentionable, reason?: string) {
+	export async function insertBlacklisted(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, mentionable: Mentionable, reason?: string) {
 		// insert into db
 		const insertedBlacklisted = map(queues, queue => store.insertBlacklisted({
 			guildId: store.guild.id,
@@ -23,7 +23,7 @@ export namespace BlacklistUtils {
 
 		// delete members
 		const by = (mentionable instanceof Role) ? { roleId: mentionable.id } : { userId: mentionable.id };
-		MemberUtils.deleteMembers({ store, queues, reason: ArchivedMemberReason.Kicked, by, force: true });
+		await MemberUtils.deleteMembers({ store, queues: queues, reason: ArchivedMemberReason.Kicked, by, force: true });
 
 		return { insertedBlacklisted, updatedQueueIds };
 	}

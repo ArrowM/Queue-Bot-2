@@ -1,24 +1,113 @@
-import type { Guild } from "discord.js";
+import {
+	type DMChannel,
+	type Guild,
+	type GuildMember,
+	type NonThreadGuildBasedChannel,
+	type PartialGuildMember,
+	Role,
+	StageChannel,
+	VoiceChannel,
+	VoiceState,
+} from "discord.js";
+import { compact } from "lodash-es";
 
 import { QueryUtils } from "../db/queries.ts";
 import { Store } from "../db/store.ts";
+import { ArchivedMemberReason } from "../types/db.types.ts";
+import { DisplayUtils } from "../utils/display.utils.ts";
+import { MemberUtils } from "../utils/member.utils.ts";
+import { QueueUtils } from "../utils/queue.utils.ts";
 
 export namespace ClientHandler {
-	export function handleGuildCreate(guild: Guild) {
-		try {
-			new Store(guild);
-		}
-		catch {
-			// ignore
-		}
-	}
-
 	export function handleGuildDelete(guild: Guild) {
 		try {
 			QueryUtils.deleteGuild({ guildId: guild.id });
 		}
 		catch {
 			// ignore
+		}
+	}
+
+	export async function handleRoleDelete(role: Role) {
+		const store = new Store(role.guild);
+		const queues = store.dbQueues().filter(queue => queue.roleId === role.id);
+		await QueueUtils.updateQueues(store, queues, { roleId: null });
+	}
+
+	export async function handleGuildMemberRemove(member: GuildMember | PartialGuildMember) {
+		const store = new Store(member.guild);
+		await MemberUtils.deleteMembers({
+			store,
+			queues: store.dbQueues(),
+			reason: ArchivedMemberReason.NotFound,
+			by: { userId: member.id },
+		});
+	}
+
+	export function handleChannelDelete(channel: DMChannel | NonThreadGuildBasedChannel) {
+		if ("guild" in channel) {
+			const store = new Store(channel.guild);
+			const updated = compact([
+				...store.deleteManyDisplays({ displayChannelId: channel.id }),
+				...store.deleteManyVoices({ channelId: channel.id }),
+			]);
+			updated.forEach(({ queueId }) => DisplayUtils.requestDisplayUpdate(store, queueId));
+		}
+	}
+
+	export async function handleVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
+		const member = oldState.member ?? newState.member;
+		if (oldState.channelId === newState.channelId || !member) return;
+
+		const guild = oldState.guild ?? newState.guild;
+		if (!guild) return;
+		const store = new Store(guild);
+
+		const queuesJoined = store.dbVoices()
+			.filter(voice => voice.sourceChannelId === newState.channelId)
+			.map(voice => store.dbQueues().get(voice.queueId));
+		for (const queue of queuesJoined.values()) {
+			try {
+				// Join
+				await MemberUtils.insertJsMember({
+					store,
+					queue,
+					jsMember: newState.member!,
+				});
+			}
+			catch {
+				// ignore
+			}
+		}
+
+		const queuesLeft = store.dbVoices()
+			.filter(voice => voice.sourceChannelId === oldState.channelId)
+			.map(voice => store.dbQueues().get(voice.queueId));
+		for (const queue of queuesLeft.values()) {
+			// Leave
+			MemberUtils.deleteMembers({
+				store,
+				queues: [queue],
+				reason: ArchivedMemberReason.Left,
+				by: { userId: newState.member!.id },
+			});
+		}
+
+		const destinationVoices = store.dbVoices().filter(voice => voice.destinationChannelId === oldState.channelId);
+		for (const voice of destinationVoices.values()) {
+			const queue = store.dbQueues().get(voice.queueId);
+			if (queue.autopullToggle) {
+				const destinationChannel = guild.channels.cache.get(voice.destinationChannelId) as VoiceChannel | StageChannel;
+				if (!destinationChannel.userLimit || destinationChannel.members.size < destinationChannel.userLimit) {
+					// Auto pull
+					MemberUtils.deleteMembers({
+						store,
+						queues: [queue],
+						reason: ArchivedMemberReason.Pulled,
+						by: { count: destinationChannel.userLimit - destinationChannel.members.size },
+					});
+				}
+			}
 		}
 	}
 }

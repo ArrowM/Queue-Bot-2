@@ -3,9 +3,9 @@ import type { AutocompleteInteraction, SlashInteraction } from "../../types/inte
 import { toChoices } from "../../utils/misc.utils.ts";
 import { StringOption } from "../base.options.ts";
 
-export class UpdateTypeOption extends StringOption {
-	static readonly ID = "update_type";
-	id = UpdateTypeOption.ID;
+export class DisplayUpdateTypeOption extends StringOption {
+	static readonly ID = "display_update_type";
+	id = DisplayUpdateTypeOption.ID;
 	defaultValue = DisplayUpdateType.Edit;
 	choices = toChoices(DisplayUpdateType);
 

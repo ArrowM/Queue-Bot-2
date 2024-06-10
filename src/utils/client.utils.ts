@@ -82,8 +82,18 @@ export namespace ClientUtils {
 		const patchNoteChannel = CLIENT.channels.cache.get(patchNotesChannelId) as TextChannel;
 		for (const fileName of unreadFileNames) {
 			const { embeds } = await import(`../../patch-notes/${fileName}`);
-			await patchNoteChannel.send({ embeds });
-			QueryUtils.insertPatchNotes({ fileName });
+
+			// wait for console confirmation
+			console.log(`Patch notes for ${fileName} have not been read.`);
+			console.log("Type 'confirm' to send the patch notes:");
+			const userInput = (await new Promise(resolve => process.stdin.once("data", resolve))).toString().trim();
+			if (userInput === "confirm") {
+				await patchNoteChannel.send({ embeds });
+				QueryUtils.insertPatchNotes({ fileName });
+			}
+			else {
+				console.log("Patch notes not sent. Continuing...");
+			}
 		}
 	}
 

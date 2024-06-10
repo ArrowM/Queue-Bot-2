@@ -101,6 +101,7 @@ export class Store {
 			const { status } = e as DiscordAPIError;
 			if (status == 404) {
 				this.deleteManyDisplays({ displayChannelId: channelId });
+				this.deleteManyVoices({ channelId });
 			}
 		}
 	}
@@ -356,8 +357,9 @@ export class Store {
 	 * If there is more than one parameter, the condition will be an `AND` condition.
 	 * @param table - The table to create the condition for.
 	 * @param params - The parameters to create the condition with.
+	 * @param connector - The connector to use for multiple parameters.
 	 */
-	private createCondition(table: any, params: { [key: string]: any }) {
+	private createCondition(table: any, params: { [key: string]: any }, connector: "AND" | "OR" = "AND") {
 		function createSingleCondition(key: string) {
 			const col = table[key];
 			const value = params[key];
@@ -368,7 +370,12 @@ export class Store {
 		params.guildId = this.guild.id;
 
 		if (Object.keys(params).length > 1) {
-			return and(...Object.keys(params).map(createSingleCondition));
+			if (connector === "AND") {
+				return and(...Object.keys(params).map(createSingleCondition));
+			}
+			else {
+				return or(...Object.keys(params).map(createSingleCondition));
+			}
 		}
 		else {
 			return createSingleCondition(Object.keys(params)[0]);
@@ -497,9 +504,14 @@ export class Store {
 		return db.delete(VOICE_TABLE).where(cond).returning().get();
 	}
 
-	deleteManyVoices() {
+	deleteManyVoices(by:
+		{ id: bigint} |
+		{ channelId: Snowflake }
+	) {
 		this.dbVoices.clear();
-		const cond = this.createCondition(VOICE_TABLE, {});
+		const cond = "channelId" in by
+			? this.createCondition(VOICE_TABLE, { sourceChannelId: by.channelId, destinationChannelId: by.channelId })
+			: this.createCondition(VOICE_TABLE, by);
 		return db.delete(VOICE_TABLE).where(cond).returning().all();
 	}
 

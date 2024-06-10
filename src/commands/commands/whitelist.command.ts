@@ -55,16 +55,13 @@ export class WhitelistCommand extends AdminCommand {
 	static async whitelist_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
 		queues = queues ?? await WhitelistCommand.GET_OPTIONS.queues.get(inter);
 
-		let whitelisted = [...inter.store.dbWhitelisted().values()];
-		if (queues) {
-			whitelisted = whitelisted.filter(whitelisted => queues.has(whitelisted.queueId));
-		}
+		const whitelisted = inter.store.dbWhitelisted().filter(whitelisted => queues.has(whitelisted.queueId));
 
 		const embeds = describeTable({
 			store: inter.store,
 			tableName: "Whitelisted members and roles",
 			color: Color.White,
-			entries: whitelisted,
+			entries: [...whitelisted.values()],
 		});
 
 		await inter.respond({ embeds });

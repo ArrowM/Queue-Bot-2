@@ -7,7 +7,6 @@ import { type DbQueue, type DbSchedule, type NewSchedule } from "../db/schema.ts
 import { Store } from "../db/store.ts";
 import { ArchivedMemberReason, ScheduleCommand } from "../types/db.types.ts";
 import { type ArrayOrCollection, TIMEZONES } from "../types/misc.types.ts";
-import { NotificationType } from "../types/notification.types.ts";
 import { ClientUtils } from "./client.utils.ts";
 import { DisplayUtils } from "./display.utils.ts";
 import { InvalidCronError } from "./error.utils.ts";
@@ -133,11 +132,10 @@ export namespace ScheduleUtils {
 				MemberUtils.clearMembers(store, queue);
 				break;
 			case ScheduleCommand.Pull:
-				MemberUtils.deleteMembers({
+				await MemberUtils.deleteMembers({
 					store,
 					queues: [queue],
 					reason: ArchivedMemberReason.Pulled,
-					notification: { type: NotificationType.PULLED_FROM_QUEUE },
 				});
 				break;
 			case ScheduleCommand.Show:

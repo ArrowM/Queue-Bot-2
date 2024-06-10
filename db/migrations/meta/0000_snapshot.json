@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "a1d1971d-4b7d-4cad-8dd2-8e9abbdf397d",
+  "id": "8b3e020a-289b-475c-bf93-ca95d64a119a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "admin": {
@@ -148,34 +148,7 @@
           "isUnique": true
         }
       },
-      "foreignKeys": {
-        "archived_member_guild_id_guild_guild_id_fk": {
-          "name": "archived_member_guild_id_guild_guild_id_fk",
-          "tableFrom": "archived_member",
-          "tableTo": "guild",
-          "columnsFrom": [
-            "guild_id"
-          ],
-          "columnsTo": [
-            "guild_id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "archived_member_queue_id_queue_id_fk": {
-          "name": "archived_member_queue_id_queue_id_fk",
-          "tableFrom": "archived_member",
-          "tableTo": "queue",
-          "columnsFrom": [
-            "queue_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -402,6 +375,14 @@
         },
         "queues_added": {
           "name": "queues_added",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "voices_added": {
+          "name": "voices_added",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
@@ -667,7 +648,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": 1
+          "default": 5
         },
         "reason": {
           "name": "reason",
@@ -833,7 +814,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": false
+          "default": true
         },
         "pull_batch_size": {
           "name": "pull_batch_size",
@@ -865,27 +846,13 @@
           "autoincrement": false,
           "default": "'off'"
         },
-        "update_type": {
-          "name": "update_type",
+        "display_update_type": {
+          "name": "display_update_type",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": "'edit'"
-        },
-        "source_voice_channel_id": {
-          "name": "source_voice_channel_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "destination_voice_channel_id": {
-          "name": "destination_voice_channel_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
         }
       },
       "indexes": {
@@ -1012,6 +979,93 @@
         "schedule_queue_id_queue_id_fk": {
           "name": "schedule_queue_id_queue_id_fk",
           "tableFrom": "schedule",
+          "tableTo": "queue",
+          "columnsFrom": [
+            "queue_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "voice": {
+      "name": "voice",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "guild_id": {
+          "name": "guild_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "queue_id": {
+          "name": "queue_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_channel_id": {
+          "name": "source_channel_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "destination_channel_id": {
+          "name": "destination_channel_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "voice_guild_id_index": {
+          "name": "voice_guild_id_index",
+          "columns": [
+            "guild_id"
+          ],
+          "isUnique": false
+        },
+        "voice_queue_id_source_channel_id_unique": {
+          "name": "voice_queue_id_source_channel_id_unique",
+          "columns": [
+            "queue_id",
+            "source_channel_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "voice_guild_id_guild_guild_id_fk": {
+          "name": "voice_guild_id_guild_guild_id_fk",
+          "tableFrom": "voice",
+          "tableTo": "guild",
+          "columnsFrom": [
+            "guild_id"
+          ],
+          "columnsTo": [
+            "guild_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "voice_queue_id_queue_id_fk": {
+          "name": "voice_queue_id_queue_id_fk",
+          "tableFrom": "voice",
           "tableTo": "queue",
           "columnsFrom": [
             "queue_id"

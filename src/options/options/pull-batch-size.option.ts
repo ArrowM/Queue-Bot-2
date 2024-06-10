@@ -1,7 +1,8 @@
+import { QUEUE_TABLE } from "../../db/schema.ts";
 import { IntegerOption } from "../base.options.ts";
 
 export class PullBatchSizeOption extends IntegerOption {
 	static readonly ID = "pull_batch_size";
 	id = PullBatchSizeOption.ID;
-	defaultValue = 1;
+	defaultValue = QUEUE_TABLE.pullBatchSize.default;
 }

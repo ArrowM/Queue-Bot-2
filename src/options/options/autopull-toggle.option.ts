@@ -1,7 +1,8 @@
+import { QUEUE_TABLE } from "../../db/schema.ts";
 import { BooleanOption } from "../base.options.ts";
 
 export class AutopullToggleOption extends BooleanOption {
 	static readonly ID = "autopull_toggle";
 	id = AutopullToggleOption.ID;
-	defaultValue = false;
+	defaultValue = QUEUE_TABLE.autopullToggle.default;
 }
