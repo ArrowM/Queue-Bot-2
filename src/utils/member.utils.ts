@@ -120,7 +120,6 @@ export namespace MemberUtils {
 		const { store, queues: _queues, reason, by, channelToLink, force } = options;
 		const queues = _queues instanceof Collection ? [..._queues.values()] : _queues;
 		const { userId, userIds, roleId, count } = by ?? {} as any;
-
 		const deletedMembers: DbMember[] = [];
 
 		async function deleteMembersAndNotify(queue: DbQueue, userIds: Snowflake[], reason: ArchivedMemberReason) {
@@ -191,11 +190,11 @@ export namespace MemberUtils {
 	}
 
 	export function moveMember(store: Store, queue: DbQueue, member: DbMember, newPosition: number) {
-		const members = [...store.dbMembers().filter(member => member.queueId === queue.id).values()];
-		const positions = members.map(m => m.positionTime);
-		const originalPosition = positions.indexOf(member.positionTime);
+		return db.transaction(() => {
+			const members = [...store.dbMembers().filter(member => member.queueId === queue.id).values()];
+			const positions = members.map(m => m.positionTime);
+			const originalPosition = positions.indexOf(member.positionTime);
 
-		db.transaction(() => {
 			if (originalPosition > newPosition) {
 				members.splice(originalPosition, 1);
 				members.splice(newPosition, 0, member);
@@ -210,11 +209,11 @@ export namespace MemberUtils {
 					store.updateMember({ ...member, positionTime: positions[i] }),
 				);
 			}
+
+			DisplayUtils.requestDisplayUpdate(store, queue.id);
+
+			return members;
 		});
-
-		DisplayUtils.requestDisplayUpdate(store, queue.id);
-
-		return members;
 	}
 
 	export function clearMembers(store: Store, queue: DbQueue) {
@@ -224,18 +223,16 @@ export namespace MemberUtils {
 	}
 
 	export function shuffleMembers(store: Store, queue: DbQueue) {
-		const members = store.dbMembers().filter(member => member.queueId === queue.id);
-		const shuffledPositionTimes = shuffle(members.map(member => member.positionTime));
+		return db.transaction(() => {
+			const members = store.dbMembers().filter(member => member.queueId === queue.id);
+			const shuffledPositionTimes = shuffle(members.map(member => member.positionTime));
 
-		db.transaction(() => {
-			members.forEach((member) =>
-				store.updateMember({ ...member, positionTime: shuffledPositionTimes.pop() }),
-			);
+			members.forEach((member) => store.updateMember({ ...member, positionTime: shuffledPositionTimes.pop() }));
+
+			DisplayUtils.requestDisplayUpdate(store, queue.id);
+
+			return members;
 		});
-
-		DisplayUtils.requestDisplayUpdate(store, queue.id);
-
-		return members;
 	}
 
 	export async function getMemberDisplayLine(store: Store, queue: DbQueue, userId: Snowflake) {

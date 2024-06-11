@@ -77,7 +77,7 @@ export class VoiceCommand extends AdminCommand {
 	static readonly ADD_OPTIONS = {
 		queues: new QueuesOption({ required: true, description: "Queue(s) to integrate with voice" }),
 		sourceVoiceChannel: new VoiceSourceChannelOption({ required: true, description: "Voice channel to pull members from" }),
-		destinationVoiceChannel: new VoiceDestinationChannelOption({required: true, description: "Voice channel to push members to" }),
+		destinationVoiceChannel: new VoiceDestinationChannelOption({ required: true, description: "Voice channel to push members to" }),
 	};
 
 	static async voice_add(inter: SlashInteraction) {

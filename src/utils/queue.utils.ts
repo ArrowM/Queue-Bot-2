@@ -42,20 +42,20 @@ export namespace QueueUtils {
 	}
 
 	export async function updateQueues(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, update: Partial<DbQueue>) {
-		QueueUtils.validateQueueProperties(update);
+		return await db.transaction(async () => {
+			QueueUtils.validateQueueProperties(update);
 
-		const updatedQueues = db.transaction(() =>
-			map(queues, queue => store.updateQueue({ id: queue.id, ...update })),
-		);
-		const updatedQueueIds = updatedQueues.map(queue => queue.id);
+			const updatedQueues = map(queues, queue => store.updateQueue({ id: queue.id, ...update }));
+			const updatedQueueIds = updatedQueues.map(queue => queue.id);
 
-		DisplayUtils.requestDisplaysUpdate(store, updatedQueueIds);
+			DisplayUtils.requestDisplaysUpdate(store, updatedQueueIds);
 
-		if (update.roleInQueueId) {
-			await MemberUtils.updateInQueueRole(store, updatedQueues, update.roleInQueueId, "add");
-		}
+			if (update.roleInQueueId) {
+				await MemberUtils.updateInQueueRole(store, updatedQueues, update.roleInQueueId, "add");
+			}
 
-		return { updatedQueues };
+			return { updatedQueues };
+		});
 	}
 
 	export function describeQueue(store: Store, queue: DbQueue) {

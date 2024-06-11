@@ -27,9 +27,11 @@ export async function start() {
 
 		ScheduleUtils.loadSchedules();
 
-		ClientUtils.loadTopGGAutoPoster();
-
 		console.timeEnd("READY");
+
+		// Post-bot-startup tasks
+
+		ClientUtils.loadTopGGAutoPoster();
 
 		ClientUtils.checkForOfflineVoiceChanges();
 
