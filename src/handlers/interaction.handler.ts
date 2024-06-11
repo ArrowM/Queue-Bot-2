@@ -9,6 +9,7 @@ import { ERROR_HEADER_LINE } from "../utils/string.utils.ts";
 import { AutocompleteHandler } from "./autocomplete.handler.ts";
 import { ButtonHandler } from "./button.handler.ts";
 import { CommandHandler } from "./command.handler.ts";
+import { compact, concat } from "lodash-es";
 
 export class InteractionHandler implements Handler {
 	private readonly inter: AnyInteraction;
@@ -37,7 +38,7 @@ export class InteractionHandler implements Handler {
 	}
 
 	private async handleInteractionError(error: Error) {
-		let { message, stack, embeds, log } = error as CustomError;
+		const { message, stack, embeds, log } = error as CustomError;
 
 		if (message === "Unknown interaction") return;
 
@@ -49,11 +50,11 @@ export class InteractionHandler implements Handler {
 				embed.setFooter({ text: "This error has been logged and will be investigated by the developers." });
 			}
 
-			embeds = embeds ?? [];
-			embeds.push(embed);
-
 			if ("respond" in this.inter) {
-				await this.inter.respond({ embeds, ephemeral: true });
+				await this.inter.respond({
+					embeds: compact(concat(embeds, embed)),
+					ephemeral: true
+				});
 			}
 
 			if (log !== false) {

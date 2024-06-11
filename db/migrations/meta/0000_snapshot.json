@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "8b3e020a-289b-475c-bf93-ca95d64a119a",
+  "id": "60f24e90-9866-4600-8e5d-4a975599cf76",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "admin": {
@@ -754,14 +754,6 @@
           "autoincrement": false,
           "default": "'Random'"
         },
-        "grace_period": {
-          "name": "grace_period",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
         "header": {
           "name": "header",
           "type": "text",
@@ -824,8 +816,31 @@
           "autoincrement": false,
           "default": 1
         },
-        "role_id": {
-          "name": "role_id",
+        "rejoin_cooldown_period": {
+          "name": "rejoin_cooldown_period",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "rejoin_grace_period": {
+          "name": "rejoin_grace_period",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "role_in_queue_id": {
+          "name": "role_in_queue_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "role_on_pull_id": {
+          "name": "role_on_pull_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
