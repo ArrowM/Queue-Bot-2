@@ -1,12 +1,4 @@
-import {
-	Collection,
-	EmbedBuilder,
-	GuildMember,
-	type GuildTextBasedChannel,
-	Role,
-	roleMention,
-	type Snowflake,
-} from "discord.js";
+import { Collection, EmbedBuilder, GuildMember, type GuildTextBasedChannel, Role, roleMention, type Snowflake } from "discord.js";
 import { isNil, shuffle } from "lodash-es";
 
 import { db } from "../db/db.ts";
@@ -20,13 +12,7 @@ import { NotificationType } from "../types/notification.types.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
 import { BlacklistUtils } from "./blacklist.utils.ts";
 import { DisplayUtils } from "./display.utils.ts";
-import {
-	CustomError,
-	NotOnQueueWhitelistError,
-	OnQueueBlacklistError,
-	QueueFullError,
-	QueueLockedError,
-} from "./error.utils.ts";
+import { CustomError, NotOnQueueWhitelistError, OnQueueBlacklistError, QueueFullError, QueueLockedError } from "./error.utils.ts";
 import { map } from "./misc.utils.ts";
 import { NotificationUtils } from "./notification.utils.ts";
 import { PriorityUtils } from "./priority.utils.ts";
