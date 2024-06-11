@@ -12,14 +12,14 @@ import { filterDbObjectsOnJsMember, map } from "./misc.utils.ts";
 export namespace PriorityUtils {
 	export function insertPrioritized(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, mentionable: Mentionable, priorityOrder?: number, reason?: string) {
 		const insertedPrioritized = db.transaction(() =>
-		 map(queues, queue => store.insertPrioritized({
+			map(queues, queue => store.insertPrioritized({
 				guildId: store.guild.id,
 				queueId: queue.id,
 				subjectId: mentionable.id,
 				isRole: mentionable instanceof Role,
 				priorityOrder,
 				reason,
-			}))
+			})),
 		);
 		const updatedQueueIds = uniq(insertedPrioritized.map(prioritized => prioritized.queueId));
 
@@ -30,7 +30,7 @@ export namespace PriorityUtils {
 
 	export function updatePrioritized(store: Store, prioritizedIds: bigint[], update: Partial<DbPrioritized>) {
 		const updatedPrioritized = db.transaction(() =>
-			prioritizedIds.map(id => store.updatePrioritized({ id, ...update }))
+			prioritizedIds.map(id => store.updatePrioritized({ id, ...update })),
 		);
 		const updatedQueueIds = uniq(updatedPrioritized.map(prioritized => prioritized.queueId));
 
@@ -41,7 +41,7 @@ export namespace PriorityUtils {
 
 	export function deletePrioritized(store: Store, prioritizedIds: bigint[]) {
 		const deletedPrioritized = db.transaction(() =>
-			prioritizedIds.map(id => store.deletePrioritized({ id }))
+			prioritizedIds.map(id => store.deletePrioritized({ id })),
 		);
 		const updatedQueueIds = uniq(deletedPrioritized.map(prioritized => prioritized.queueId));
 

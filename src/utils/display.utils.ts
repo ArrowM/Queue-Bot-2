@@ -106,7 +106,10 @@ export namespace DisplayUtils {
 		return `${idxStr}${await memberMention(store, member)}\n`;
 	}
 
-	async function updateDisplays(store: Store, queueId: bigint, opts?: { displayIds?: bigint[], updateTypeOverride?: DisplayUpdateType }) {
+	async function updateDisplays(store: Store, queueId: bigint, opts?: {
+		displayIds?: bigint[],
+		updateTypeOverride?: DisplayUpdateType
+	}) {
 		try {
 			UPDATED_QUEUE_IDS.set(queueId, store);
 
@@ -317,7 +320,15 @@ export namespace DisplayUtils {
 	async function buildDescription(store: Store, queue: DbQueue) {
 		const schedules = store.dbSchedules().filter(schedule => queue.id === schedule.queueId);
 		const members = store.dbMembers().filter(member => member.queueId === queue.id);
-		const { autopullToggle, header, lockToggle, rejoinCooldownPeriod, rejoinGracePeriod, roleInQueueId, roleOnPullId } = queue;
+		const {
+			autopullToggle,
+			header,
+			lockToggle,
+			rejoinCooldownPeriod,
+			rejoinGracePeriod,
+			roleInQueueId,
+			roleOnPullId,
+		} = queue;
 		const descriptionParts = [];
 
 		if (header) {
@@ -328,7 +339,10 @@ export namespace DisplayUtils {
 			descriptionParts.push("- Queue is locked.");
 		}
 		else {
-			const { sourceChannelId, destinationChannelId } = store.dbVoices().find(voice => voice.queueId === queue.id) ?? {};
+			const {
+				sourceChannelId,
+				destinationChannelId,
+			} = store.dbVoices().find(voice => voice.queueId === queue.id) ?? {};
 			if (sourceChannelId && destinationChannelId) {
 				const sourceChannel = await store.jsChannel(sourceChannelId);
 				const destinationChannel = await store.jsChannel(destinationChannelId);

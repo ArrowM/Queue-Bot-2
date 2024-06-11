@@ -17,7 +17,7 @@ export namespace VoiceUtils {
 				queueId: queue.id,
 				sourceChannelId,
 				destinationChannelId,
-			}))
+			})),
 		);
 		const updatedQueueIds = uniq(insertedVoices.map(voice => voice.queueId));
 
@@ -29,7 +29,7 @@ export namespace VoiceUtils {
 	export function updateVoices(store: Store, voiceIds: bigint[], update: Partial<DbVoice>) {
 		// update in db
 		const updatedVoices = db.transaction(() =>
-			voiceIds.map(id => store.updateVoice({ id, ...update }))
+			voiceIds.map(id => store.updateVoice({ id, ...update })),
 		);
 		const updatedQueueIds = uniq(updatedVoices.map(voice => voice.queueId));
 
@@ -41,7 +41,7 @@ export namespace VoiceUtils {
 	export function deleteVoices(store: Store, voiceIds: bigint[]) {
 		// delete from db
 		const deletedVoices = db.transaction(() =>
-			voiceIds.map(id => store.deleteVoice({ id }))
+			voiceIds.map(id => store.deleteVoice({ id })),
 		);
 		const updatedQueueIds = uniq(deletedVoices.map(voice => voice.queueId));
 

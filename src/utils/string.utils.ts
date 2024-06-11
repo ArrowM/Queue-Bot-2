@@ -1,15 +1,6 @@
 import { chatInputApplicationCommandMention } from "@discordjs/formatters";
 import cronstrue from "cronstrue";
-import {
-	bold,
-	Collection,
-	EmbedBuilder,
-	roleMention,
-	type Snowflake,
-	time,
-	type TimestampStylesString,
-	userMention,
-} from "discord.js";
+import { bold, Collection, EmbedBuilder, roleMention, type Snowflake, time, type TimestampStylesString, userMention } from "discord.js";
 import { concat, get, groupBy, partition } from "lodash-es";
 
 import { type DbMember, type DbQueue, type DbSchedule } from "../db/schema.ts";
@@ -35,7 +26,7 @@ export function queuesMention(queues: ArrayOrCollection<bigint, DbQueue>): strin
 
 export async function membersMention(store: Store, members: ArrayOrCollection<bigint, DbMember>) {
 	return (await Promise.all(
-		map(members, member => memberMention(store, member))
+		map(members, member => memberMention(store, member)),
 	)).join("\n");
 }
 

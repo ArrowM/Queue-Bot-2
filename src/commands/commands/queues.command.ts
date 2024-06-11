@@ -104,7 +104,7 @@ export class QueuesCommand extends AdminCommand {
 					.addFields({
 						name: queueMention(queue),
 						value: QueueUtils.describeQueue(inter.store, queue),
-					})
+					}),
 			);
 			embeds.push(new EmbedBuilder().setDescription(italic(`Queue settings can be updated with ${commandMention("queues", "set")}`)));
 		}
@@ -272,14 +272,14 @@ export class QueuesCommand extends AdminCommand {
 		}
 
 		const updatedQueues = db.transaction(() =>
-			queues.map((queue) => inter.store.updateQueue({ id: queue.id, ...updatedSettings }))
+			queues.map((queue) => inter.store.updateQueue({ id: queue.id, ...updatedSettings })),
 		);
 
 		if (updatedSettings.roleId) {
 			await Promise.all(
 				queues.map(queue => {
 					return MemberUtils.updateInQueueRole(inter.store, [queue], updatedSettings.roleId, "remove");
-				})
+				}),
 			);
 		}
 

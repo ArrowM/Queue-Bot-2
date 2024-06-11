@@ -77,7 +77,7 @@ export class VoiceCommand extends AdminCommand {
 	static readonly ADD_OPTIONS = {
 		queues: new QueuesOption({ required: true, description: "Queue(s) to integrate with voice" }),
 		sourceVoiceChannel: new VoiceSourceChannelOption({ required: true, description: "Voice channel to pull members from" }),
-		destinationVoiceChannel: new VoiceDestinationChannelOption({ required: true, description: "Voice channel to push members to" }),
+		destinationVoiceChannel: new VoiceDestinationChannelOption({required: true, description: "Voice channel to push members to" }),
 	};
 
 	static async voice_add(inter: SlashInteraction) {
@@ -89,7 +89,7 @@ export class VoiceCommand extends AdminCommand {
 			const members = inter.store.dbMembers().filter(member => member.queueId === queue.id);
 			if (members.size) {
 				const confirmed = await inter.promptConfirmOrCancel(
-					`There are ${members.size} member${members.size === 1 ? "" : "s"} in the queue${members.size === 1 ? "" : "s"} ${queueMention(queue)} that will be cleared if you proceed. Do you want to proceed?`
+					`There are ${members.size} member${members.size === 1 ? "" : "s"} in the queue${members.size === 1 ? "" : "s"} ${queueMention(queue)} that will be cleared if you proceed. Do you want to proceed?`,
 				);
 				if (confirmed) {
 					await MemberUtils.deleteMembers({ store: inter.store, queues: [queue], reason: ArchivedMemberReason.Kicked });
@@ -112,8 +112,14 @@ export class VoiceCommand extends AdminCommand {
 
 	static readonly UPDATE_OPTIONS = {
 		voices: new VoicesOption({ required: true, description: "Voice integrations to update" }),
-		sourceVoiceChannel: new VoiceSourceChannelOption({ required: false, description: "Voice channel to pull members from" }),
-		destinationVoiceChannel: new VoiceDestinationChannelOption({ required: false, description: "Voice channel to push members to" }),
+		sourceVoiceChannel: new VoiceSourceChannelOption({
+			required: false,
+			description: "Voice channel to pull members from",
+		}),
+		destinationVoiceChannel: new VoiceDestinationChannelOption({
+			required: false,
+			description: "Voice channel to push members to",
+		}),
 	};
 
 	static async voice_update(inter: SlashInteraction) {

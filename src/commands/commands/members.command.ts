@@ -95,8 +95,8 @@ export class MembersCommand extends AdminCommand {
 		const insertedMembers = (await Promise.all(
 			compact(mentionables)
 				.map(async (mentionable) =>
-					await MemberUtils.insertMentionable(inter.store, mentionable, queues)
-				)
+					await MemberUtils.insertMentionable(inter.store, mentionable, queues),
+				),
 		)).flat();
 
 		await inter.respond(`Added ${insertedMembers.map(member => userMention(member.userId))} to '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`);

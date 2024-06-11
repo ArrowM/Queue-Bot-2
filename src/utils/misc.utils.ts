@@ -23,7 +23,10 @@ export function find<T>(items: ArrayOrCollection<any, T>, fn: (queue: T) => bool
 	return (items instanceof Collection) ? items.find(fn) : items.find(fn);
 }
 
-export function filterDbObjectsOnJsMember<T extends {subjectId: Snowflake, isRole: boolean}>(dbObjects: Collection<bigint, T>, jsMember: GuildMember) {
+export function filterDbObjectsOnJsMember<T extends {
+	subjectId: Snowflake,
+	isRole: boolean
+}>(dbObjects: Collection<bigint, T>, jsMember: GuildMember) {
 	return dbObjects.filter(dbObj => {
 		if (dbObj.isRole) {
 			return Array.isArray(jsMember.roles)

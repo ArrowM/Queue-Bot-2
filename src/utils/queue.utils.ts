@@ -45,7 +45,7 @@ export namespace QueueUtils {
 		QueueUtils.validateQueueProperties(update);
 
 		const updatedQueues = db.transaction(() =>
-			map(queues, queue => store.updateQueue({ id: queue.id, ...update }))
+			map(queues, queue => store.updateQueue({ id: queue.id, ...update })),
 		);
 		const updatedQueueIds = updatedQueues.map(queue => queue.id);
 

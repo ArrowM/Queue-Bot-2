@@ -1,4 +1,5 @@
 import { codeBlock, EmbedBuilder, type Interaction } from "discord.js";
+import { compact, concat } from "lodash-es";
 
 import { Store } from "../db/store.ts";
 import type { Handler } from "../types/handler.types.ts";
@@ -9,7 +10,6 @@ import { ERROR_HEADER_LINE } from "../utils/string.utils.ts";
 import { AutocompleteHandler } from "./autocomplete.handler.ts";
 import { ButtonHandler } from "./button.handler.ts";
 import { CommandHandler } from "./command.handler.ts";
-import { compact, concat } from "lodash-es";
 
 export class InteractionHandler implements Handler {
 	private readonly inter: AnyInteraction;
@@ -53,7 +53,7 @@ export class InteractionHandler implements Handler {
 			if ("respond" in this.inter) {
 				await this.inter.respond({
 					embeds: compact(concat(embeds, embed)),
-					ephemeral: true
+					ephemeral: true,
 				});
 			}
 

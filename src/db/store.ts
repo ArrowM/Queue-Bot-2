@@ -1,11 +1,4 @@
-import {
-	type DiscordAPIError,
-	Guild,
-	type GuildBasedChannel,
-	type GuildMember,
-	type Role,
-	type Snowflake,
-} from "discord.js";
+import { type DiscordAPIError, Guild, type GuildBasedChannel, type GuildMember, type Role, type Snowflake } from "discord.js";
 import { and, eq, isNull, or } from "drizzle-orm";
 import { compact, isNil, omitBy } from "lodash-es";
 import moize from "moize";
@@ -505,8 +498,8 @@ export class Store {
 	}
 
 	deleteManyVoices(by:
-		{ id: bigint} |
-		{ channelId: Snowflake }
+		{ id: bigint } |
+		{ channelId: Snowflake },
 	) {
 		this.dbVoices.clear();
 		const cond = "channelId" in by
