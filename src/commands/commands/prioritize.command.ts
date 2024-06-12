@@ -11,7 +11,7 @@ import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
 import { PriorityUtils } from "../../utils/priority.utils.ts";
-import { describeTable, mentionableMention, queuesMention } from "../../utils/string.utils.ts";
+import { describeTable, mentionableMention, mentionablesMention, queuesMention } from "../../utils/string.utils.ts";
 
 export class PrioritizeCommand extends AdminCommand {
 	static readonly ID = "prioritize";
@@ -75,23 +75,34 @@ export class PrioritizeCommand extends AdminCommand {
 
 	static readonly ADD_OPTIONS = {
 		queues: new QueuesOption({ required: true, description: "Queue(s) to prioritize in" }),
-		mentionable: new MentionableOption({ required: true, description: "User or role to prioritize" }),
+		mentionable1: new MentionableOption({ required: true, name: "mentionable_1", description: "User or role to prioritize" }),
+		mentionable2: new MentionableOption({ name: "mentionable_2", description: "User or role to prioritize" }),
+		mentionable3: new MentionableOption({ name: "mentionable_3", description: "User or role to prioritize" }),
+		mentionable4: new MentionableOption({ name: "mentionable_4", description: "User or role to prioritize" }),
+		mentionable5: new MentionableOption({ name: "mentionable_5", description: "User or role to prioritize" }),
 		reason: new ReasonOption({ description: "Reason for the priority" }),
 		priorityOrder: new PriorityOrderOption({ description: "Lower priority orders go first" }),
 	};
 
 	static async prioritize_add(inter: SlashInteraction) {
 		const queues = await PrioritizeCommand.ADD_OPTIONS.queues.get(inter);
-		const mentionable = PrioritizeCommand.ADD_OPTIONS.mentionable.get(inter);
+		const mentionables = [
+			PrioritizeCommand.ADD_OPTIONS.mentionable1.get(inter),
+			PrioritizeCommand.ADD_OPTIONS.mentionable2.get(inter),
+			PrioritizeCommand.ADD_OPTIONS.mentionable3.get(inter),
+			PrioritizeCommand.ADD_OPTIONS.mentionable4.get(inter),
+			PrioritizeCommand.ADD_OPTIONS.mentionable5.get(inter),
+		];
 		const priorityOrder = PrioritizeCommand.ADD_OPTIONS.priorityOrder.get(inter);
 		const reason = PrioritizeCommand.ADD_OPTIONS.reason.get(inter);
 
 		const {
 			updatedQueueIds,
-		} = PriorityUtils.insertPrioritized(inter.store, queues, mentionable, priorityOrder, reason);
+			insertedPrioritized,
+		} = PriorityUtils.insertPrioritized(inter.store, queues, mentionables, priorityOrder, reason);
 		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
-		await inter.respond(`Prioritized ${mentionable} in the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`);
+		await inter.respond(`Prioritized ${mentionablesMention(insertedPrioritized)} in the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`);
 		await this.prioritize_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 

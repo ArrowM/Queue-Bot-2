@@ -9,7 +9,7 @@ import { AdminCommand } from "../../types/command.types.ts";
 import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
-import { describeTable, mentionableMention, queuesMention } from "../../utils/string.utils.ts";
+import { describeTable, mentionableMention, mentionablesMention, queuesMention } from "../../utils/string.utils.ts";
 import { WhitelistUtils } from "../../utils/whitelist.utils.ts";
 
 export class WhitelistCommand extends AdminCommand {
@@ -73,21 +73,32 @@ export class WhitelistCommand extends AdminCommand {
 
 	static readonly ADD_OPTIONS = {
 		queues: new QueuesOption({ required: true, description: "Queue(s) to whitelist in" }),
-		mentionable: new MentionableOption({ required: true, description: "User or role to whitelist" }),
+		mentionable1: new MentionableOption({ required: true, name: "mentionable_1", description: "User or role to whitelist" }),
+		mentionable2: new MentionableOption({ name: "mentionable_2", description: "User or role to whitelist" }),
+		mentionable3: new MentionableOption({ name: "mentionable_3", description: "User or role to whitelist" }),
+		mentionable4: new MentionableOption({ name: "mentionable_4", description: "User or role to whitelist" }),
+		mentionable5: new MentionableOption({ name: "mentionable_5", description: "User or role to whitelist" }),
 		reason: new ReasonOption({ description: "Reason for whitelisting" }),
 	};
 
 	static async whitelist_add(inter: SlashInteraction) {
 		const queues = await WhitelistCommand.ADD_OPTIONS.queues.get(inter);
-		const mentionable = WhitelistCommand.ADD_OPTIONS.mentionable.get(inter);
+		const mentionables = [
+			WhitelistCommand.ADD_OPTIONS.mentionable1.get(inter),
+			WhitelistCommand.ADD_OPTIONS.mentionable2.get(inter),
+			WhitelistCommand.ADD_OPTIONS.mentionable3.get(inter),
+			WhitelistCommand.ADD_OPTIONS.mentionable4.get(inter),
+			WhitelistCommand.ADD_OPTIONS.mentionable5.get(inter),
+		];
 		const reason = WhitelistCommand.ADD_OPTIONS.reason.get(inter);
 
 		const {
 			updatedQueueIds,
-		} = WhitelistUtils.insertWhitelisted(inter.store, queues, mentionable, reason);
+			insertedWhitelisted,
+		} = WhitelistUtils.insertWhitelisted(inter.store, queues, mentionables, reason);
 		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
-		await inter.respond(`Whitelisted ${mentionable} in the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`);
+		await inter.respond(`Whitelisted ${mentionablesMention(insertedWhitelisted)} in the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`);
 		await this.whitelist_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 

@@ -1,31 +1,42 @@
-import { type GuildMember, Role } from "discord.js";
+import { Collection, type GuildMember, Role } from "discord.js";
 import { uniq } from "lodash-es";
 
+import { db } from "../db/db.ts";
 import type { DbQueue } from "../db/schema.ts";
 import type { Store } from "../db/store.ts";
 import { ArchivedMemberReason } from "../types/db.types.ts";
 import type { ArrayOrCollection } from "../types/misc.types.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
 import { MemberUtils } from "./member.utils.ts";
-import { filterDbObjectsOnJsMember, map } from "./misc.utils.ts";
+import { filterDbObjectsOnJsMember } from "./misc.utils.ts";
 
 export namespace BlacklistUtils {
-	export async function insertBlacklisted(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, mentionable: Mentionable, reason?: string) {
-		// insert into db
-		const insertedBlacklisted = map(queues, queue => store.insertBlacklisted({
-			guildId: store.guild.id,
-			queueId: queue.id,
-			subjectId: mentionable.id,
-			isRole: mentionable instanceof Role,
-			reason,
-		}));
-		const updatedQueueIds = uniq(insertedBlacklisted.map(blacklisted => blacklisted.queueId));
+	export async function insertBlacklisted(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, mentionables: Mentionable[], reason?: string) {
+		return db.transaction(async () => {
+			const _queues = queues instanceof Collection ? [...queues.values()] : queues;
+			const insertedBlacklisted = [];
 
-		// delete members
-		const by = (mentionable instanceof Role) ? { roleId: mentionable.id } : { userId: mentionable.id };
-		await MemberUtils.deleteMembers({ store, queues: queues, reason: ArchivedMemberReason.Kicked, by, force: true });
+			for (const mentionable of mentionables) {
+				for (const queue of _queues) {
+					insertedBlacklisted.push(
+						// insert into db
+						store.insertBlacklisted({
+							guildId: store.guild.id,
+							queueId: queue.id,
+							subjectId: mentionable.id,
+							isRole: mentionable instanceof Role,
+							reason,
+						})
+					);
+					// delete members
+					const by = (mentionable instanceof Role) ? { roleId: mentionable.id } : { userId: mentionable.id };
+					await MemberUtils.deleteMembers({ store, queues: queues, reason: ArchivedMemberReason.Kicked, by, force: true });
+				}
+			}
+			const updatedQueueIds = uniq(insertedBlacklisted.map(blacklisted => blacklisted.queueId));
 
-		return { insertedBlacklisted, updatedQueueIds };
+			return { insertedBlacklisted, updatedQueueIds };
+		});
 	}
 
 	export function deleteBlacklisted(store: Store, blacklistedIds: bigint[]) {

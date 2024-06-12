@@ -45,6 +45,14 @@ export async function memberMention(store: Store, member: DbMember) {
 	return `${timeStr}${prioStr}${nameStr}${msgStr}`;
 }
 
+export function usersMention(users: {userId: Snowflake}[]) {
+	return users.map(user => userMention(user.userId)).join(", ");
+}
+
+export function mentionablesMention(mentionables: { isRole: boolean, subjectId: Snowflake }[]) {
+	return mentionables.map(mentionable => mentionableMention(mentionable)).join(", ");
+}
+
 export function mentionableMention(mentionable: { isRole: boolean, subjectId: Snowflake }): string {
 	return mentionable.isRole ? roleMention(mentionable.subjectId) : userMention(mentionable.subjectId);
 }

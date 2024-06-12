@@ -7,7 +7,7 @@ import { EveryoneCommand } from "../../types/command.types.ts";
 import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { AdminUtils } from "../../utils/admin.utils.ts";
-import { describeTable, mentionableMention } from "../../utils/string.utils.ts";
+import { describeTable, mentionablesMention } from "../../utils/string.utils.ts";
 
 export class AdminsCommand extends EveryoneCommand {
 	static readonly ID = "admins";
@@ -62,15 +62,25 @@ export class AdminsCommand extends EveryoneCommand {
 	// ====================================================================
 
 	static readonly ADD_OPTIONS = {
-		mentionable: new MentionableOption({ required: true, description: "User or role to grant admin status to" }),
+		mentionable1: new MentionableOption({ required: true, name: "mentionable_1", description: "User or role to grant admin status to" }),
+		mentionable2: new MentionableOption({ name: "mentionable_2", description: "User or role to grant admin status to" }),
+		mentionable3: new MentionableOption({ name: "mentionable_3", description: "User or role to grant admin status to" }),
+		mentionable4: new MentionableOption({ name: "mentionable_4", description: "User or role to grant admin status to" }),
+		mentionable5: new MentionableOption({ name: "mentionable_5", description: "User or role to grant admin status to" }),
 	};
 
 	static async admins_add(inter: SlashInteraction) {
-		const mentionable = AdminsCommand.ADD_OPTIONS.mentionable.get(inter);
+		const mentionables = [
+			AdminsCommand.ADD_OPTIONS.mentionable1.get(inter),
+			AdminsCommand.ADD_OPTIONS.mentionable2.get(inter),
+			AdminsCommand.ADD_OPTIONS.mentionable3.get(inter),
+			AdminsCommand.ADD_OPTIONS.mentionable4.get(inter),
+			AdminsCommand.ADD_OPTIONS.mentionable5.get(inter),
+		];
 
-		AdminUtils.insertAdmin(inter.store, mentionable);
+		const insertedAdmins = AdminUtils.insertAdmins(inter.store, mentionables);
 
-		await inter.respond(`Granted Queue Bot admin access to ${mentionable}.`);
+		await inter.respond(`Granted Queue Bot admin access to ${mentionablesMention(insertedAdmins)}.`);
 
 		await this.admins_get(inter);
 	}
@@ -86,9 +96,9 @@ export class AdminsCommand extends EveryoneCommand {
 	static async admins_delete(inter: SlashInteraction) {
 		const admins = await AdminsCommand.DELETE_OPTIONS.admins.get(inter);
 
-		AdminUtils.deleteAdmins(inter.store, admins.map(admin => admin.id));
+		const deletedAdmins = AdminUtils.deleteAdmins(inter.store, admins.map(admin => admin.id));
 
-		await inter.respond(`Revoked Queue Bot admin access from ${admins.map(mentionableMention).join(", ")}.`);
+		await inter.respond(`Revoked Queue Bot admin access from ${mentionablesMention(deletedAdmins)}.`);
 
 		await this.admins_get(inter);
 	}

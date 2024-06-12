@@ -1,5 +1,4 @@
-import { type Collection, SlashCommandBuilder, userMention } from "discord.js";
-import { compact } from "lodash-es";
+import { type Collection, SlashCommandBuilder } from "discord.js";
 
 import type { DbQueue } from "../../db/schema.ts";
 import { MembersOption } from "../../options/options/members.option.ts";
@@ -13,7 +12,7 @@ import { NotificationType } from "../../types/notification.types.ts";
 import { MemberUtils } from "../../utils/member.utils.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
 import { NotificationUtils } from "../../utils/notification.utils.ts";
-import { queuesMention } from "../../utils/string.utils.ts";
+import { queuesMention, usersMention } from "../../utils/string.utils.ts";
 import { ShowCommand } from "./show.command.ts";
 
 export class MembersCommand extends AdminCommand {
@@ -92,14 +91,9 @@ export class MembersCommand extends AdminCommand {
 			MembersCommand.ADD_OPTIONS.mentionable5.get(inter),
 		];
 
-		const insertedMembers = (await Promise.all(
-			compact(mentionables)
-				.map(async (mentionable) =>
-					await MemberUtils.insertMentionable(inter.store, mentionable, queues),
-				),
-		)).flat();
+		const insertedMembers = await MemberUtils.insertMentionables(inter.store, mentionables, queues);
 
-		await inter.respond(`Added ${insertedMembers.map(member => userMention(member.userId))} to '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`);
+		await inter.respond(`Added ${usersMention(insertedMembers)} to '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`);
 
 		NotificationUtils.notify(inter.store, insertedMembers, {
 			type: NotificationType.ADDED_TO_QUEUE,
@@ -127,7 +121,7 @@ export class MembersCommand extends AdminCommand {
 
 		const updatedMembers = MemberUtils.updateMembers(inter.store, members, message);
 
-		await inter.respond(`Updated ${updatedMembers.map(member => userMention(member.userId))} in '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`);
+		await inter.respond(`Updated ${usersMention(updatedMembers)} in '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`);
 
 		const updatedQueues = updatedMembers.map(updated => queues.get(updated.queueId));
 		await MembersCommand.members_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
@@ -155,7 +149,7 @@ export class MembersCommand extends AdminCommand {
 			force: true,
 		});
 
-		await inter.respond(`Removed ${deletedMembers.map(member => userMention(member.userId))} from '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`);
+		await inter.respond(`Removed ${usersMention(deletedMembers)} from '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`);
 
 		const updatedQueues = deletedMembers.map(deleted => inter.store.dbQueues().get(deleted.queueId));
 		await MembersCommand.members_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));

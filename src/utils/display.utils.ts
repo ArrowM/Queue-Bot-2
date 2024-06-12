@@ -366,7 +366,7 @@ export namespace DisplayUtils {
 			if (rejoinCooldownPeriod) {
 				descriptionParts.push(`- After being pulled, you must wait ${timeMention(rejoinCooldownPeriod)} to requeue.`);
 			}
-		}
+		}``;
 
 		if (members.some(m => !isNil(m.priority))) {
 			descriptionParts.push("- '✨' indicates priority.");

@@ -10,7 +10,7 @@ import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { BlacklistUtils } from "../../utils/blacklist.utils.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
-import { describeTable, mentionableMention, queuesMention } from "../../utils/string.utils.ts";
+import { describeTable, mentionableMention, mentionablesMention, queuesMention } from "../../utils/string.utils.ts";
 
 export class BlacklistCommand extends AdminCommand {
 	static readonly ID = "blacklist";
@@ -73,21 +73,32 @@ export class BlacklistCommand extends AdminCommand {
 
 	static readonly ADD_OPTIONS = {
 		queues: new QueuesOption({ required: true, description: "Queue(s) to blacklist from" }),
-		mentionable: new MentionableOption({ required: true, description: "User or role to blacklist" }),
+		mentionable1: new MentionableOption({ required: true, name: "mentionable_1", description: "User or role to blacklist" }),
+		mentionable2: new MentionableOption({ name: "mentionable_2", description: "User or role to blacklist" }),
+		mentionable3: new MentionableOption({ name: "mentionable_3", description: "User or role to blacklist" }),
+		mentionable4: new MentionableOption({ name: "mentionable_4", description: "User or role to blacklist" }),
+		mentionable5: new MentionableOption({ name: "mentionable_5", description: "User or role to blacklist" }),
 		reason: new ReasonOption({ description: "Reason for blacklisting" }),
 	};
 
 	static async blacklist_add(inter: SlashInteraction) {
 		const queues = await BlacklistCommand.ADD_OPTIONS.queues.get(inter);
-		const mentionable = BlacklistCommand.ADD_OPTIONS.mentionable.get(inter);
+		const mentionables = [
+			BlacklistCommand.ADD_OPTIONS.mentionable1.get(inter),
+			BlacklistCommand.ADD_OPTIONS.mentionable2.get(inter),
+			BlacklistCommand.ADD_OPTIONS.mentionable3.get(inter),
+			BlacklistCommand.ADD_OPTIONS.mentionable4.get(inter),
+			BlacklistCommand.ADD_OPTIONS.mentionable5.get(inter),
+		];
 		const reason = BlacklistCommand.ADD_OPTIONS.reason.get(inter);
 
 		const {
 			updatedQueueIds,
-		} = await BlacklistUtils.insertBlacklisted(inter.store, queues, mentionable, reason);
+			insertedBlacklisted,
+		} = await BlacklistUtils.insertBlacklisted(inter.store, queues, mentionables, reason);
 		const updatedQueues = updatedQueueIds.map(id => inter.store.dbQueues().get(id));
 
-		await inter.respond(`Blacklisted ${mentionable} from the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`);
+		await inter.respond(`Blacklisted ${mentionablesMention(insertedBlacklisted)} from the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`);
 		await this.blacklist_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 

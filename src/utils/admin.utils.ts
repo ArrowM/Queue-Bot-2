@@ -1,18 +1,22 @@
 import { type GuildMember, PermissionsBitField, Role } from "discord.js";
 
-import type { DbAdmin } from "../db/schema.ts";
+import { db } from "../db/db.ts";
 import type { Store } from "../db/store.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
 import { AdminAccessError } from "./error.utils.ts";
 
 export namespace AdminUtils {
-	export function insertAdmin(store: Store, mentionable: Mentionable): DbAdmin {
-		// insert into db
-		return store.insertAdmin({
-			guildId: store.guild.id,
-			subjectId: mentionable.id,
-			isRole: mentionable instanceof Role,
-		});
+	export function insertAdmins(store: Store, mentionables: Mentionable[]) {
+		return db.transaction(() =>
+			mentionables.map(mentionable =>
+			// insert into db
+				store.insertAdmin({
+					guildId: store.guild.id,
+					subjectId: mentionable.id,
+					isRole: mentionable instanceof Role,
+				})
+			)
+		);
 	}
 
 	export function deleteAdmins(store: Store, adminIds: bigint[]) {

@@ -20,18 +20,24 @@ import { membersMention, queueMention, timeMention } from "./string.utils.ts";
 import { WhitelistUtils } from "./whitelist.utils.ts";
 
 export namespace MemberUtils {
-	export async function insertMentionable(store: Store, mentionable: Mentionable, queues?: Collection<bigint, DbQueue>) {
+	export async function insertMentionables(store: Store, mentionables: Mentionable[], queues?: Collection<bigint, DbQueue>) {
 		const insertedMembers = [];
-		for (const queue of queues.values()) {
+		for (const mentionable of mentionables) {
 			if (mentionable instanceof GuildMember) {
-				const member = await insertJsMember({ store, queue: queue, jsMember: mentionable });
-				insertedMembers.push(member);
+				for (const queue of queues.values()) {
+					insertedMembers.push(
+						await insertJsMember({ store, queue, jsMember: mentionable })
+					);
+				}
 			}
 			else if (mentionable instanceof Role) {
 				const role = await store.jsRole(mentionable.id);
-				for (const jsMember of role.members.values()) {
-					const member = await insertJsMember({ store, queue, jsMember });
-					insertedMembers.push(member);
+				for (const queue of queues.values()) {
+					for (const jsMember of role.members.values()) {
+						insertedMembers.push(
+							await insertJsMember({ store, queue, jsMember })
+						);
+					}
 				}
 			}
 		}
