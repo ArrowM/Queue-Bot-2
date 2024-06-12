@@ -19,18 +19,6 @@ import { CustomError } from "./error.utils.ts";
 
 export namespace InteractionUtils {
 	export async function respond(inter: AnyInteraction, response: (InteractionReplyOptions | string | MessagePayload)) {
-		// if (typeof response === "string") {
-		// 	response = { content: response, embeds: [] };
-		// }
-		// else if ("content" in response || "embeds" in response) {
-		// 	response = {
-		// 		...response,
-		// 		content: response.content ?? "",
-		// 		embeds: response.embeds ?? [],
-		// 		components: response.components ?? [],
-		// 	};
-		// }
-
 		const interaction = inter as any;
 		if (interaction.deferred) {
 			return await interaction.editReply(response);
@@ -43,22 +31,21 @@ export namespace InteractionUtils {
 		}
 	}
 
+	const CANCEL_BUTTON = new ButtonBuilder()
+		.setCustomId("cancel")
+		.setLabel("Cancel")
+		.setStyle(ButtonStyle.Secondary);
+
+	const CONFIRM_BUTTON = new ButtonBuilder()
+		.setCustomId("confirm")
+		.setLabel("Confirm")
+		.setStyle(ButtonStyle.Danger);
+
 	export async function promptConfirmOrCancel(inter: SlashInteraction, message: string): Promise<boolean> {
-		const confirm = new ButtonBuilder()
-			.setCustomId("confirm")
-			.setLabel("Confirm")
-			.setStyle(ButtonStyle.Danger);
-
-		const cancel = new ButtonBuilder()
-			.setCustomId("cancel")
-			.setLabel("Cancel")
-			.setStyle(ButtonStyle.Secondary);
-
 		const response = await inter.respond({
 			content: message,
-			embeds: [],
 			components: [
-				new ActionRowBuilder<ButtonBuilder>().addComponents(cancel, confirm),
+				new ActionRowBuilder<ButtonBuilder>({ components: [ CANCEL_BUTTON, CONFIRM_BUTTON ] }),
 			],
 		});
 		let confirmation;
@@ -75,7 +62,7 @@ export namespace InteractionUtils {
 		finally {
 			// Cleanup messages
 			await Promise.all([
-				confirmation.deleteReply(),
+				confirmation?.deleteReply(),
 				inter.editReply({ components: [] }),
 			]);
 		}
@@ -85,12 +72,12 @@ export namespace InteractionUtils {
 
 	export function verifyCommandIsFromGuild(inter: Interaction) {
 		if (!inter.guild) {
-			throw new Error("This command can only be used in a guild.");
+			throw new Error("This command can only be used in servers.");
 		}
 	}
 
 	export async function verifyCanSendMessages(jsChannel: GuildTextBasedChannel) {
-		function throwError(permissionName: string) {
+		function throwPermissionError(permissionName: string) {
 			throw new CustomError({
 				message: "Missing Permissions",
 				embeds: [
@@ -99,17 +86,16 @@ export namespace InteractionUtils {
 						.setDescription(`Please open the '${bold(jsChannel.guild.name)}' server, hover over ${jsChannel}, click the gear, click 'Permissions', and ensure I have the ${inlineCode(permissionName)} permission.`)
 						.setColor(Color.Red),
 				],
-			},
-			);
+			});
 		}
 
 		const me = await jsChannel.guild.members.fetchMe();
 		const perms = jsChannel?.permissionsFor(me);
 		if (!perms?.has(PermissionsBitField.Flags.ViewChannel)) {
-			throwError("View Channel");
+			throwPermissionError("View Channel");
 		}
 		if (!perms?.has(PermissionsBitField.Flags.SendMessages)) {
-			throwError("Send Messages");
+			throwPermissionError("Send Messages");
 		}
 	}
 }

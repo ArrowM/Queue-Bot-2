@@ -30,7 +30,7 @@ export namespace BlacklistUtils {
 					);
 					// delete members
 					const by = (mentionable instanceof Role) ? { roleId: mentionable.id } : { userId: mentionable.id };
-					await MemberUtils.deleteMembers({ store, queues: queues, reason: ArchivedMemberReason.Kicked, by, force: true });
+					await MemberUtils.deleteMembers({ store, queues, reason: ArchivedMemberReason.Kicked, by, force: true });
 				}
 			}
 			const updatedQueueIds = uniq(insertedBlacklisted.map(blacklisted => blacklisted.queueId));

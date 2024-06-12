@@ -17,7 +17,7 @@ export class InteractionHandler implements Handler {
 	constructor(inter: Interaction) {
 		InteractionUtils.verifyCommandIsFromGuild(inter);
 		this.inter = inter as any as AnyInteraction;
-		this.inter.store = new Store(this.inter.guild, this.inter.member);
+		this.inter.store = new Store(this.inter.guild, this.inter);
 	}
 
 	async handle() {

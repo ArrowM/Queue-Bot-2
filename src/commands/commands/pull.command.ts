@@ -41,7 +41,7 @@ export class PullCommand extends AdminCommand {
 
 		const pulledMembers = await MemberUtils.deleteMembers({
 			store: inter.store,
-			queues: queues,
+			queues,
 			reason: ArchivedMemberReason.Pulled,
 			by: { userIds: members?.map((member) => member.userId), count },
 			channelToLink: inter.channel,

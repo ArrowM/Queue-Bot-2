@@ -131,8 +131,8 @@ export namespace DisplayUtils {
 					}
 					catch (e) {
 						store.deleteDisplay(display);
-						if (store.initiator) {
-							await store.initiator.send({ embeds: (e as CustomError).embeds });
+						if (store.inter?.member) {
+							await store.inter.member.send({ embeds: (e as CustomError).embeds });
 						}
 						return;
 					}
@@ -217,19 +217,19 @@ export namespace DisplayUtils {
 		try {
 			const { message, stack } = e as Error;
 			const isPermissionError = /access|permission/i.test(message);
-			if (store.initiator) {
+			if (store.inter?.member) {
 				const embed = new EmbedBuilder()
 					.setTitle("Failed to display queue")
 					.setColor(Color.Red)
 					.setDescription(
-						`Hey ${store.initiator}, I just tried to display the '${queueMention(queue)}' queue in ${channelMention(display.displayChannelId)}, but something went wrong. ` +
+						`Hey ${store.inter.member}, I just tried to display the '${queueMention(queue)}' queue in ${channelMention(display.displayChannelId)}, but something went wrong. ` +
 						(isPermissionError ? bold(`It looks like a permission issue, please check the bot's perms in ${channelMention(display.displayChannelId)}. `) : "") +
 						`Here's the error:${codeBlock(message)}`,
 					);
 				if (!isPermissionError) {
 					embed.setFooter({ text: "This error has been logged and will be investigated by the developers." });
 				}
-				await store.initiator.send({ embeds: [embed] });
+				await store.inter.member.send({ embeds: [embed] });
 			}
 
 			if (!isPermissionError) {
@@ -359,25 +359,25 @@ export namespace DisplayUtils {
 				descriptionParts.push(`${commandMention("join")} or ${commandMention("leave")}.`);
 			}
 
-			if (rejoinGracePeriod) {
-				descriptionParts.push(`- After leaving, rejoin within ${timeMention(rejoinGracePeriod)} to reclaim your spot.`);
-			}
-
 			if (rejoinCooldownPeriod) {
 				descriptionParts.push(`- After being pulled, you must wait ${timeMention(rejoinCooldownPeriod)} to requeue.`);
 			}
-		}``;
+
+			if (rejoinGracePeriod) {
+				descriptionParts.push(`- Rejoin within ${timeMention(rejoinGracePeriod)} of leaving to reclaim your spot.`);
+			}
+		}
 
 		if (members.some(m => !isNil(m.priority))) {
 			descriptionParts.push("- '✨' indicates priority.");
 		}
 
 		if (roleInQueueId) {
-			descriptionParts.push(`- Members are assigned ${roleMention(roleInQueueId)} while in queue.`);
+			descriptionParts.push(`- Members are assigned the '${roleMention(roleInQueueId)}' role while in queue.`);
 		}
 
 		if (roleOnPullId) {
-			descriptionParts.push(`- Members are assigned ${roleMention(roleOnPullId)} when pulled from queue.`);
+			descriptionParts.push(`- Members are assigned the '${roleMention(roleOnPullId)}' role when pulled from queue.`);
 		}
 
 		if (schedules.size) {
@@ -407,8 +407,6 @@ export namespace DisplayUtils {
 			actionRowBuilder.addComponents(
 				buildButton(BUTTONS.get(MyPositionsButton.ID)),
 				buildButton(BUTTONS.get(PullButton.ID)),
-				// buildButton(BUTTONS.get(ClearButton.ID)),
-				// buildButton(BUTTONS.get(ShuffleButton.ID)),
 			);
 			return [actionRowBuilder.toJSON()];
 		}

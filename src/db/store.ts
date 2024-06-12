@@ -4,6 +4,7 @@ import { compact, isNil, omitBy } from "lodash-es";
 import moize from "moize";
 
 import { ArchivedMemberReason, type GuildStat } from "../types/db.types.ts";
+import type { AnyInteraction } from "../types/interaction.types.ts";
 import {
 	AdminAlreadyExistsError,
 	BlacklistedAlreadyExistsError,
@@ -61,7 +62,7 @@ export class Store {
 
 	constructor(
 		public guild: Guild,
-		public initiator?: GuildMember,
+		public inter?: AnyInteraction,
 	) {
 	}
 
