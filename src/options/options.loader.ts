@@ -16,7 +16,7 @@ import { HeaderOption } from "./options/header.option.ts";
 import { InlineToggleOption } from "./options/inline-toggle.option.ts";
 import { LockToggleOption } from "./options/lock-toggle.option.ts";
 import { LogChannelOption } from "./options/log-channel.option.ts";
-import { LogLevelOption } from "./options/log-level.option.ts";
+import { LogScopeOption } from "./options/log-scope.option.ts";
 import { MemberOption } from "./options/member.option.ts";
 import { MemberDisplayTypeOption } from "./options/member-display-type.option.ts";
 import { MembersOption } from "./options/members.option.ts";
@@ -65,7 +65,7 @@ export const OPTIONS = new Collection<string, Option>([
 	[InlineToggleOption.ID, new InlineToggleOption()],
 	[LockToggleOption.ID, new LockToggleOption()],
 	[LogChannelOption.ID, new LogChannelOption()],
-	[LogLevelOption.ID, new LogLevelOption()],
+	[LogScopeOption.ID, new LogScopeOption()],
 	[MemberOption.ID, new MemberOption()],
 	[MemberDisplayTypeOption.ID, new MemberDisplayTypeOption()],
 	[MembersOption.ID, new MembersOption()],

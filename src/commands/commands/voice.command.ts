@@ -102,7 +102,7 @@ export class VoiceCommand extends AdminCommand {
 		} = VoiceUtils.insertVoices(inter.store, queues, sourceVoiceChannel.id, destinationVoiceChannel.id);
 		const updatedQueues = updatedQueueIds.map(id => inter.store.dbQueues().get(id));
 
-		await inter.respond(`Added voice integrations to ${updatedQueues.length} queue${updatedQueues.length ? "s" : ""}`);
+		await inter.respond(`Added voice integrations to ${updatedQueues.length} queue${updatedQueues.length ? "s" : ""}`, true);
 		await this.voice_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
@@ -135,7 +135,7 @@ export class VoiceCommand extends AdminCommand {
 		});
 		const updatedQueues = updatedQueueIds.map(id => inter.store.dbQueues().get(id));
 
-		await inter.respond(`Updated voice integrations in ${updatedQueues.length} queue${updatedQueues.length ? "s" : ""}`);
+		await inter.respond(`Updated voice integrations in ${updatedQueues.length} queue${updatedQueues.length ? "s" : ""}`, true);
 		await this.voice_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
@@ -155,7 +155,7 @@ export class VoiceCommand extends AdminCommand {
 		} = VoiceUtils.deleteVoices(inter.store, voices.map(voice => voice.id));
 		const updatedQueues = updatedQueueIds.map(id => inter.store.dbQueues().get(id));
 
-		await inter.respond(`Deleted voice integrations in ${updatedQueues.length} queue${updatedQueues.length ? "s" : ""}`);
+		await inter.respond(`Deleted voice integrations in ${updatedQueues.length} queue${updatedQueues.length ? "s" : ""}`, true);
 		await this.voice_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 }

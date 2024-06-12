@@ -10,7 +10,7 @@ import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { BlacklistUtils } from "../../utils/blacklist.utils.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
-import { describeTable, mentionableMention, mentionablesMention, queuesMention } from "../../utils/string.utils.ts";
+import { describeMentionableTable, mentionableMention, mentionablesMention, queuesMention } from "../../utils/string.utils.ts";
 
 export class BlacklistCommand extends AdminCommand {
 	static readonly ID = "blacklist";
@@ -57,7 +57,7 @@ export class BlacklistCommand extends AdminCommand {
 
 		const blacklisted = inter.store.dbBlacklisted().filter(blacklisted => queues.has(blacklisted.queueId));
 
-		const embeds = describeTable({
+		const embeds = describeMentionableTable({
 			store: inter.store,
 			tableName: "Blacklisted members and roles",
 			color: Color.Black,
@@ -98,7 +98,7 @@ export class BlacklistCommand extends AdminCommand {
 		} = await BlacklistUtils.insertBlacklisted(inter.store, queues, mentionables, reason);
 		const updatedQueues = updatedQueueIds.map(id => inter.store.dbQueues().get(id));
 
-		await inter.respond(`Blacklisted ${mentionablesMention(insertedBlacklisted)} from the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`);
+		await inter.respond(`Blacklisted ${mentionablesMention(insertedBlacklisted)} from the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`, true);
 		await this.blacklist_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
@@ -121,7 +121,7 @@ export class BlacklistCommand extends AdminCommand {
 		} = BlacklistUtils.deleteBlacklisted(inter.store, blacklisteds.map(blacklisted => blacklisted.id));
 		const updatedQueues = updatedQueueIds.map(id => inter.store.dbQueues().get(id));
 
-		await inter.respond(`Un-blacklisted ${blacklisteds.map(mentionableMention).join(", ")}.`);
+		await inter.respond(`Un-blacklisted ${blacklisteds.map(mentionableMention).join(", ")}.`, true);
 		await this.blacklist_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 }

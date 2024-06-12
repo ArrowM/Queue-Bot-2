@@ -1,4 +1,4 @@
-import { type InteractionReplyOptions, MessagePayload } from "discord.js";
+import { type InteractionReplyOptions } from "discord.js";
 
 import { COMMANDS } from "../commands/commands.loader.ts";
 import { incrementGuildStat } from "../db/db-scheduled-tasks.ts";
@@ -14,8 +14,6 @@ export class CommandHandler implements Handler {
 	constructor(inter: AnyInteraction) {
 		this.inter = inter as SlashInteraction;
 		this.inter.parser = new Parser(this.inter);
-		this.inter.promptConfirmOrCancel = (message: string) => InteractionUtils.promptConfirmOrCancel(this.inter, message);
-		this.inter.respond = (options: (InteractionReplyOptions | string | MessagePayload)) => InteractionUtils.respond(this.inter, options);
 	}
 
 	async handle() {
@@ -26,7 +24,17 @@ export class CommandHandler implements Handler {
 		const command = COMMANDS.get(this.inter.commandName);
 
 		if (command) {
-			if (command.adminOnly) AdminUtils.verifyIsAdmin(this.inter.store, this.inter.member);
+			const isAdmin = command.adminOnly;
+
+			this.inter.promptConfirmOrCancel = (message: string) =>
+				InteractionUtils.promptConfirmOrCancel(this.inter, message);
+
+			this.inter.respond = (response: (InteractionReplyOptions | string), log = false) =>
+				InteractionUtils.respond(this.inter, isAdmin, response, log);
+
+			if (isAdmin) {
+				AdminUtils.verifyIsAdmin(this.inter.store, this.inter.member);
+			}
 
 			if (fullCommandName in command) {
 				incrementGuildStat(this.inter.guildId, "commandsReceived");

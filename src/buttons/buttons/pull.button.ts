@@ -24,11 +24,9 @@ export class PullButton extends AdminButton {
 			force: true,
 		});
 
-		await Promise.all([
-			inter.deleteReply(),
-			inter.channel.send({
-				embeds: await MemberUtils.describePulledMembers(inter.store, [queue], pulledMembers),
-			}),
-		]);
+		await inter.respond({
+			embeds: await MemberUtils.describePulledMembers(inter.store, [queue], pulledMembers),
+			ephemeral: false,
+		}, true);
 	}
 }

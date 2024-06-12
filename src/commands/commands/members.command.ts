@@ -60,7 +60,7 @@ export class MembersCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly GET_OPTIONS = {
-		queues: new QueuesOption({ required: true, description: "Queues(s) to display" }),
+		queues: new QueuesOption({ required: true, description: "Queue(s) to display" }),
 	};
 
 	static async members_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
@@ -72,7 +72,7 @@ export class MembersCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly ADD_OPTIONS = {
-		queues: new QueuesOption({ required: true, description: "Queue to add members to" }),
+		queues: new QueuesOption({ required: true, description: "Queue(s) to add members to" }),
 		mentionable1: new MentionableOption({ name: "mentionable_1", required: true, description: "User or role to add" }),
 		mentionable2: new MentionableOption({ name: "mentionable_2", description: "User or role to add" }),
 		mentionable3: new MentionableOption({ name: "mentionable_3", description: "User or role to add" }),
@@ -93,7 +93,7 @@ export class MembersCommand extends AdminCommand {
 
 		const insertedMembers = await MemberUtils.insertMentionables(inter.store, mentionables, queues);
 
-		await inter.respond(`Added ${usersMention(insertedMembers)} to '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`);
+		await inter.respond(`Added ${usersMention(insertedMembers)} to '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`, true);
 
 		NotificationUtils.notify(inter.store, insertedMembers, {
 			type: NotificationType.ADDED_TO_QUEUE,
@@ -109,7 +109,7 @@ export class MembersCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly SET_OPTIONS = {
-		queues: new QueuesOption({ required: true, description: "Queue of members to update" }),
+		queues: new QueuesOption({ required: true, description: "Queue(s) of members to update" }),
 		members: new MembersOption({ required: true, description: "Members to update" }),
 		message: new MessageOption({ description: "New message of the member" }),
 	};
@@ -121,7 +121,7 @@ export class MembersCommand extends AdminCommand {
 
 		const updatedMembers = MemberUtils.updateMembers(inter.store, members, message);
 
-		await inter.respond(`Updated ${usersMention(updatedMembers)} in '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`);
+		await inter.respond(`Updated ${usersMention(updatedMembers)} in '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`, true);
 
 		const updatedQueues = updatedMembers.map(updated => queues.get(updated.queueId));
 		await MembersCommand.members_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
@@ -149,7 +149,7 @@ export class MembersCommand extends AdminCommand {
 			force: true,
 		});
 
-		await inter.respond(`Removed ${usersMention(deletedMembers)} from '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`);
+		await inter.respond(`Removed ${usersMention(deletedMembers)} from '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`, true);
 
 		const updatedQueues = deletedMembers.map(deleted => inter.store.dbQueues().get(deleted.queueId));
 		await MembersCommand.members_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));

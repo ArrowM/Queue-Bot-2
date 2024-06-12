@@ -72,7 +72,7 @@ export class DisplaysCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly ADD_OPTIONS = {
-		queues: new QueuesOption({ required: true, description: "Queues(s) to display" }),
+		queues: new QueuesOption({ required: true, description: "Queue(s) to display" }),
 	};
 
 	static async displays_add(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
@@ -100,7 +100,7 @@ export class DisplaysCommand extends AdminCommand {
 		} = DisplayUtils.deleteDisplays(inter.store, displays.map(dis => dis.id));
 		const queuesToUpdate = updatedQueueIds.map(id => inter.store.dbQueues().get(id));
 
-		await inter.respond(`Deleted ${deletedDisplays.length} display${deletedDisplays.length === 1 ? "" : "s"}.`);
+		await inter.respond(`Deleted ${deletedDisplays.length} display${deletedDisplays.length === 1 ? "" : "s"}.`, true);
 
 		await this.displays_get(inter, toCollection<bigint, DbQueue>("id", queuesToUpdate));
 	}

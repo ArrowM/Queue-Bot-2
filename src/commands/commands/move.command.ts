@@ -43,6 +43,6 @@ export class MoveCommand extends AdminCommand {
 
 		MemberUtils.moveMember(inter.store, queue, member, position - 1);
 
-		await inter.respond(`Moved ${userMention(member.userId)} to position ${bold(position.toString())} in the '${queueMention(queue)}' queue.`);
+		await inter.respond(`Moved ${userMention(member.userId)} to position ${bold(position.toString())} in the '${queueMention(queue)}' queue.`, true);
 	}
 }

@@ -93,7 +93,7 @@ export class SchedulesCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly ADD_OPTIONS = {
-		queues: new QueuesOption({ required: true, description: "Queues to create scheduled command for" }),
+		queues: new QueuesOption({ required: true, description: "Queue(s) to create scheduled command for" }),
 		command: new CommandOption({ required: true, description: "Command to schedule" }),
 		cron: new CronOption({ required: true, description: "Cron schedule" }),
 		timezone: new TimezoneOption({ required: true, description: "Timezone for the schedule" }),
@@ -115,7 +115,7 @@ export class SchedulesCommand extends AdminCommand {
 		} = ScheduleUtils.insertSchedules(inter.store, queues, schedule);
 		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
-		await inter.respond(`Scheduled ${schedule.command} for the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`);
+		await inter.respond(`Scheduled ${schedule.command} for the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`, true);
 		await this.schedules_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
@@ -145,7 +145,7 @@ export class SchedulesCommand extends AdminCommand {
 		} = ScheduleUtils.updateSchedules(inter.store, schedules, scheduleUpdate);
 		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
-		await inter.respond(`Updated ${schedules.size} schedule${schedules.size ? "s" : ""}.`);
+		await inter.respond(`Updated ${schedules.size} schedule${schedules.size ? "s" : ""}.`, true);
 		await this.schedules_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
@@ -165,7 +165,7 @@ export class SchedulesCommand extends AdminCommand {
 		} = ScheduleUtils.deleteSchedules(schedules.map(sch => sch.id), inter.store);
 		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
-		await inter.respond(`Deleted ${schedules.size} schedule${schedules.size ? "s" : ""}.`);
+		await inter.respond(`Deleted ${schedules.size} schedule${schedules.size ? "s" : ""}.`, true);
 		await this.schedules_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 

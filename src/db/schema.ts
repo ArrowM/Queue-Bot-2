@@ -7,7 +7,7 @@ import {
 	ArchivedMemberReason,
 	Color,
 	DisplayUpdateType,
-	LogLevel,
+	LogScope,
 	MemberDisplayType,
 	ScheduleCommand,
 	TimestampType,
@@ -15,6 +15,9 @@ import {
 
 export const GUILD_TABLE = sqliteTable("guild", ({
 	guildId: text("guild_id").$type<Snowflake>().primaryKey(),
+
+	logChannelId: text("log_channel_id").$type<Snowflake | null>(),
+	logScope: text("log_scope").$type<LogScope | null>(),
 
 	joinTime: integer("joinTime").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
 	lastUpdateTime: integer("last_updated_time").$type<bigint>().notNull().$defaultFn(() => BigInt(Date.now())),
@@ -61,8 +64,6 @@ export const QUEUE_TABLE = sqliteTable("queue", ({
 	header: text("header"),
 	inlineToggle: integer("inline_toggle", { mode: "boolean" }).notNull().default(false),
 	lockToggle: integer("lock_toggle", { mode: "boolean" }).notNull().default(false),
-	logChannelId: text("log_channel_id").$type<Snowflake | null>(),
-	logLevel: text("log_level").$type<LogLevel>().notNull().default(LogLevel.Default),
 	memberDisplayType: text("member_display_type").$type<MemberDisplayType>().notNull().default(MemberDisplayType.Mention),
 	notificationsToggle: integer("notifications_toggle", { mode: "boolean" }).notNull().default(true),
 	pullBatchSize: integer("pull_batch_size").notNull().default(1),

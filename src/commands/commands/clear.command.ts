@@ -32,9 +32,9 @@ export class ClearCommand extends AdminCommand {
 
 		queues.forEach(queue => MemberUtils.clearMembers(inter.store, queue));
 
-		await Promise.all([
-			inter.deleteReply(),
-			inter.channel.send(`Cleared the '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`),
-		]);
+		await inter.respond({
+			content: `Cleared the '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`,
+			ephemeral: false,
+		}, true);
 	}
 }

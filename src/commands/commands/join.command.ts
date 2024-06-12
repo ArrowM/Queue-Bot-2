@@ -36,6 +36,6 @@ export class JoinCommand extends EveryoneCommand {
 		await inter.respond({
 			content: `Joined the '${queueMention(queue)}' queue.`,
 			embeds: [await MemberUtils.getMemberDisplayLine(inter.store, queue, inter.member.id)],
-		});
+		}, true);
 	}
 }

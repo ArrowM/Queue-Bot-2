@@ -1,4 +1,4 @@
-import type { InteractionReplyOptions, MessagePayload } from "discord.js";
+import type { InteractionReplyOptions } from "discord.js";
 
 import { BUTTONS } from "../buttons/buttons.loader.ts";
 import { incrementGuildStat } from "../db/db-scheduled-tasks.ts";
@@ -12,14 +12,21 @@ export class ButtonHandler implements Handler {
 
 	constructor(inter: AnyInteraction) {
 		this.inter = inter as ButtonInteraction;
-		this.inter.respond = (options: (InteractionReplyOptions | string | MessagePayload)) => InteractionUtils.respond(this.inter, options);
 	}
 
 	async handle() {
 		await this.inter.deferReply({ ephemeral: true });
 		const button = BUTTONS.get(this.inter.customId);
 		if (button) {
-			if (button.adminOnly) AdminUtils.verifyIsAdmin(this.inter.store, this.inter.member);
+			const isAdmin = button.adminOnly;
+
+			this.inter.respond = (response: (InteractionReplyOptions | string), log = false) =>
+				InteractionUtils.respond(this.inter, isAdmin, response, log);
+
+			if (isAdmin) {
+				AdminUtils.verifyIsAdmin(this.inter.store, this.inter.member);
+			}
+
 			incrementGuildStat(this.inter.guildId, "buttonsReceived");
 			await button.handle(this.inter);
 		}

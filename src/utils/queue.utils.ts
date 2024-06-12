@@ -20,7 +20,6 @@ export namespace QueueUtils {
 	type FormattingFunctions = Partial<Record<keyof DbQueue | keyof DbVoice, (value: any) => string>>;
 	const formattingFunctions: FormattingFunctions = {
 		destinationChannelId: channelMention,
-		logChannelId: channelMention,
 		roleInQueueId: roleMention,
 		roleOnPullId: roleMention,
 		sourceChannelId: channelMention,

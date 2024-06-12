@@ -6,7 +6,6 @@ import {
 	type Interaction as DiscordInteraction,
 	type InteractionReplyOptions,
 	type Message,
-	MessagePayload,
 } from "discord.js";
 
 import type { Store } from "../db/store.ts";
@@ -15,7 +14,7 @@ import { type Parser } from "../utils/message-utils/parser.ts";
 interface BaseProperties {
 	store: Store;
 	/** InteractionUtils.respond() */
-	respond: (options: (InteractionReplyOptions | string | MessagePayload)) => Promise<Message>;
+	respond: (options: (InteractionReplyOptions | string), log?: boolean) => Promise<Message>;
 	member: GuildMember; // overrides default type of `GuildMember | APIInteractionGuildMember`
 }
 

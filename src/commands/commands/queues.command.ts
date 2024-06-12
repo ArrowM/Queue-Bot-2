@@ -1,4 +1,4 @@
-import { type Collection, EmbedBuilder, inlineCode, italic, SlashCommandBuilder } from "discord.js";
+import { bold, type Collection, EmbedBuilder, inlineCode, italic, SlashCommandBuilder } from "discord.js";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import { findKey, isNil, omitBy } from "lodash-es";
 
@@ -11,8 +11,6 @@ import { DisplayUpdateTypeOption } from "../../options/options/display-update-ty
 import { HeaderOption } from "../../options/options/header.option.ts";
 import { InlineToggleOption } from "../../options/options/inline-toggle.option.ts";
 import { LockToggleOption } from "../../options/options/lock-toggle.option.ts";
-import { LogChannelOption } from "../../options/options/log-channel.option.ts";
-import { LogLevelOption } from "../../options/options/log-level.option.ts";
 import { MemberDisplayTypeOption } from "../../options/options/member-display-type.option.ts";
 import { NameOption } from "../../options/options/name.option.ts";
 import { NotificationsToggleOption } from "../../options/options/notifications-enable.option.ts";
@@ -129,8 +127,6 @@ export class QueuesCommand extends AdminCommand {
 		header: new HeaderOption({ description: "Header of the queue display" }),
 		inlineToggle: new InlineToggleOption({ description: "Toggle inline display of queue members" }),
 		lockToggle: new LockToggleOption({ description: "Toggle queue locked status (prevents joining)" }),
-		logChannel: new LogChannelOption({ description: "Channel to write logs to" }),
-		logLevel: new LogLevelOption({ description: "Level of logging" }),
 		memberDisplayType: new MemberDisplayTypeOption({ description: "How to display members" }),
 		notificationsToggle: new NotificationsToggleOption({ description: "Toggle whether users are DM-ed on pull" }),
 		pullBatchSize: new PullBatchSizeOption({ description: "How many queue members to include in a pull" }),
@@ -154,8 +150,6 @@ export class QueuesCommand extends AdminCommand {
 				header: QueuesCommand.ADD_OPTIONS.header.get(inter),
 				inlineToggle: QueuesCommand.ADD_OPTIONS.inlineToggle.get(inter),
 				lockToggle: QueuesCommand.ADD_OPTIONS.lockToggle.get(inter),
-				logChannel: QueuesCommand.ADD_OPTIONS.logChannel.get(inter),
-				logLevel: QueuesCommand.ADD_OPTIONS.logLevel.get(inter),
 				memberDisplayType: QueuesCommand.ADD_OPTIONS.memberDisplayType.get(inter),
 				notificationsToggle: QueuesCommand.ADD_OPTIONS.notificationsToggle.get(inter),
 				pullBatchSize: QueuesCommand.ADD_OPTIONS.pullBatchSize.get(inter),
@@ -179,7 +173,7 @@ export class QueuesCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly SET_OPTIONS = {
-		queues: new QueuesOption({ required: true, description: "Queues to update" }),
+		queues: new QueuesOption({ required: true, description: "Queue(s) to update" }),
 		autopullToggle: new AutopullToggleOption({ description: "Toggle automatic pulling of queue members" }),
 		buttonsToggle: new ButtonsToggleOption({ description: "Toggle buttons beneath queue displays" }),
 		color: new ColorOption({ description: "Color of the queue" }),
@@ -188,8 +182,6 @@ export class QueuesCommand extends AdminCommand {
 		header: new HeaderOption({ description: "Header of the queue display" }),
 		inlineToggle: new InlineToggleOption({ description: "Toggle inline display of queue members" }),
 		lockToggle: new LockToggleOption({ description: "Toggle queue locked status (prevents joining)" }),
-		logChannel: new LogChannelOption({ description: "Channel to write logs to" }),
-		logLevel: new LogLevelOption({ description: "Level of logging" }),
 		memberDisplayType: new MemberDisplayTypeOption({ description: "How to display members" }),
 		name: new NameOption({ description: "Name of the queue" }),
 		notificationsToggle: new NotificationsToggleOption({ description: "Toggle whether users are DM-ed on pull" }),
@@ -212,8 +204,6 @@ export class QueuesCommand extends AdminCommand {
 			header: QueuesCommand.SET_OPTIONS.header.get(inter),
 			inlineToggle: QueuesCommand.SET_OPTIONS.inlineToggle.get(inter),
 			lockToggle: QueuesCommand.SET_OPTIONS.lockToggle.get(inter),
-			logChannel: QueuesCommand.SET_OPTIONS.logChannel.get(inter),
-			logLevel: QueuesCommand.SET_OPTIONS.logLevel.get(inter),
 			memberDisplayType: QueuesCommand.SET_OPTIONS.memberDisplayType.get(inter),
 			name: QueuesCommand.SET_OPTIONS.name.get(inter),
 			notificationsToggle: QueuesCommand.SET_OPTIONS.notificationsToggle.get(inter),
@@ -227,6 +217,8 @@ export class QueuesCommand extends AdminCommand {
 
 		const { updatedQueues } = await QueueUtils.updateQueues(inter.store, queues, update);
 
+		await inter.respond(`Updated ${Object.keys(update).map(bold).join(", ")} of ${queuesMention(queues)} queue${queues.size > 1 ? "s" : ""}.`, true);
+
 		await QueuesCommand.queues_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
@@ -235,7 +227,7 @@ export class QueuesCommand extends AdminCommand {
 	// ====================================================================
 
 	static readonly RESET_OPTIONS = {
-		queues: new QueuesOption({ required: true, description: "Queues to reset" }),
+		queues: new QueuesOption({ required: true, description: "Queue(s) to reset" }),
 	};
 
 	static async queues_reset(inter: SlashInteraction) {
@@ -250,8 +242,6 @@ export class QueuesCommand extends AdminCommand {
 			{ name: HeaderOption.ID, value: QUEUE_TABLE.header.name },
 			{ name: InlineToggleOption.ID, value: QUEUE_TABLE.inlineToggle.name },
 			{ name: LockToggleOption.ID, value: QUEUE_TABLE.lockToggle.name },
-			{ name: LogChannelOption.ID, value: QUEUE_TABLE.logChannelId.name },
-			{ name: LogLevelOption.ID, value: QUEUE_TABLE.logLevel.name },
 			{ name: MemberDisplayTypeOption.ID, value: QUEUE_TABLE.memberDisplayType.name },
 			{ name: NameOption.ID, value: QUEUE_TABLE.name.name },
 			{ name: NotificationsToggleOption.ID, value: QUEUE_TABLE.notificationsToggle.name },
@@ -313,6 +303,6 @@ export class QueuesCommand extends AdminCommand {
 
 		const deletedQueue = inter.store.deleteQueue({ id: queue.id });
 
-		await inter.respond(`Deleted the '${queueMention(deletedQueue)}' queue.`);
+		await inter.respond(`Deleted the '${queueMention(deletedQueue)}' queue.`, true);
 	}
 }

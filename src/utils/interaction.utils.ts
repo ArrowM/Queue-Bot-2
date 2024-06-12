@@ -9,26 +9,42 @@ import {
 	inlineCode,
 	type Interaction,
 	type InteractionReplyOptions,
-	MessagePayload,
+	type Message,
+	messageLink,
 	PermissionsBitField,
 } from "discord.js";
 
-import { Color } from "../types/db.types.ts";
+import { Color, LogScope } from "../types/db.types.ts";
 import type { AnyInteraction, SlashInteraction } from "../types/interaction.types.ts";
 import { CustomError } from "./error.utils.ts";
 
 export namespace InteractionUtils {
-	export async function respond(inter: AnyInteraction, response: (InteractionReplyOptions | string | MessagePayload)) {
+	export async function respond(inter: AnyInteraction, isAdmin: boolean, response: (InteractionReplyOptions | string), log = false) {
 		const interaction = inter as any;
-		if (interaction.deferred) {
-			return await interaction.editReply(response);
+
+		let result: Message;
+
+		if (typeof response === "object" && "ephemeral" in response && response.ephemeral === false) {
+			await Promise.all([
+				interaction.deleteReply(),
+				result = interaction.channel.send(response),
+			]);
+		}
+		else if (interaction.deferred) {
+			result = await interaction.editReply(response);
 		}
 		else if (interaction.replied) {
-			return await interaction.followUp(response);
+			result = await interaction.followUp(response);
 		}
 		else {
-			return await (await interaction.reply(response)).fetch();
+			result = await (await interaction.reply(response)).fetch();
 		}
+
+		if (log) {
+			await logResponse(inter, isAdmin, response, result);
+		}
+
+		return result;
 	}
 
 	const CANCEL_BUTTON = new ButtonBuilder()
@@ -96,6 +112,26 @@ export namespace InteractionUtils {
 		}
 		if (!perms?.has(PermissionsBitField.Flags.SendMessages)) {
 			throwPermissionError("Send Messages");
+		}
+	}
+
+	async function logResponse(inter: AnyInteraction, isAdmin: boolean, response: (InteractionReplyOptions | string), result: Message) {
+		const { logChannelId, logScope } = inter.store.dbGuild();
+		const logChannel = await inter.store.jsChannel(logChannelId) as GuildTextBasedChannel;
+
+		if (!logChannel) return;
+
+		if (typeof response === "string") {
+			response = { content: response };
+		}
+
+		response.content = messageLink(result.channelId, result.id) + " " + response.content;
+
+		if (
+			isAdmin && ([LogScope.Admin, LogScope.All].includes(logScope)) ||
+			!isAdmin && ([LogScope.NonAdmin, LogScope.All].includes(logScope))
+		) {
+			await logChannel.send(response as any);
 		}
 	}
 }

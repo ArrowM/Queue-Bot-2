@@ -26,7 +26,7 @@ export function queuesMention(queues: ArrayOrCollection<bigint, DbQueue>): strin
 
 export async function membersMention(store: Store, members: ArrayOrCollection<bigint, DbMember>) {
 	return (await Promise.all(
-		map(members, member => memberMention(store, member)),
+		map(members, async (member) => `- ${await memberMention(store, member)}`),
 	)).join("\n");
 }
 
@@ -85,12 +85,21 @@ export function timeMention(seconds: number) {
 		(numSecondsRemainder > 1 ? "s" : "");
 }
 
+export function describeMentionableTable<T>(options: {
+	store: Store,
+	tableName: string,
+	color: Color,
+	entries: T[],
+}) {
+	return describeTable({ mentionFn: null, ...options });
+}
+
 export function describeTable<T>(options: {
 	store: Store,
 	tableName: string,
 	color: Color,
 	entries: T[],
-	mentionFn?: (entry: T) => string,
+	mentionFn: (entry: T) => string,
 }) {
 	const { store, tableName, color, entries, mentionFn } = options;
 	const embeds: EmbedBuilder[] = [];

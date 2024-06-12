@@ -3,7 +3,7 @@ import { and, eq, isNull, or } from "drizzle-orm";
 import { compact, isNil, omitBy } from "lodash-es";
 import moize from "moize";
 
-import { ArchivedMemberReason, type GuildStat } from "../types/db.types.ts";
+import { ArchivedMemberReason, type GuildStat, type LogScope } from "../types/db.types.ts";
 import type { AnyInteraction } from "../types/interaction.types.ts";
 import {
 	AdminAlreadyExistsError,
@@ -70,6 +70,7 @@ export class Store {
 	//                           Common data
 	// ====================================================================
 
+	dbGuild = moize(() => QueryUtils.selectGuild({ guildId: this.guild.id }));
 	dbQueues = moize(() => toCollection<bigint, DbQueue>("id", QueryUtils.selectManyQueues({ guildId: this.guild.id })));
 	dbVoices = moize(() => toCollection<bigint, DbVoice>("id", QueryUtils.selectManyVoices({ guildId: this.guild.id })));
 	dbDisplays = moize(() => toCollection<bigint, DbDisplay>("id", QueryUtils.selectManyDisplays({ guildId: this.guild.id })));
@@ -87,6 +88,19 @@ export class Store {
 	//                           Discord.js
 	// ====================================================================
 
+	async cleanupMissingChannel(channelId: Snowflake) {
+		this.deleteManyDisplays({ displayChannelId: channelId });
+		this.deleteManyVoices({ channelId });
+		// Delete the log channel if it is missing
+		db
+			.update(GUILD_TABLE)
+			.set({ logChannelId: null })
+			.where(and(
+				eq(GUILD_TABLE.guildId, this.guild.id),
+				eq(GUILD_TABLE.logChannelId, channelId),
+			));
+	}
+
 	async jsChannel(channelId: Snowflake) {
 		try {
 			return await this.guild.channels.fetch(channelId);
@@ -94,8 +108,7 @@ export class Store {
 		catch (e) {
 			const { status } = e as DiscordAPIError;
 			if (status == 404) {
-				this.deleteManyDisplays({ displayChannelId: channelId });
-				this.deleteManyVoices({ channelId });
+				await this.cleanupMissingChannel(channelId);
 			}
 		}
 	}
@@ -379,6 +392,16 @@ export class Store {
 	// ====================================================================
 	//                           Updates
 	// ====================================================================
+
+	updateGuild(guild: {logChannelId: Snowflake, logScope: LogScope }) {
+		// Ensure the guild is in the database
+		this.insertGuild({ guildId: this.guild.id });
+		return db
+			.update(GUILD_TABLE)
+			.set(guild)
+			.where(eq(GUILD_TABLE.guildId, this.guild.id))
+			.returning().get();
+	}
 
 	updateQueue(queue: { id: bigint } & Partial<DbQueue>) {
 		this.dbQueues.clear();

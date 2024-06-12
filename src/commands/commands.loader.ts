@@ -8,6 +8,7 @@ import { DisplaysCommand } from "./commands/displays.command.ts";
 import { HelpCommand } from "./commands/help.command.ts";
 import { JoinCommand } from "./commands/join.command.ts";
 import { LeaveCommand } from "./commands/leave.command.ts";
+import { LoggingCommand } from "./commands/logging.command.ts";
 import { MembersCommand } from "./commands/members.command.ts";
 import { MoveCommand } from "./commands/move.command.ts";
 import { PositionsCommand } from "./commands/positions.command.ts";
@@ -28,6 +29,7 @@ export const COMMANDS = new Collection<string, Command>([
 	[HelpCommand.ID, new HelpCommand()],
 	[JoinCommand.ID, new JoinCommand()],
 	[LeaveCommand.ID, new LeaveCommand()],
+	[LoggingCommand.ID, new LoggingCommand()],
 	[MembersCommand.ID, new MembersCommand()],
 	[MoveCommand.ID, new MoveCommand()],
 	[PositionsCommand.ID, new PositionsCommand()],

@@ -1,8 +1,9 @@
 import type { DbGuild } from "../db/schema.ts";
 
-export enum LogLevel {
-	Default = "default",
-	Everything = "everything",
+export enum LogScope {
+	NonAdmin = "non-admin",
+	Admin = "admin",
+	All = "all",
 }
 
 export enum ScheduleCommand {

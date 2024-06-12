@@ -12,7 +12,7 @@ export class ShuffleCommand extends AdminCommand {
 	shuffle = ShuffleCommand.shuffle;
 
 	static readonly SHUFFLE_OPTIONS = {
-		queues: new QueuesOption({ required: true, description: "Queues to shuffle" }),
+		queues: new QueuesOption({ required: true, description: "Queue(s) to shuffle" }),
 	};
 
 	data = new SlashCommandBuilder()
@@ -32,9 +32,9 @@ export class ShuffleCommand extends AdminCommand {
 
 		queues.forEach((queue) => MemberUtils.shuffleMembers(inter.store, queue));
 
-		await Promise.all([
-			inter.deleteReply(),
-			inter.channel.send(`Shuffled the '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`),
-		]);
+		await inter.respond({
+			content: `Shuffled the '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`,
+			ephemeral: false,
+		}, true);
 	}
 }

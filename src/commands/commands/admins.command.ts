@@ -7,7 +7,7 @@ import { EveryoneCommand } from "../../types/command.types.ts";
 import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { AdminUtils } from "../../utils/admin.utils.ts";
-import { describeTable, mentionablesMention } from "../../utils/string.utils.ts";
+import { describeMentionableTable, mentionablesMention } from "../../utils/string.utils.ts";
 
 export class AdminsCommand extends EveryoneCommand {
 	static readonly ID = "admins";
@@ -47,7 +47,7 @@ export class AdminsCommand extends EveryoneCommand {
 	static async admins_get(inter: SlashInteraction) {
 		const admins = QueryUtils.selectManyAdmins({ guildId: inter.guildId });
 
-		const embeds = describeTable({
+		const embeds = describeMentionableTable({
 			store: inter.store,
 			tableName: "Admins",
 			color: Color.DarkRed,
@@ -80,7 +80,7 @@ export class AdminsCommand extends EveryoneCommand {
 
 		const insertedAdmins = AdminUtils.insertAdmins(inter.store, mentionables);
 
-		await inter.respond(`Granted Queue Bot admin access to ${mentionablesMention(insertedAdmins)}.`);
+		await inter.respond(`Granted Queue Bot admin access to ${mentionablesMention(insertedAdmins)}.`, true);
 
 		await this.admins_get(inter);
 	}
@@ -98,7 +98,7 @@ export class AdminsCommand extends EveryoneCommand {
 
 		const deletedAdmins = AdminUtils.deleteAdmins(inter.store, admins.map(admin => admin.id));
 
-		await inter.respond(`Revoked Queue Bot admin access from ${mentionablesMention(deletedAdmins)}.`);
+		await inter.respond(`Revoked Queue Bot admin access from ${mentionablesMention(deletedAdmins)}.`, true);
 
 		await this.admins_get(inter);
 	}
