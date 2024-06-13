@@ -146,7 +146,7 @@ export namespace DisplayUtils {
 						// Send new display
 						const message = await jsChannel.send({
 							embeds: embedBuilders,
-							components: getButtonRow(store, queue),
+							components: getButtonRow(queue),
 						});
 						if (message) {
 							// Remove buttons on the previous message
@@ -168,7 +168,7 @@ export namespace DisplayUtils {
 							try {
 								await lastMessage.edit({
 									embeds: embedBuilders,
-									components: lastMessage.components,
+									components: getButtonRow(queue),
 								});
 							}
 							catch {
@@ -339,18 +339,13 @@ export namespace DisplayUtils {
 			descriptionParts.push("- Queue is locked.");
 		}
 		else {
-			const {
-				sourceChannelId,
-				destinationChannelId,
-			} = store.dbVoices().find(voice => voice.queueId === queue.id) ?? {};
-			if (sourceChannelId && destinationChannelId) {
-				const sourceChannel = await store.jsChannel(sourceChannelId);
-				const destinationChannel = await store.jsChannel(destinationChannelId);
-				if (sourceChannel && destinationChannel) {
-					descriptionParts.push(
-						`- ${autopullToggle ? "Automatically pulling" : "Manually pulling"} members from ${sourceChannel} to ${destinationChannel}.`,
-					);
-				}
+			const voices = store.dbVoices().filter(voice => voice.queueId === queue.id);
+			if (voices.size) {
+				const isAutoPulling = autopullToggle && queue.voiceDestinationChannelId;
+				const pullMethodStr = isAutoPulling ? "Automatically" : "Manually";
+				const srcStr = voices.map(voice => channelMention(voice.sourceChannelId)).join(", ");
+				const dstStr = queue.voiceDestinationChannelId ? ` to ${channelMention(queue.voiceDestinationChannelId)}` : "";
+				descriptionParts.push(`- ${pullMethodStr} pulling members from ${srcStr}${dstStr}`);
 			}
 			else if (queue.buttonsToggle) {
 				descriptionParts.push(`${commandMention("join")}, ${commandMention("leave")}, or click the buttons below.`);
@@ -394,11 +389,10 @@ export namespace DisplayUtils {
 			.setStyle(button.style);
 	}
 
-	function getButtonRow(store: Store, queue: DbQueue) {
+	function getButtonRow(queue: DbQueue) {
 		if (queue.buttonsToggle) {
 			const actionRowBuilder = new ActionRowBuilder<ButtonBuilder>();
-			const voice = store.dbVoices().find(voice => voice.queueId === queue.id);
-			if (!voice) {
+			if (!queue?.voiceOnlyToggle) {
 				actionRowBuilder.addComponents(
 					buildButton(BUTTONS.get(JoinButton.ID)),
 					buildButton(BUTTONS.get(LeaveButton.ID)),

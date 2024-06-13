@@ -1,6 +1,6 @@
 import { type Collection, SlashCommandBuilder } from "discord.js";
 
-import type { DbQueue } from "../../db/schema.ts";
+import { BLACKLISTED_TABLE, type DbQueue } from "../../db/schema.ts";
 import { BlacklistedsOption } from "../../options/options/blacklisteds.option.ts";
 import { MentionableOption } from "../../options/options/mentionable.option.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
@@ -10,7 +10,7 @@ import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { BlacklistUtils } from "../../utils/blacklist.utils.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
-import { describeMentionableTable, mentionableMention, mentionablesMention, queuesMention } from "../../utils/string.utils.ts";
+import { describeTable, mentionableMention, mentionablesMention, queuesMention } from "../../utils/string.utils.ts";
 
 export class BlacklistCommand extends AdminCommand {
 	static readonly ID = "blacklist";
@@ -57,14 +57,16 @@ export class BlacklistCommand extends AdminCommand {
 
 		const blacklisted = inter.store.dbBlacklisted().filter(blacklisted => queues.has(blacklisted.queueId));
 
-		const embeds = describeMentionableTable({
+		const descriptionMessage = describeTable({
 			store: inter.store,
-			tableName: "Blacklisted members and roles",
-			color: Color.Black,
+			table: BLACKLISTED_TABLE,
+			tableLabel: "Blacklisted members and roles",
+			entryLabelProperty: "subjectId",
 			entries: [...blacklisted.values()],
+			color: Color.Black,
 		});
 
-		await inter.respond({ embeds });
+		await inter.respond(descriptionMessage);
 	}
 
 	// ====================================================================
@@ -98,7 +100,7 @@ export class BlacklistCommand extends AdminCommand {
 		} = await BlacklistUtils.insertBlacklisted(inter.store, queues, mentionables, reason);
 		const updatedQueues = updatedQueueIds.map(id => inter.store.dbQueues().get(id));
 
-		await inter.respond(`Blacklisted ${mentionablesMention(insertedBlacklisted)} from the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`, true);
+		await inter.respond(`Blacklisted ${mentionablesMention(insertedBlacklisted)} from the '${queuesMention(updatedQueues)}' queue${updatedQueues.length > 1 ? "s" : ""}.`, true);
 		await this.blacklist_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 

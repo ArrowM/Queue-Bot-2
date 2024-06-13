@@ -9,7 +9,7 @@ import {
 	VoiceChannel,
 	VoiceState,
 } from "discord.js";
-import { compact } from "lodash-es";
+import { compact, shuffle } from "lodash-es";
 
 import { QueryUtils } from "../db/queries.ts";
 import { Store } from "../db/store.ts";
@@ -72,7 +72,7 @@ export namespace ClientHandler {
 		const store = new Store(guild);
 
 		const queuesJoined = store.dbVoices()
-			.filter(voice => voice.sourceChannelId === newState.channelId)
+			.filter(voice => voice.joinSyncToggle && voice.sourceChannelId === newState.channelId)
 			.map(voice => store.dbQueues().get(voice.queueId));
 		for (const queue of queuesJoined.values()) {
 			try {
@@ -89,31 +89,41 @@ export namespace ClientHandler {
 		}
 
 		const queuesLeft = store.dbVoices()
-			.filter(voice => voice.sourceChannelId === oldState.channelId)
+			.filter(voice => voice.leaveSyncToggle && voice.sourceChannelId === oldState.channelId)
 			.map(voice => store.dbQueues().get(voice.queueId));
 		for (const queue of queuesLeft.values()) {
-			// Leave
-			MemberUtils.deleteMembers({
-				store,
-				queues: [queue],
-				reason: ArchivedMemberReason.Left,
-				by: { userId: newState.member!.id },
-			});
+			try {
+				// Leave
+				await MemberUtils.deleteMembers({
+					store,
+					queues: [queue],
+					reason: ArchivedMemberReason.Left,
+					by: { userId: newState.member!.id },
+				});
+			}
+			catch {
+				// ignore
+			}
 		}
 
-		const destinationVoices = store.dbVoices().filter(voice => voice.destinationChannelId === oldState.channelId);
-		for (const voice of destinationVoices.values()) {
-			const queue = store.dbQueues().get(voice.queueId);
+		const queuesTargetingDestination = store.dbQueues().filter(queue => queue.voiceDestinationChannelId === oldState.channelId);
+		// Shuffle queues in case multiple target the same destination
+		for (const queue of shuffle([...queuesTargetingDestination.values()])) {
 			if (queue.autopullToggle) {
-				const destinationChannel = guild.channels.cache.get(voice.destinationChannelId) as VoiceChannel | StageChannel;
-				if (!destinationChannel.userLimit || destinationChannel.members.size < destinationChannel.userLimit) {
-					// Auto pull
-					MemberUtils.deleteMembers({
-						store,
-						queues: [queue],
-						reason: ArchivedMemberReason.Pulled,
-						by: { count: destinationChannel.userLimit - destinationChannel.members.size },
-					});
+				const destinationChannel = guild.channels.cache.get(queue.voiceDestinationChannelId) as VoiceChannel | StageChannel;
+				if (destinationChannel && !destinationChannel.userLimit || destinationChannel.members.size < destinationChannel.userLimit) {
+					try {
+						// Auto pull
+						await MemberUtils.deleteMembers({
+							store,
+							queues: [queue],
+							reason: ArchivedMemberReason.Pulled,
+							by: { count: destinationChannel.userLimit - destinationChannel.members.size },
+						});
+					}
+					catch {
+						// ignore
+					}
 				}
 			}
 		}

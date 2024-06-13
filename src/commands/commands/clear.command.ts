@@ -28,7 +28,10 @@ export class ClearCommand extends AdminCommand {
 		const queues = await ClearCommand.CLEAR_OPTIONS.queues.get(inter);
 
 		const confirmed = await inter.promptConfirmOrCancel(`Are you sure you want to clear the '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}?`);
-		if (!confirmed) return;
+		if (!confirmed) {
+			await inter.respond("Cancelled clear");
+			return;
+		}
 
 		queues.forEach(queue => MemberUtils.clearMembers(inter.store, queue));
 

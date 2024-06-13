@@ -61,6 +61,7 @@ export const QUEUE_TABLE = sqliteTable("queue", ({
 	autopullToggle: integer("autopull_toggle", { mode: "boolean" }).notNull().default(false),
 	buttonsToggle: integer("buttons_toggle", { mode: "boolean" }).notNull().default(true),
 	color: text("color").$type<ColorResolvable>().notNull().default(get(Color, process.env.DEFAULT_COLOR) as ColorResolvable),
+	displayUpdateType: text("display_update_type").$type<DisplayUpdateType>().notNull().default(DisplayUpdateType.Edit),
 	header: text("header"),
 	inlineToggle: integer("inline_toggle", { mode: "boolean" }).notNull().default(false),
 	lockToggle: integer("lock_toggle", { mode: "boolean" }).notNull().default(false),
@@ -73,7 +74,8 @@ export const QUEUE_TABLE = sqliteTable("queue", ({
 	roleOnPullId: text("role_on_pull_id").$type<Snowflake | null>(),
 	size: integer("size"),
 	timestampType: text("time_display_type").$type<TimestampType>().default(TimestampType.Off),
-	displayUpdateType: text("display_update_type").$type<DisplayUpdateType>().notNull().default(DisplayUpdateType.Edit),
+	voiceDestinationChannelId: text("destination_channel_id").$type<Snowflake | null>(),
+	voiceOnlyToggle: integer("voice_only_toggle", { mode: "boolean" }).notNull().default(false),
 }),
 (table) => ({
 	unq: unique().on(table.name, table.guildId),
@@ -104,7 +106,8 @@ export const VOICE_TABLE = sqliteTable("voice", ({
 	guildId: text("guild_id").$type<Snowflake>().notNull().references(() => GUILD_TABLE.guildId, { onDelete: "cascade" }),
 	queueId: integer("queue_id").$type<bigint>().notNull().references(() => QUEUE_TABLE.id, { onDelete: "cascade" }),
 	sourceChannelId: text("source_channel_id").$type<Snowflake>().notNull(),
-	destinationChannelId: text("destination_channel_id").$type<Snowflake>().notNull(),
+	joinSyncToggle: integer("join_sync_toggle", { mode: "boolean" }).notNull().default(true),
+	leaveSyncToggle: integer("leave_sync_toggle", { mode: "boolean" }).notNull().default(true),
 }),
 (table) => ({
 	unq: unique().on(table.queueId, table.sourceChannelId),

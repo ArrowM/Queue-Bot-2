@@ -38,3 +38,13 @@ export function filterDbObjectsOnJsMember<T extends {
 		}
 	});
 }
+
+// Convert a value to a BigInt, or return null if it fails
+export function BigIntSafe(value: any) {
+	try {
+		return BigInt(value);
+	}
+	catch {
+		return null;
+	}
+}

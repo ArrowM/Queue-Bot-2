@@ -81,8 +81,7 @@ export class MembersCommand extends AdminCommand {
 	};
 
 	static async members_add(inter: SlashInteraction) {
-		const queues = await MembersCommand.ADD_OPTIONS.queues.get(inter)
-			?? inter.store.dbQueues();
+		const queues = await MembersCommand.ADD_OPTIONS.queues.get(inter);
 		const mentionables = [
 			MembersCommand.ADD_OPTIONS.mentionable1.get(inter),
 			MembersCommand.ADD_OPTIONS.mentionable2.get(inter),

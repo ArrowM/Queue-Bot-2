@@ -95,7 +95,7 @@ export namespace ScheduleUtils {
 
 	export function validateTimezone(timezone: string) {
 		if (!TIMEZONES.includes(timezone)) {
-			throw new Error("Invalid timezone.");
+			throw new Error("Invalid timezone");
 		}
 	}
 

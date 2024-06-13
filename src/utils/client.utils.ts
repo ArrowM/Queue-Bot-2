@@ -63,7 +63,7 @@ export namespace ClientUtils {
 			"DEFAULT_COLOR",
 		].forEach(name => {
 			if (process.env[name] == null) {
-				throw new Error(`Required environment variable ${name} not set. Please edit .env file.`);
+				throw new Error(`Required environment variable ${name} not set. Please edit .env file`);
 			}
 		});
 		// color check
@@ -87,15 +87,26 @@ export namespace ClientUtils {
 			const { embeds } = await import(`../../patch-notes/${fileName}`);
 
 			// wait for console confirmation
-			console.log(`Patch notes for ${fileName} have not been read.`);
-			console.log("Type 'confirm' to send the patch notes:");
-			const userInput = (await new Promise(resolve => process.stdin.once("data", resolve))).toString().trim();
-			if (userInput.toLowerCase() === "confirm") {
+			let userInput = null;
+			while (!["1", "2", "3"].includes(userInput)) {
+				console.log("");
+				console.log(`Patch notes for '${fileName}' have not been sent. Enter a number to continue:`);
+				console.log("[1] send patch notes to patch notes channel");
+				console.log("[2] mark patch note as skipped (will be skipped in future runs)");
+				console.log("[3] ignore");
+				userInput = (await new Promise(resolve => process.stdin.once("data", resolve))).toString().trim();
+			}
+			if (userInput === "1") {
 				await patchNoteChannel.send({ embeds });
 				QueryUtils.insertPatchNotes({ fileName });
+				console.log(`Sent ${fileName}. Continuing...`);
+			}
+			else if (userInput === "2") {
+				QueryUtils.insertPatchNotes({ fileName });
+				console.log(`Marked '${fileName}' as skipped. Continuing...`);
 			}
 			else {
-				console.log("Patch notes not sent. Continuing...");
+				console.log("Continuing...");
 			}
 		}
 	}

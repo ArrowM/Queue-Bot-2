@@ -38,7 +38,7 @@ export class MoveCommand extends AdminCommand {
 		// Validate position
 		const members = inter.store.dbMembers().filter(member => member.queueId === queue.id);
 		if (position < 1 || position > members.size) {
-			throw new Error("Invalid position.");
+			throw new Error("Invalid position");
 		}
 
 		MemberUtils.moveMember(inter.store, queue, member, position - 1);

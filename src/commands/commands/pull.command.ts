@@ -36,7 +36,7 @@ export class PullCommand extends AdminCommand {
 		const members = await PullCommand.PULL_OPTIONS.members.get(inter);
 
 		if (count && count < 1) {
-			throw new Error("Count must be a positive number.");
+			throw new Error("Count must be a positive number");
 		}
 
 		const pulledMembers = await MemberUtils.deleteMembers({

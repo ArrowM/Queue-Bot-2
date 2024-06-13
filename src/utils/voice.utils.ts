@@ -1,22 +1,20 @@
-import type { Snowflake } from "discord.js";
 import { uniq } from "lodash-es";
 
 import { db } from "../db/db.ts";
-import type { DbQueue, DbVoice } from "../db/schema.ts";
+import type { DbQueue, DbVoice, NewVoice } from "../db/schema.ts";
 import type { Store } from "../db/store.ts";
 import type { ArrayOrCollection } from "../types/misc.types.ts";
 import { DisplayUtils } from "./display.utils.ts";
 import { map } from "./misc.utils.ts";
 
 export namespace VoiceUtils {
-	export function insertVoices(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, sourceChannelId: Snowflake, destinationChannelId: Snowflake) {
+	export function insertVoices(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, voice: Omit<NewVoice, "guildId" | "queueId">) {
 		return db.transaction(() => {
 			// insert into db
 			const insertedVoices = map(queues, queue => store.insertVoice({
 				guildId: store.guild.id,
 				queueId: queue.id,
-				sourceChannelId,
-				destinationChannelId,
+				...voice,
 			}));
 			const updatedQueueIds = uniq(insertedVoices.map(voice => voice.queueId));
 

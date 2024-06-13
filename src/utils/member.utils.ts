@@ -1,4 +1,13 @@
-import { Collection, EmbedBuilder, GuildMember, type GuildTextBasedChannel, Role, roleMention, type Snowflake } from "discord.js";
+import {
+	channelMention,
+	Collection,
+	EmbedBuilder,
+	GuildMember,
+	type GuildTextBasedChannel,
+	Role,
+	roleMention,
+	type Snowflake,
+} from "discord.js";
 import { isNil, shuffle } from "lodash-es";
 
 import { db } from "../db/db.ts";
@@ -67,7 +76,7 @@ export namespace MemberUtils {
 				const msCooldownRemaining = BigInt(queue.rejoinCooldownPeriod * 1000) - msSincePulled;
 				if (msCooldownRemaining > 0) {
 					throw new CustomError({
-						message: "You are currently in a cooldown period and cannot rejoin the queue.",
+						message: "You are currently in a cooldown period and cannot rejoin the queue",
 						embeds: [
 							new EmbedBuilder()
 								.setDescription(`You can rejoin the queue in ${timeMention(Number(msCooldownRemaining / 1000n))}.`),
@@ -137,12 +146,11 @@ export namespace MemberUtils {
 
 			// Pull members to the destination channel if they are in a voice channel
 			if (reason === ArchivedMemberReason.Pulled) {
-				const destinationChannelId = store.dbVoices().find(voice => voice.queueId === queue.id)?.destinationChannelId;
-				if (destinationChannelId) {
+				if (queue.voiceDestinationChannelId) {
 					for (const userId of userIds) {
 						const jsMember = await store.jsMember(userId);
-						if (jsMember.voice && jsMember.voice.channelId !== destinationChannelId) {
-							jsMember.voice?.setChannel(destinationChannelId).catch(() => null);
+						if (jsMember.voice && jsMember.voice.channelId !== queue.voiceDestinationChannelId) {
+							jsMember.voice?.setChannel(queue.voiceDestinationChannelId).catch(() => null);
 						}
 					}
 				}
@@ -185,7 +193,7 @@ export namespace MemberUtils {
 				for (const queue of queues) {
 					const numToPull = Number(count ?? queue.pullBatchSize);
 					const members = [...store.dbMembers().filter(member => member.queueId === queue.id).values()];
-					if (!force && members.length && (members.length < numToPull)) throw new Error("Not enough members to pull.");
+					if (!force && members.length && (members.length < numToPull)) throw new Error("Not enough members to pull");
 					const userIdsToPull = members.slice(0, numToPull).map(member => member.userId);
 					await deleteMembersAndNotify(queue, userIdsToPull, reason);
 				}
@@ -311,7 +319,7 @@ export namespace MemberUtils {
 		}
 	}
 
-	export async function updateInQueueRole(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, roleId: Snowflake, modification: "add" | "remove") {
+	export async function assignInQueueRoleToMembers(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, roleId: Snowflake, modification: "add" | "remove") {
 		await Promise.all(
 			map(queues, async (queue) => {
 				const members = store.dbMembers().filter(member => member.queueId === queue.id);
@@ -343,6 +351,27 @@ export namespace MemberUtils {
 		}
 		if (BlacklistUtils.isBlockedByBlacklist(store, queue.id, jsMember)) {
 			throw new OnQueueBlacklistError();
+		}
+
+		if (queue.voiceOnlyToggle) {
+			const voices = store.dbVoices().filter(voice => voice.queueId === queue.id);
+			if (!jsMember.voice || !voices.some(voice => voice.sourceChannelId === jsMember.voice.channelId)) {
+				let message: string;
+				if (voices.size === 0) {
+					message = "This queue is voice-only, but no voice channels are linked to it. Please contact a server administrator.";
+				}
+				else if (voices.size === 1) {
+					message = `You must be in the ${channelMention(voices.first().sourceChannelId)} voice channel to join the queue.`;
+				}
+				else {
+					message = "You must be in one of the following voice channels to join the queue:\n" +
+						map(voices, voice => `- ${channelMention(voice.sourceChannelId)}`).join("\n");
+				}
+				throw new CustomError({
+					message: "Not in voice channel",
+					embeds: [new EmbedBuilder().setDescription(message)],
+				});
+			}
 		}
 	}
 

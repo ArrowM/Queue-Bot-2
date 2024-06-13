@@ -30,11 +30,11 @@ export namespace InteractionUtils {
 				result = interaction.channel.send(response),
 			]);
 		}
-		else if (interaction.deferred) {
-			result = await interaction.editReply(response);
-		}
 		else if (interaction.replied) {
 			result = await interaction.followUp(response);
+		}
+		else if (interaction.deferred) {
+			result = await interaction.editReply(response);
 		}
 		else {
 			result = await (await interaction.reply(response)).fetch();
@@ -83,12 +83,12 @@ export namespace InteractionUtils {
 			]);
 		}
 
-		return confirmation.customId === "confirm";
+		return confirmation?.customId === "confirm";
 	}
 
 	export function verifyCommandIsFromGuild(inter: Interaction) {
 		if (!inter.guild) {
-			throw new Error("This command can only be used in servers.");
+			throw new Error("This command can only be used in servers");
 		}
 	}
 

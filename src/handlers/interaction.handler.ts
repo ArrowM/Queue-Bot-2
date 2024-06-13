@@ -2,6 +2,7 @@ import { codeBlock, EmbedBuilder, type Interaction } from "discord.js";
 import { compact, concat } from "lodash-es";
 
 import { Store } from "../db/store.ts";
+import { Color } from "../types/db.types.ts";
 import type { Handler } from "../types/handler.types.ts";
 import type { AnyInteraction } from "../types/interaction.types.ts";
 import { CustomError } from "../utils/error.utils.ts";
@@ -45,6 +46,7 @@ export class InteractionHandler implements Handler {
 		try {
 			const embed = new EmbedBuilder()
 				.setTitle(ERROR_HEADER_LINE)
+				.setColor(Color.DarkRed)
 				.setDescription(message ? `${codeBlock(message)}` : "");
 			if (log) {
 				embed.setFooter({ text: "This error has been logged and will be investigated by the developers." });

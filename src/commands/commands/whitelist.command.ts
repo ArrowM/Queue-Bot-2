@@ -1,6 +1,6 @@
 import { type Collection, SlashCommandBuilder } from "discord.js";
 
-import type { DbQueue } from "../../db/schema.ts";
+import { type DbQueue, WHITELISTED_TABLE } from "../../db/schema.ts";
 import { MentionableOption } from "../../options/options/mentionable.option.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
 import { ReasonOption } from "../../options/options/reason.option.ts";
@@ -9,7 +9,7 @@ import { AdminCommand } from "../../types/command.types.ts";
 import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
-import { describeMentionableTable, mentionableMention, mentionablesMention, queuesMention } from "../../utils/string.utils.ts";
+import { describeTable, mentionableMention, mentionablesMention, queuesMention } from "../../utils/string.utils.ts";
 import { WhitelistUtils } from "../../utils/whitelist.utils.ts";
 
 export class WhitelistCommand extends AdminCommand {
@@ -57,14 +57,16 @@ export class WhitelistCommand extends AdminCommand {
 
 		const whitelisted = inter.store.dbWhitelisted().filter(whitelisted => queues.has(whitelisted.queueId));
 
-		const embeds = describeMentionableTable({
+		const descriptionMessage = describeTable({
 			store: inter.store,
-			tableName: "Whitelisted members and roles",
-			color: Color.White,
+			table: WHITELISTED_TABLE,
+			tableLabel: "Whitelisted members and roles",
+			entryLabelProperty: "subjectId",
 			entries: [...whitelisted.values()],
+			color: Color.White,
 		});
 
-		await inter.respond({ embeds });
+		await inter.respond(descriptionMessage);
 	}
 
 	// ====================================================================
@@ -98,7 +100,7 @@ export class WhitelistCommand extends AdminCommand {
 		} = WhitelistUtils.insertWhitelisted(inter.store, queues, mentionables, reason);
 		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
-		await inter.respond(`Whitelisted ${mentionablesMention(insertedWhitelisted)} in the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`, true);
+		await inter.respond(`Whitelisted ${mentionablesMention(insertedWhitelisted)} in the '${queuesMention(updatedQueues)}' queue${updatedQueues.length > 1 ? "s" : ""}.`, true);
 		await this.whitelist_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 

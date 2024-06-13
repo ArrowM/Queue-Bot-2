@@ -1,6 +1,6 @@
 import { type Collection, SlashCommandBuilder } from "discord.js";
 
-import type { DbQueue } from "../../db/schema.ts";
+import { type DbQueue, PRIORITIZED_TABLE } from "../../db/schema.ts";
 import { MentionableOption } from "../../options/options/mentionable.option.ts";
 import { PrioritizedsOption } from "../../options/options/prioritizeds.option.ts";
 import { PriorityOrderOption } from "../../options/options/priority-order.option.ts";
@@ -11,7 +11,7 @@ import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
 import { PriorityUtils } from "../../utils/priority.utils.ts";
-import { describeMentionableTable, mentionableMention, mentionablesMention, queuesMention } from "../../utils/string.utils.ts";
+import { describeTable, mentionableMention, mentionablesMention, queuesMention } from "../../utils/string.utils.ts";
 
 export class PrioritizeCommand extends AdminCommand {
 	static readonly ID = "prioritize";
@@ -40,6 +40,13 @@ export class PrioritizeCommand extends AdminCommand {
 		})
 		.addSubcommand(subcommand => {
 			subcommand
+				.setName("update")
+				.setDescription("Update prioritized users and roles");
+			Object.values(PrioritizeCommand.UPDATE_OPTIONS).forEach(option => option.addToCommand(subcommand));
+			return subcommand;
+		})
+		.addSubcommand(subcommand => {
+			subcommand
 				.setName("delete")
 				.setDescription("Un-prioritize users and roles");
 			Object.values(PrioritizeCommand.DELETE_OPTIONS).forEach(option => option.addToCommand(subcommand));
@@ -59,14 +66,16 @@ export class PrioritizeCommand extends AdminCommand {
 
 		const prioritized = inter.store.dbPrioritized().filter(prioritized => queues.has(prioritized.queueId));
 
-		const embeds = describeMentionableTable({
+		const descriptionMessage = describeTable({
 			store: inter.store,
-			tableName: "Prioritized members and roles",
-			color: Color.Gold,
+			table: PRIORITIZED_TABLE,
+			tableLabel: "Prioritized members and roles",
+			entryLabelProperty: "subjectId",
 			entries: [...prioritized.values()],
+			color: Color.Gold,
 		});
 
-		await inter.respond({ embeds });
+		await inter.respond(descriptionMessage);
 	}
 
 	// ====================================================================
@@ -102,7 +111,7 @@ export class PrioritizeCommand extends AdminCommand {
 		} = PriorityUtils.insertPrioritized(inter.store, queues, mentionables, priorityOrder, reason);
 		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
-		await inter.respond(`Prioritized ${mentionablesMention(insertedPrioritized)} in the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`, true);
+		await inter.respond(`Prioritized ${mentionablesMention(insertedPrioritized)} in the '${queuesMention(updatedQueues)}' queue${updatedQueues.length > 1 ? "s" : ""}.`, true);
 		await this.prioritize_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 

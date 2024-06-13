@@ -28,7 +28,10 @@ export class ShuffleCommand extends AdminCommand {
 		const queues = await ShuffleCommand.SHUFFLE_OPTIONS.queues.get(inter);
 
 		const confirmed = await inter.promptConfirmOrCancel(`Are you sure you want to shuffle the '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}?`);
-		if (!confirmed) return;
+		if (!confirmed) {
+			await inter.respond("Cancelled shuffle");
+			return;
+		}
 
 		queues.forEach((queue) => MemberUtils.shuffleMembers(inter.store, queue));
 

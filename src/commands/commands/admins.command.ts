@@ -1,13 +1,14 @@
 import { SlashCommandBuilder } from "discord.js";
 
 import { QueryUtils } from "../../db/queries.ts";
+import { ADMIN_TABLE } from "../../db/schema.ts";
 import { AdminsOption } from "../../options/options/admins.option.ts";
 import { MentionableOption } from "../../options/options/mentionable.option.ts";
 import { EveryoneCommand } from "../../types/command.types.ts";
 import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { AdminUtils } from "../../utils/admin.utils.ts";
-import { describeMentionableTable, mentionablesMention } from "../../utils/string.utils.ts";
+import { describeTable, mentionablesMention } from "../../utils/string.utils.ts";
 
 export class AdminsCommand extends EveryoneCommand {
 	static readonly ID = "admins";
@@ -47,14 +48,16 @@ export class AdminsCommand extends EveryoneCommand {
 	static async admins_get(inter: SlashInteraction) {
 		const admins = QueryUtils.selectManyAdmins({ guildId: inter.guildId });
 
-		const embeds = describeMentionableTable({
+		const descriptionMessage = describeTable({
 			store: inter.store,
-			tableName: "Admins",
-			color: Color.DarkRed,
+			table: ADMIN_TABLE,
+			tableLabel: "Admins",
+			entryLabelProperty: "subjectId",
 			entries: admins,
+			color: Color.DarkRed,
 		});
 
-		await inter.respond({ embeds });
+		await inter.respond(descriptionMessage);
 	}
 
 	// ====================================================================

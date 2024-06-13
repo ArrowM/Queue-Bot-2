@@ -41,6 +41,8 @@ CREATE TABLE `display` (
 --> statement-breakpoint
 CREATE TABLE `guild` (
 	`guild_id` text PRIMARY KEY NOT NULL,
+	`log_channel_id` text,
+	`log_scope` text,
 	`joinTime` integer NOT NULL,
 	`last_updated_time` integer NOT NULL,
 	`commands_received` integer DEFAULT 0 NOT NULL,
@@ -94,11 +96,10 @@ CREATE TABLE `queue` (
 	`autopull_toggle` integer DEFAULT false NOT NULL,
 	`buttons_toggle` integer DEFAULT true NOT NULL,
 	`color` text DEFAULT 'Random' NOT NULL,
+	`display_update_type` text DEFAULT 'edit' NOT NULL,
 	`header` text,
 	`inline_toggle` integer DEFAULT false NOT NULL,
 	`lock_toggle` integer DEFAULT false NOT NULL,
-	`log_channel_id` text,
-	`log_level` text DEFAULT 'default' NOT NULL,
 	`member_display_type` text DEFAULT 'mention' NOT NULL,
 	`notifications_toggle` integer DEFAULT true NOT NULL,
 	`pull_batch_size` integer DEFAULT 1 NOT NULL,
@@ -108,7 +109,8 @@ CREATE TABLE `queue` (
 	`role_on_pull_id` text,
 	`size` integer,
 	`time_display_type` text DEFAULT 'off',
-	`display_update_type` text DEFAULT 'edit' NOT NULL,
+	`destination_channel_id` text,
+	`voice_only_toggle` integer DEFAULT false NOT NULL,
 	FOREIGN KEY (`guild_id`) REFERENCES `guild`(`guild_id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
@@ -129,7 +131,8 @@ CREATE TABLE `voice` (
 	`guild_id` text NOT NULL,
 	`queue_id` integer NOT NULL,
 	`source_channel_id` text NOT NULL,
-	`destination_channel_id` text NOT NULL,
+	`join_sync_toggle` integer DEFAULT true NOT NULL,
+	`leave_sync_toggle` integer DEFAULT true NOT NULL,
 	FOREIGN KEY (`guild_id`) REFERENCES `guild`(`guild_id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`queue_id`) REFERENCES `queue`(`id`) ON UPDATE no action ON DELETE cascade
 );

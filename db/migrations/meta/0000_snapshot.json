@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "60f24e90-9866-4600-8e5d-4a975599cf76",
+  "id": "de0bece5-3761-45b7-86be-81f1e1478869",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "admin": {
@@ -341,6 +341,20 @@
           "type": "text",
           "primaryKey": true,
           "notNull": true,
+          "autoincrement": false
+        },
+        "log_channel_id": {
+          "name": "log_channel_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "log_scope": {
+          "name": "log_scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "joinTime": {
@@ -754,6 +768,14 @@
           "autoincrement": false,
           "default": "'Random'"
         },
+        "display_update_type": {
+          "name": "display_update_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'edit'"
+        },
         "header": {
           "name": "header",
           "type": "text",
@@ -776,21 +798,6 @@
           "notNull": true,
           "autoincrement": false,
           "default": false
-        },
-        "log_channel_id": {
-          "name": "log_channel_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "log_level": {
-          "name": "log_level",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'default'"
         },
         "member_display_type": {
           "name": "member_display_type",
@@ -861,13 +868,20 @@
           "autoincrement": false,
           "default": "'off'"
         },
-        "display_update_type": {
-          "name": "display_update_type",
+        "destination_channel_id": {
+          "name": "destination_channel_id",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "voice_only_toggle": {
+          "name": "voice_only_toggle",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'edit'"
+          "default": false
         }
       },
       "indexes": {
@@ -1039,12 +1053,21 @@
           "notNull": true,
           "autoincrement": false
         },
-        "destination_channel_id": {
-          "name": "destination_channel_id",
-          "type": "text",
+        "join_sync_toggle": {
+          "name": "join_sync_toggle",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": true
+        },
+        "leave_sync_toggle": {
+          "name": "leave_sync_toggle",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
         }
       },
       "indexes": {

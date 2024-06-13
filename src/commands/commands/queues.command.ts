@@ -1,4 +1,4 @@
-import { bold, type Collection, EmbedBuilder, inlineCode, italic, SlashCommandBuilder } from "discord.js";
+import { bold, channelMention, type Collection, inlineCode, roleMention, SlashCommandBuilder } from "discord.js";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import { findKey, isNil, omitBy } from "lodash-es";
 
@@ -23,14 +23,17 @@ import { RoleInQueueOption } from "../../options/options/role-in-queue.option.ts
 import { RoleOnPullOption } from "../../options/options/role-on-pull.option.ts";
 import { SizeOption } from "../../options/options/size.option.ts";
 import { TimestampTypeOption } from "../../options/options/timestamp-type.option.ts";
+import { VoiceDestinationChannelOption } from "../../options/options/voice-destination-channel.option.ts";
+import { VoiceOnlyToggleOption } from "../../options/options/voice-only-toggle.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
+import { ArchivedMemberReason } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { DisplayUtils } from "../../utils/display.utils.ts";
 import { MemberUtils } from "../../utils/member.utils.ts";
 import { SelectMenuTransactor } from "../../utils/message-utils/select-menu-transactor.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
 import { QueueUtils } from "../../utils/queue.utils.ts";
-import { commandMention, queueMention, queuesMention } from "../../utils/string.utils.ts";
+import { describeTable, queueMention, queuesMention, timeMention } from "../../utils/string.utils.ts";
 
 export class QueuesCommand extends AdminCommand {
 	static readonly ID = "queues";
@@ -47,7 +50,7 @@ export class QueuesCommand extends AdminCommand {
 		.addSubcommand((subcommand) => {
 			subcommand
 				.setName("get")
-				.setDescription("Get queues settings");
+				.setDescription("Get queues properties");
 			Object.values(QueuesCommand.GET_OPTIONS).forEach(option => option.addToCommand(subcommand));
 			return subcommand;
 		})
@@ -89,28 +92,26 @@ export class QueuesCommand extends AdminCommand {
 	};
 
 	static async queues_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
-		queues = queues
-			?? await QueuesCommand.GET_OPTIONS.queues.get(inter)
-			?? inter.store.dbQueues();
+		queues = queues ?? await QueuesCommand.GET_OPTIONS.queues.get(inter);
 
-		let embeds: EmbedBuilder[];
+		const descriptionMessage = describeTable({
+			store: inter.store,
+			table: QUEUE_TABLE,
+			tableLabel: "Queues",
+			entryLabel: "properties:",
+			hiddenProperties: ["name"],
+			queueIdProperty: "id",
+			propertyFormatters: {
+				roleInQueueId: roleMention,
+				roleOnPullId: roleMention,
+				rejoinCooldownPeriod: timeMention,
+				rejoinGracePeriod: timeMention,
+				voiceDestinationChannelId: channelMention,
+			},
+			entries: [...queues.values()],
+		});
 
-		if (queues.size > 0) {
-			embeds = queues.map(queue =>
-				new EmbedBuilder()
-					.setColor(queue.color)
-					.addFields({
-						name: queueMention(queue),
-						value: QueueUtils.describeQueue(inter.store, queue),
-					}),
-			);
-			embeds.push(new EmbedBuilder().setDescription(italic(`Queue settings can be updated with ${commandMention("queues", "set")}`)));
-		}
-		else {
-			embeds = [new EmbedBuilder().setDescription(italic("no queues"))];
-		}
-
-		await inter.respond({ embeds });
+		await inter.respond(descriptionMessage);
 	}
 
 	// ====================================================================
@@ -122,19 +123,21 @@ export class QueuesCommand extends AdminCommand {
 		autopullToggle: new AutopullToggleOption({ description: "Toggle automatic pulling of queue members" }),
 		buttonsToggle: new ButtonsToggleOption({ description: "Toggle buttons beneath queue displays" }),
 		color: new ColorOption({ description: "Color of the queue" }),
-		rejoinCooldownPeriod: new RejoinCooldownPeriodOption({ description: "# of seconds a member must wait before re-queueing after being pulled" }),
-		rejoinGracePeriod: new RejoinGracePeriodOption({ description: "# of seconds a member has to reclaim their queue spot after leaving" }),
+		displayUpdateType: new DisplayUpdateTypeOption({ description: "How to update displays" }),
 		header: new HeaderOption({ description: "Header of the queue display" }),
 		inlineToggle: new InlineToggleOption({ description: "Toggle inline display of queue members" }),
 		lockToggle: new LockToggleOption({ description: "Toggle queue locked status (prevents joining)" }),
 		memberDisplayType: new MemberDisplayTypeOption({ description: "How to display members" }),
 		notificationsToggle: new NotificationsToggleOption({ description: "Toggle whether users are DM-ed on pull" }),
 		pullBatchSize: new PullBatchSizeOption({ description: "How many queue members to include in a pull" }),
+		rejoinCooldownPeriod: new RejoinCooldownPeriodOption({ description: "# of seconds a member must wait before re-queueing after being pulled" }),
+		rejoinGracePeriod: new RejoinGracePeriodOption({ description: "# of seconds a member has to reclaim their queue spot after leaving" }),
 		roleInQueue: new RoleInQueueOption({ description: "Role to assign members of the queue" }),
 		roleOnPull: new RoleOnPullOption({ description: "Role to assign members when they are pulled" }),
 		size: new SizeOption({ description: "Limit the size of the queue" }),
 		timestampType: new TimestampTypeOption({ description: "How to display timestamps" }),
-		displayUpdateType: new DisplayUpdateTypeOption({ description: "How to update displays" }),
+		voiceOnlyToggle: new VoiceOnlyToggleOption({ description: "Toggle whether queue is restricted to members in source voice channel" }),
+		voiceDestinationChannel: new VoiceDestinationChannelOption({ description: "Voice channel to move members to when they are pulled" }),
 	};
 
 	static async queues_add(inter: SlashInteraction) {
@@ -145,19 +148,20 @@ export class QueuesCommand extends AdminCommand {
 				autopullToggle: QueuesCommand.ADD_OPTIONS.autopullToggle.get(inter),
 				buttonsToggle: QueuesCommand.ADD_OPTIONS.buttonsToggle.get(inter),
 				color: QueuesCommand.ADD_OPTIONS.color.get(inter),
-				rejoinCooldownPeriod: QueuesCommand.ADD_OPTIONS.rejoinCooldownPeriod.get(inter),
-				rejoinGracePeriod: QueuesCommand.ADD_OPTIONS.rejoinGracePeriod.get(inter),
+				displayUpdateType: QueuesCommand.ADD_OPTIONS.displayUpdateType.get(inter),
 				header: QueuesCommand.ADD_OPTIONS.header.get(inter),
 				inlineToggle: QueuesCommand.ADD_OPTIONS.inlineToggle.get(inter),
 				lockToggle: QueuesCommand.ADD_OPTIONS.lockToggle.get(inter),
 				memberDisplayType: QueuesCommand.ADD_OPTIONS.memberDisplayType.get(inter),
 				notificationsToggle: QueuesCommand.ADD_OPTIONS.notificationsToggle.get(inter),
 				pullBatchSize: QueuesCommand.ADD_OPTIONS.pullBatchSize.get(inter),
+				rejoinCooldownPeriod: QueuesCommand.ADD_OPTIONS.rejoinCooldownPeriod.get(inter),
+				rejoinGracePeriod: QueuesCommand.ADD_OPTIONS.rejoinGracePeriod.get(inter),
 				roleInQueueId: QueuesCommand.ADD_OPTIONS.roleInQueue.get(inter)?.id,
 				roleOnPullId: QueuesCommand.ADD_OPTIONS.roleOnPull.get(inter)?.id,
 				size: QueuesCommand.ADD_OPTIONS.size.get(inter),
 				timestampType: QueuesCommand.ADD_OPTIONS.timestampType.get(inter),
-				displayUpdateType: QueuesCommand.ADD_OPTIONS.displayUpdateType.get(inter),
+				voiceOnlyToggle: QueuesCommand.ADD_OPTIONS.voiceOnlyToggle.get(inter),
 			}, isNil),
 		};
 
@@ -177,8 +181,7 @@ export class QueuesCommand extends AdminCommand {
 		autopullToggle: new AutopullToggleOption({ description: "Toggle automatic pulling of queue members" }),
 		buttonsToggle: new ButtonsToggleOption({ description: "Toggle buttons beneath queue displays" }),
 		color: new ColorOption({ description: "Color of the queue" }),
-		rejoinCooldownPeriod: new RejoinCooldownPeriodOption({ description: "# of seconds a  member must wait before re-queueing after being pulled" }),
-		rejoinGracePeriod: new RejoinGracePeriodOption({ description: "# of seconds a  member has to reclaim their queue spot after leaving" }),
+		displayUpdateType: new DisplayUpdateTypeOption({ description: "How to update displays" }),
 		header: new HeaderOption({ description: "Header of the queue display" }),
 		inlineToggle: new InlineToggleOption({ description: "Toggle inline display of queue members" }),
 		lockToggle: new LockToggleOption({ description: "Toggle queue locked status (prevents joining)" }),
@@ -186,11 +189,14 @@ export class QueuesCommand extends AdminCommand {
 		name: new NameOption({ description: "Name of the queue" }),
 		notificationsToggle: new NotificationsToggleOption({ description: "Toggle whether users are DM-ed on pull" }),
 		pullBatchSize: new PullBatchSizeOption({ description: "How many queue members to include in a pull" }),
+		rejoinCooldownPeriod: new RejoinCooldownPeriodOption({ description: "# of seconds a  member must wait before re-queueing after being pulled" }),
+		rejoinGracePeriod: new RejoinGracePeriodOption({ description: "# of seconds a  member has to reclaim their queue spot after leaving" }),
 		roleInQueue: new RoleInQueueOption({ description: "Role to assign members of the queue" }),
 		roleOnPull: new RoleOnPullOption({ description: "Role to assign members when they are pulled" }),
 		size: new SizeOption({ description: "Limit the size of the queue" }),
 		timestampType: new TimestampTypeOption({ description: "How to display timestamps" }),
-		displayUpdateType: new DisplayUpdateTypeOption({ description: "How to update displays" }),
+		voiceOnlyToggle: new VoiceOnlyToggleOption({ description: "Toggle whether queue is restricted to members in source voice channel" }),
+		voiceDestinationChannel: new VoiceDestinationChannelOption({ description: "Voice channel to move members to when they are pulled" }),
 	};
 
 	static async queues_set(inter: SlashInteraction) {
@@ -199,8 +205,7 @@ export class QueuesCommand extends AdminCommand {
 			autopullToggle: QueuesCommand.SET_OPTIONS.autopullToggle.get(inter),
 			buttonsToggle: QueuesCommand.SET_OPTIONS.buttonsToggle.get(inter),
 			color: QueuesCommand.SET_OPTIONS.color.get(inter),
-			rejoinCooldownPeriod: QueuesCommand.SET_OPTIONS.rejoinCooldownPeriod.get(inter),
-			rejoinGracePeriod: QueuesCommand.SET_OPTIONS.rejoinGracePeriod.get(inter),
+			displayUpdateType: QueuesCommand.SET_OPTIONS.displayUpdateType.get(inter),
 			header: QueuesCommand.SET_OPTIONS.header.get(inter),
 			inlineToggle: QueuesCommand.SET_OPTIONS.inlineToggle.get(inter),
 			lockToggle: QueuesCommand.SET_OPTIONS.lockToggle.get(inter),
@@ -208,16 +213,40 @@ export class QueuesCommand extends AdminCommand {
 			name: QueuesCommand.SET_OPTIONS.name.get(inter),
 			notificationsToggle: QueuesCommand.SET_OPTIONS.notificationsToggle.get(inter),
 			pullBatchSize: QueuesCommand.SET_OPTIONS.pullBatchSize.get(inter),
+			rejoinCooldownPeriod: QueuesCommand.SET_OPTIONS.rejoinCooldownPeriod.get(inter),
+			rejoinGracePeriod: QueuesCommand.SET_OPTIONS.rejoinGracePeriod.get(inter),
 			roleInQueueId: QueuesCommand.SET_OPTIONS.roleInQueue.get(inter)?.id,
 			roleOnPullId: QueuesCommand.SET_OPTIONS.roleOnPull.get(inter)?.id,
 			size: QueuesCommand.SET_OPTIONS.size.get(inter),
 			timestampType: QueuesCommand.SET_OPTIONS.timestampType.get(inter),
-			displayUpdateType: QueuesCommand.SET_OPTIONS.displayUpdateType.get(inter),
-		}, isNil) as Partial<DbQueue>;
+			voiceOnlyToggle: QueuesCommand.SET_OPTIONS.voiceOnlyToggle.get(inter),
+		}, isNil);
+
+		if (update.voiceOnlyToggle) {
+			const nonVoiceOnlyQueues = queues.filter(queue => !queue.voiceOnlyToggle);
+			for (const queue of nonVoiceOnlyQueues.values()) {
+				const members = inter.store.dbMembers().filter(member => member.queueId === queue.id);
+				if (members.size) {
+					const confirmed = await inter.promptConfirmOrCancel(
+						`You are enabling ${inlineCode(VoiceOnlyToggleOption.ID)} for the '${queueMention(queue)}' queue. ` +
+						`There are ${members.size} member${members.size === 1 ? "" : "s"} in the '${queueMention(queue)}' queue that will be cleared if you proceed. ` +
+						"Do you wish to proceed?",
+					);
+					if (!confirmed) {
+						await inter.respond("Cancelled queue update. No changes have been made.");
+						return;
+					}
+				}
+			}
+			for (const queue of nonVoiceOnlyQueues.values()) {
+				await MemberUtils.deleteMembers({ store: inter.store, queues: [queue], reason: ArchivedMemberReason.Kicked });
+				await inter.respond(`Cleared ${queueMention(queue)} queue of members due to ${inlineCode(VoiceOnlyToggleOption.ID)} being enabled.`, true);
+			}
+		}
 
 		const { updatedQueues } = await QueueUtils.updateQueues(inter.store, queues, update);
 
-		await inter.respond(`Updated ${Object.keys(update).map(bold).join(", ")} of ${queuesMention(queues)} queue${queues.size > 1 ? "s" : ""}.`, true);
+		await inter.respond(`Updated ${Object.keys(update).map(bold).join(", ")} of '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`, true);
 
 		await QueuesCommand.queues_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
@@ -237,8 +266,7 @@ export class QueuesCommand extends AdminCommand {
 			{ name: AutopullToggleOption.ID, value: QUEUE_TABLE.autopullToggle.name },
 			{ name: ButtonsToggleOption.ID, value: QUEUE_TABLE.buttonsToggle.name },
 			{ name: ColorOption.ID, value: QUEUE_TABLE.color.name },
-			{ name: RejoinCooldownPeriodOption.ID, value: QUEUE_TABLE.rejoinCooldownPeriod.name },
-			{ name: RejoinGracePeriodOption.ID, value: QUEUE_TABLE.rejoinGracePeriod.name },
+			{ name: DisplayUpdateTypeOption.ID, value: QUEUE_TABLE.displayUpdateType.name },
 			{ name: HeaderOption.ID, value: QUEUE_TABLE.header.name },
 			{ name: InlineToggleOption.ID, value: QUEUE_TABLE.inlineToggle.name },
 			{ name: LockToggleOption.ID, value: QUEUE_TABLE.lockToggle.name },
@@ -246,41 +274,39 @@ export class QueuesCommand extends AdminCommand {
 			{ name: NameOption.ID, value: QUEUE_TABLE.name.name },
 			{ name: NotificationsToggleOption.ID, value: QUEUE_TABLE.notificationsToggle.name },
 			{ name: PullBatchSizeOption.ID, value: QUEUE_TABLE.pullBatchSize.name },
+			{ name: RejoinCooldownPeriodOption.ID, value: QUEUE_TABLE.rejoinCooldownPeriod.name },
+			{ name: RejoinGracePeriodOption.ID, value: QUEUE_TABLE.rejoinGracePeriod.name },
 			{ name: RoleInQueueOption.ID, value: QUEUE_TABLE.roleInQueueId.name },
 			{ name: RoleOnPullOption.ID, value: QUEUE_TABLE.roleOnPullId.name },
 			{ name: SizeOption.ID, value: QUEUE_TABLE.size.name },
 			{ name: TimestampTypeOption.ID, value: QUEUE_TABLE.timestampType.name },
-			{ name: DisplayUpdateTypeOption.ID, value: QUEUE_TABLE.displayUpdateType.name },
+			{ name: VoiceOnlyToggleOption.ID, value: QUEUE_TABLE.voiceOnlyToggle.name },
 		];
 		const selectMenuTransactor = new SelectMenuTransactor(inter);
-		const settingsToReset = await selectMenuTransactor.sendAndReceive("Queue settings to reset", selectMenuOptions);
+		const propertiesToReset = await selectMenuTransactor.sendAndReceive("Queue properties to reset", selectMenuOptions);
 
-		const updatedSettings = {} as any;
-		for (const setting of settingsToReset) {
-			const columnKey = findKey(QUEUE_TABLE, (column: SQLiteColumn) => column.name === setting);
-			updatedSettings[columnKey] = (QUEUE_TABLE as any)[columnKey]?.default;
+		const updatedProperties = {} as any;
+		for (const property of propertiesToReset) {
+			const columnKey = findKey(QUEUE_TABLE, (column: SQLiteColumn) => column.name === property);
+			updatedProperties[columnKey] = (QUEUE_TABLE as any)[columnKey]?.default;
 		}
 
 		const updatedQueues = db.transaction(() =>
-			queues.map((queue) => inter.store.updateQueue({ id: queue.id, ...updatedSettings })),
+			queues.map((queue) => inter.store.updateQueue({ id: queue.id, ...updatedProperties })),
 		);
 
-		if (updatedSettings.roleId) {
-			await Promise.all(
-				queues.map(queue => {
-					return MemberUtils.updateInQueueRole(inter.store, [queue], updatedSettings.roleId, "remove");
-				}),
-			);
+		if (updatedProperties.roleId) {
+			await MemberUtils.assignInQueueRoleToMembers(inter.store, queues, updatedProperties.roleId, "remove");
 		}
 
-		const settingsStr = settingsToReset.map(inlineCode).join(", ");
-		const settingsWord = settingsToReset.length === 1 ? "setting" : "settings";
+		const propertiesStr = propertiesToReset.map(inlineCode).join(", ");
+		const propertiesWord = propertiesToReset.length === 1 ? "property" : "properties";
 		const queuesStr = queuesMention(queues);
 		const queuesWord = queues.size === 1 ? "queue" : "queues";
-		const haveWord = settingsToReset.length === 1 ? "has" : "have";
-		const resetSettingsStr = `${settingsStr} ${haveWord} been reset for ${queuesStr} ${queuesWord}.`;
+		const haveWord = propertiesToReset.length === 1 ? "has" : "have";
+		const resetPropertiesStr = `${propertiesStr} ${haveWord} been reset for ${queuesStr} ${queuesWord}.`;
 
-		await selectMenuTransactor.updateWithResult(`Reset ${queuesWord} ${settingsWord}`, resetSettingsStr);
+		await selectMenuTransactor.updateWithResult(`Reset ${queuesWord} ${propertiesWord}`, resetPropertiesStr);
 
 		DisplayUtils.requestDisplaysUpdate(inter.store, queues.map(queue => queue.id));
 
@@ -299,7 +325,10 @@ export class QueuesCommand extends AdminCommand {
 		const queue = await QueuesCommand.DELETE_OPTIONS.queue.get(inter);
 
 		const confirmed = await inter.promptConfirmOrCancel(`Are you sure you want to delete the '${queueMention(queue)}' queue?`);
-		if (!confirmed) return;
+		if (!confirmed) {
+			await inter.respond("Cancelled queue deletion");
+			return;
+		}
 
 		const deletedQueue = inter.store.deleteQueue({ id: queue.id });
 

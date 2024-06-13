@@ -49,12 +49,13 @@ export class VoiceOption extends CustomOption {
 
 		const suggestions: UIOption[] = [];
 		for (const voice of voices.values()) {
-			const queueName = queues.get(voice.queueId).name;
+			const queue = queues.get(voice.queueId);
+			const queueName = queue.name;
 			const sourceName = (await inter.store.jsChannel(voice.sourceChannelId)).name;
-			const destinationName = (await inter.store.jsChannel(voice.destinationChannelId)).name;
+			const destinationName = (await inter.store.jsChannel(queue.voiceDestinationChannelId)).name;
 
 			suggestions.push({
-				name: `'${queueName}': '${sourceName}' -> '${destinationName}'`,
+				name: `'${queueName}' queue: '${sourceName}' vc${destinationName ? ` -> '${destinationName}' vc` : ""}`,
 				value: voice.id.toString(),
 			});
 		}

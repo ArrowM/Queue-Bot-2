@@ -27,7 +27,7 @@ type SlashProperties = BaseProperties & {
 	promptConfirmOrCancel?: (message: string) => Promise<boolean>;
 }
 
-export type AnyInteraction = DiscordInteraction & BaseProperties;
-export type AutocompleteInteraction = DiscordAutocompleteInteraction & AutocompleteProperties;
-export type ButtonInteraction = DiscordButtonInteraction & SlashProperties;
-export type SlashInteraction = DiscordSlashCommandInteration & SlashProperties;
+export type AnyInteraction = Omit<DiscordInteraction, "send" | "reply" | "followUp"> & BaseProperties;
+export type AutocompleteInteraction = Omit<DiscordAutocompleteInteraction, "send" | "reply" | "followUp"> & AutocompleteProperties;
+export type ButtonInteraction = Omit<DiscordButtonInteraction, "send" | "reply" | "followUp"> & SlashProperties;
+export type SlashInteraction = Omit<DiscordSlashCommandInteration, "send" | "reply" | "followUp"> & SlashProperties;

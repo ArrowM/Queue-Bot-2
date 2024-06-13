@@ -150,7 +150,7 @@ export class HelpCommand extends EveryoneCommand {
 						value: "Shuffle queues",
 					},
 					{
-						name: commandMention("voice", "add"),
+						name: commandMention("voice", "add_source"),
 						value: "Manage voice channel settings",
 					},
 					{

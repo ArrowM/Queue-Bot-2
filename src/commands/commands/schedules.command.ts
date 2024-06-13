@@ -1,7 +1,8 @@
-import { type Collection, EmbedBuilder, italic, SlashCommandBuilder } from "discord.js";
+import cronstrue from "cronstrue";
+import { type Collection, EmbedBuilder, inlineCode, SlashCommandBuilder } from "discord.js";
 import { isNil, omitBy } from "lodash-es";
 
-import type { DbQueue, DbSchedule } from "../../db/schema.ts";
+import { type DbQueue, type DbSchedule, SCHEDULE_TABLE } from "../../db/schema.ts";
 import { CommandOption } from "../../options/options/command.option.ts";
 import { CronOption } from "../../options/options/cron.option.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
@@ -9,11 +10,10 @@ import { ReasonOption } from "../../options/options/reason.option.ts";
 import { SchedulesOption } from "../../options/options/schedules.option.ts";
 import { TimezoneOption } from "../../options/options/timezone.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
-import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
 import { ScheduleUtils } from "../../utils/schedule.utils.ts";
-import { commandMention, describeTable, queuesMention, scheduleMention } from "../../utils/string.utils.ts";
+import { describeTable, queuesMention } from "../../utils/string.utils.ts";
 
 export class SchedulesCommand extends AdminCommand {
 	static readonly ID = "schedules";
@@ -75,17 +75,18 @@ export class SchedulesCommand extends AdminCommand {
 
 		const schedules = inter.store.dbSchedules().filter(schedule => queues.has(schedule.queueId));
 
-		const embeds = describeTable({
+		const descriptionMessage = describeTable({
 			store: inter.store,
-			tableName: "Schedules",
-			color: Color.Raspberry,
-			mentionFn: scheduleMention,
+			table: SCHEDULE_TABLE,
+			tableLabel: "Scheduled commands",
+			entryLabelProperty: "command",
 			entries: [...schedules.values()],
+			propertyFormatters: {
+				cron: (cron) => `${inlineCode(cron)} (${cronstrue.toString(cron)})`,
+			},
 		});
 
-		embeds.push(new EmbedBuilder().setDescription(italic(`Schedules can be updated with ${commandMention("schedules", "set")}`)));
-
-		await inter.respond({ embeds });
+		await inter.respond(descriptionMessage);
 	}
 
 	// ====================================================================
@@ -115,7 +116,7 @@ export class SchedulesCommand extends AdminCommand {
 		} = ScheduleUtils.insertSchedules(inter.store, queues, schedule);
 		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
-		await inter.respond(`Scheduled ${schedule.command} for the '${queuesMention(updatedQueues)}' queue${updatedQueues.length ? "s" : ""}.`, true);
+		await inter.respond(`Scheduled ${schedule.command} for the '${queuesMention(updatedQueues)}' queue${updatedQueues.length > 1 ? "s" : ""}.`, true);
 		await this.schedules_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 

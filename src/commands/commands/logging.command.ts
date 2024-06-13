@@ -11,7 +11,7 @@ export class LoggingCommand extends AdminCommand {
 
 	logging_get = LoggingCommand.logging_get;
 	logging_set = LoggingCommand.logging_set;
-	logging_reset = LoggingCommand.logging_reset;
+	logging_reset = LoggingCommand.logging_disable;
 
 	data = new SlashCommandBuilder()
 		.setName("logging")
@@ -31,8 +31,8 @@ export class LoggingCommand extends AdminCommand {
 		})
 		.addSubcommand(subcommand => {
 			subcommand
-				.setName("reset")
-				.setDescription("Reset logging settings");
+				.setName("disable")
+				.setDescription("Disables logging");
 			return subcommand;
 		});
 
@@ -44,14 +44,14 @@ export class LoggingCommand extends AdminCommand {
 		const dbGuild = inter.store.dbGuild();
 
 		const embed = new EmbedBuilder()
-			.setTitle("Logging Settings")
+			.setTitle("Logging")
 			.setColor(Color.LightGrey);
 
 		if (dbGuild.logChannelId && dbGuild.logScope) {
 			embed.setDescription(`- Log Channel = ${channelMention(dbGuild.logChannelId)}\n- Log Scope = ${inlineCode(dbGuild.logScope)}`);
 		}
 		else {
-			embed.setDescription("No logging settings configured");
+			embed.setDescription("No logging configured");
 		}
 
 		await inter.respond({ embeds: [embed] });
@@ -77,10 +77,10 @@ export class LoggingCommand extends AdminCommand {
 	}
 
 	// ====================================================================
-	//                           /logging reset
+	//                           /logging disable
 	// ====================================================================
 
-	static async logging_reset(inter: SlashInteraction) {
+	static async logging_disable(inter: SlashInteraction) {
 		inter.store.updateGuild({ logChannelId: null, logScope: null });
 
 		await inter.respond("Disabled logging.", true);

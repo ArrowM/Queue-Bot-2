@@ -1,10 +1,9 @@
-import { channelMention, type Collection, SlashCommandBuilder } from "discord.js";
+import { type Collection, SlashCommandBuilder } from "discord.js";
 
-import type { DbDisplay, DbQueue } from "../../db/schema.ts";
+import { type DbQueue, DISPLAY_TABLE } from "../../db/schema.ts";
 import { DisplaysOption } from "../../options/options/displays.option.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
-import { Color } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
 import { DisplayUtils } from "../../utils/display.utils.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
@@ -56,15 +55,15 @@ export class DisplaysCommand extends AdminCommand {
 
 		const displays = inter.store.dbDisplays().filter(display => queues.has(display.queueId));
 
-		const embeds = describeTable({
+		const descriptionMessage = describeTable({
 			store: inter.store,
-			tableName: "Displays",
-			color: Color.SkyBlue,
-			mentionFn: (display: DbDisplay) => channelMention(display.displayChannelId),
+			table: DISPLAY_TABLE,
+			tableLabel: "Displays",
+			entryLabelProperty: "channelId",
 			entries: [...displays.values()],
 		});
 
-		await inter.respond({ embeds });
+		await inter.respond(descriptionMessage);
 	}
 
 	// ====================================================================

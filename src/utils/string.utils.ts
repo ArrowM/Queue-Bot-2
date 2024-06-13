@@ -1,22 +1,35 @@
 import { chatInputApplicationCommandMention } from "@discordjs/formatters";
 import cronstrue from "cronstrue";
-import { bold, Collection, EmbedBuilder, roleMention, type Snowflake, time, type TimestampStylesString, userMention } from "discord.js";
-import { concat, get, groupBy, partition } from "lodash-es";
+import {
+	bold,
+	Collection,
+	EmbedBuilder,
+	inlineCode,
+	roleMention,
+	type Snowflake,
+	strikethrough,
+	time,
+	type TimestampStylesString,
+	userMention,
+} from "discord.js";
+import { SQLiteTable } from "drizzle-orm/sqlite-core";
+import { groupBy, isNil, omit } from "lodash-es";
 
 import { type DbMember, type DbQueue, type DbSchedule } from "../db/schema.ts";
 import type { Store } from "../db/store.ts";
 import { Color, MemberDisplayType, TimestampType } from "../types/db.types.ts";
 import type { ArrayOrCollection } from "../types/misc.types.ts";
 import { ClientUtils } from "./client.utils.ts";
-import { map } from "./misc.utils.ts";
+import { BigIntSafe, map } from "./misc.utils.ts";
 
 export const ERROR_HEADER_LINE = "⚠️    ERROR    ⚠️";
 
 export function queueMention(queue: DbQueue): string {
 	const badges = [];
 	if (queue.lockToggle) badges.push("🔒");
-	if (queue.notificationsToggle) badges.push("🔔");
+	if (!queue.notificationsToggle) badges.push("🔕");
 	if (queue.autopullToggle) badges.push("🔁");
+	if (queue.voiceOnlyToggle) badges.push("🔊");
 	return bold(queue.name) + (badges.length ? " " + badges.join(" ") : "");
 }
 
@@ -74,73 +87,106 @@ export function scheduleMention(schedule: DbSchedule) {
 }
 
 export function timeMention(seconds: number) {
-	if (!seconds) return "";
 	seconds = Number(seconds);
 	const numMinutes = Math.floor(seconds / 60);
 	const numSecondsRemainder = seconds % 60;
 	return (numMinutes > 0 ? bold(numMinutes.toString()) + " minute" : "") +
-		(numMinutes > 1 ? "s" : "") +
+		(numMinutes === 1 ? "" : "s") +
 		(numMinutes > 0 && numSecondsRemainder > 0 ? " and " : "") +
-		(numSecondsRemainder > 0 ? bold(numSecondsRemainder.toString()) + " second" : "") +
-		(numSecondsRemainder > 1 ? "s" : "");
+		((numMinutes === 0 || numSecondsRemainder > 0) ? bold(numSecondsRemainder.toString()) + " second" : "") +
+		(numSecondsRemainder === 1 ? "" : "s");
 }
 
-export function describeMentionableTable<T>(options: {
+const GLOBAL_HIDDEN_PROPERTIES = ["id", "guildId", "queueId", "isRole"];
+
+export function describeTable<T extends object>(options: {
 	store: Store,
-	tableName: string,
-	color: Color,
+	table: SQLiteTable,
+	tableLabel: string,
 	entries: T[],
-}) {
-	return describeTable({ mentionFn: null, ...options });
-}
+	hiddenProperties?: (string)[],
+	propertyFormatters?: Record<string, (entry: any) => string>,
+	color?: Color,
+	// defaults to "queueId"
+	queueIdProperty?: string,
+} & (
+	{ entryLabelProperty: string } | { entryLabel: string }
+)) {
+	const { store, table, tableLabel, color, entries } = options;
+	const hiddenProperties = options.hiddenProperties ?? [];
+	const propertyFormatters = options.propertyFormatters ?? {};
+	const queueIdProperty = "queueIdProperty" in options ? options.queueIdProperty : "queueId";
+	const entryLabelProperty = "entryLabelProperty" in options ? options.entryLabelProperty : null;
+	const entryLabel = "entryLabel" in options ? options.entryLabel : null;
 
-export function describeTable<T>(options: {
-	store: Store,
-	tableName: string,
-	color: Color,
-	entries: T[],
-	mentionFn: (entry: T) => string,
-}) {
-	const { store, tableName, color, entries, mentionFn } = options;
-	const embeds: EmbedBuilder[] = [];
-	for (const [queueId, itemsOfQueue] of Object.entries(groupBy(entries, "queueId"))) {
-		let queue;
-		try {
-			queue = store.dbQueues().get(BigInt(queueId));
-		}
-		catch {
-			queue = null;
-		}
-
-		let itemStrings: string[] = [];
-		if (get(itemsOfQueue[0], "isRole") !== undefined) {
-			const [roles, members] = partition(itemsOfQueue as any, entry => entry.isRole);
-			itemStrings = concat(
-				roles.map(entry => `- ${roleMention(entry.subjectId)}${entry.reason ? ` - ${entry.reason}` : ""}`).sort(),
-				members.map(entry => `- ${userMention(entry.subjectId)}${entry.reason ? ` - ${entry.reason}` : ""}`).sort(),
-			);
-		}
-		else if (mentionFn) {
-			itemStrings = itemsOfQueue.map(mentionFn).sort();
-		}
-
-		const embed = new EmbedBuilder()
-			.setTitle(`${tableName} of ${queue ? `the '${queueMention(queue)}' queue` : "all queues"}`)
-			.setColor(color)
-			.setDescription(itemStrings.length ? itemStrings.join("\n") : `No ${tableName.toLowerCase()}.`);
-		embeds.push(embed);
+	function formatPropertyLabel(property: string, isDefaultValue: boolean): string {
+		const label = convertCamelCaseToTitleCase(stripIdSuffix(property));
+		return isDefaultValue ? label : bold(label);
 	}
 
-	if (!embeds.length) {
-		const embed = new EmbedBuilder()
-			.setTitle(tableName)
-			.setColor(color)
-			.setDescription(`No ${tableName.toLowerCase()}.`);
-		embeds.push(embed);
+	function formatPropertyValue(entry: T, property: string): string {
+		// handle mentionable properties
+		if ("isRole" in entry) {
+			const isRole = (entry as any).isRole;
+			const subjectId = (entry as any).subjectId;
+			return isRole ? roleMention(subjectId) : userMention(subjectId);
+		}
+
+		const value = (entry as any)[property];
+		const valueFormatter = propertyFormatters[property];
+		return valueFormatter ? valueFormatter(value) : inlineCode(String(value));
 	}
 
-	return embeds;
+	function formatDescriptionProperty(entry: T, property: string): string {
+		const value = (entry as any)[property];
+		const defaultValue = (table as any)[property]?.default;
+		const isDefaultValue = value == defaultValue;
+
+		if (isNil(value) && isNil(defaultValue)) return "";
+
+		const formattedLabel = formatPropertyLabel(property, isDefaultValue);
+		const formattedValue = formatPropertyValue(entry, property) ?? "";
+		const formattedOverriddenDefaultValue =
+			(property in table && !isDefaultValue) ? strikethrough(inlineCode(String(defaultValue))) : "";
+
+		return `- ${formattedLabel} = ${formattedValue} ${formattedOverriddenDefaultValue}`;
+	}
+
+	function formatEntryDescription(entry: T): string {
+		const descriptionProperties = omit(entry, [...GLOBAL_HIDDEN_PROPERTIES, ...hiddenProperties, entryLabelProperty]);
+		const descriptionLines = Object.keys(descriptionProperties)
+			.map(property => formatDescriptionProperty(entry, property as string))
+			.filter(Boolean);
+
+		return descriptionLines.join("\n");
+	}
+
+	function formatEntry(entry: T): { name: string, value: string } {
+		return {
+			name: entryLabelProperty ? formatPropertyValue(entry, entryLabelProperty) : entryLabel,
+			value: formatEntryDescription(entry),
+		};
+	}
+
+	const embeds = Object.entries(groupBy(entries, queueIdProperty)).map(([queueId, queueEntries]) => {
+		const _queueId = BigIntSafe(queueId);
+		const queue = _queueId ? store.dbQueues().get(_queueId) : null;
+
+		const title = queue ? `'${queueMention(queue)}' queue` : "all queues";
+		const _color = color ?? queue?.color ?? (queueEntries[0] as any).color ?? Color.Black;
+		const fields = queueEntries.map(entry => formatEntry(entry));
+
+		return new EmbedBuilder().setTitle(title).setColor(_color).addFields(fields);
+	});
+
+	if (embeds.length === 0) {
+		return { content: `No ${tableLabel.toLowerCase()} found.` };
+	}
+
+	return { content: `${tableLabel}:`, embeds };
 }
+
+// Helpers
 
 const timestampToStyle = new Collection<string, TimestampStylesString>([
 	[TimestampType.Date, "d"],
@@ -153,4 +199,15 @@ function formatTimestamp(joinTime: bigint, timestampType: TimestampType) {
 	return (timestampType !== TimestampType.Off)
 		? time(new Date(Number(joinTime)), timestampToStyle.get(timestampType))
 		: "";
+}
+
+function stripIdSuffix(input: string): string {
+	return input.replace(/Id$/, "");
+}
+
+function convertCamelCaseToTitleCase(input: string): string {
+	return input
+		.replace(/([A-Z])/g, " $1") // Insert a space before each uppercase letter
+		.toLowerCase() // Convert to lowercase
+		.replace(/^./, str => str.toUpperCase()); // Capitalize the first letter
 }

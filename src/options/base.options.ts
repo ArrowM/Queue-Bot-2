@@ -13,6 +13,7 @@ import type {
 	SlashCommandStringOption,
 	SlashCommandSubcommandBuilder,
 } from "discord.js";
+import { SQL } from "drizzle-orm";
 
 import type { UIOption } from "../types/handler.types.ts";
 import type { AutocompleteInteraction, SlashInteraction } from "../types/interaction.types.ts";
@@ -135,6 +136,7 @@ export abstract class StringOption extends BaseOptions<SlashCommandStringOption>
 
 export abstract class BooleanOption extends BaseOptions<SlashCommandBooleanOption> {
 	abstract id: string;
+	abstract defaultValue: boolean | SQL<unknown>;
 
 	addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void {
 		command.addBooleanOption(this.build);
