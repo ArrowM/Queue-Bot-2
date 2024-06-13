@@ -11,8 +11,6 @@ import { map } from "./misc.utils.ts";
 
 export namespace QueueUtils {
 	export async function insertQueue(store: Store, queue: NewQueue) {
-		QueueUtils.validateQueueProperties(queue);
-
 		const insertedQueue = store.insertQueue(queue);
 
 		const role = get(queue, "role") as Role;
@@ -25,8 +23,6 @@ export namespace QueueUtils {
 
 	export async function updateQueues(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, update: Partial<DbQueue>) {
 		return await db.transaction(async () => {
-			QueueUtils.validateQueueProperties(update);
-
 			const updatedQueues = map(queues, queue => store.updateQueue({ id: queue.id, ...update }));
 			const updatedQueueIds = updatedQueues.map(queue => queue.id);
 
@@ -38,20 +34,5 @@ export namespace QueueUtils {
 
 			return { updatedQueues };
 		});
-	}
-
-	export function validateQueueProperties(queue: Partial<DbQueue>) {
-		if (queue.pullBatchSize && queue.pullBatchSize < 1) {
-			throw new Error("Pull batch size must be a positive number");
-		}
-		if (queue.rejoinCooldownPeriod && queue.rejoinCooldownPeriod < 0) {
-			throw new Error("Rejoin cooldown period be a positive number");
-		}
-		if (queue.rejoinGracePeriod && queue.rejoinGracePeriod < 0) {
-			throw new Error("Rejoin grace period must be a positive number");
-		}
-		if (queue.size && queue.size < 1) {
-			throw new Error("Size must be a positive number");
-		}
 	}
 }

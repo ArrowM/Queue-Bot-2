@@ -1,5 +1,5 @@
 import { TEXT_CHANNELS } from "../../types/misc.types.ts";
-import { ChannelOption } from "../base.options.ts";
+import { ChannelOption } from "../base-option.ts";
 
 export class LogChannelOption extends ChannelOption {
 	static readonly ID = "log_channel";

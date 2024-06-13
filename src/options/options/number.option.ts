@@ -1,4 +1,4 @@
-import { IntegerOption } from "../base.options.ts";
+import { IntegerOption } from "../base-option.ts";
 
 export class NumberOption extends IntegerOption {
 	static readonly ID = "number";

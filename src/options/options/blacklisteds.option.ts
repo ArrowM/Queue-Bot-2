@@ -4,7 +4,7 @@ import type { DbBlacklisted } from "../../db/schema.ts";
 import type { AutocompleteInteraction, SlashInteraction } from "../../types/interaction.types.ts";
 import { CHOICE_ALL, CHOICE_SOME } from "../../types/parsing.types.ts";
 import { SelectMenuTransactor } from "../../utils/message-utils/select-menu-transactor.ts";
-import { CustomOption } from "../base.options.ts";
+import { CustomOption } from "../base-option.ts";
 import { BlacklistedOption } from "./blacklisted.option.ts";
 
 export class BlacklistedsOption extends CustomOption {

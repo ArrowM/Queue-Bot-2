@@ -15,7 +15,7 @@ export class PullCommand extends AdminCommand {
 
 	static readonly PULL_OPTIONS = {
 		queues: new QueuesOption({ required: true, description: "Queue(s) to pull members from" }),
-		count: new NumberOption({ description: "Number of queue members to pull", defaultValue: 1 }),
+		count: new NumberOption({ description: "Number of queue members to pull", defaultValue: 1, minValue: 1 }),
 		members: new MembersOption({ description: "Pull specific members instead of the next member" }),
 	};
 
@@ -34,10 +34,6 @@ export class PullCommand extends AdminCommand {
 		const queues = await PullCommand.PULL_OPTIONS.queues.get(inter);
 		const count = PullCommand.PULL_OPTIONS.count.get(inter);
 		const members = await PullCommand.PULL_OPTIONS.members.get(inter);
-
-		if (count && count < 1) {
-			throw new Error("Count must be a positive number");
-		}
 
 		const pulledMembers = await MemberUtils.deleteMembers({
 			store: inter.store,

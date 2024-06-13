@@ -17,10 +17,10 @@ import { SQL } from "drizzle-orm";
 
 import type { UIOption } from "../types/handler.types.ts";
 import type { AutocompleteInteraction, SlashInteraction } from "../types/interaction.types.ts";
-import type { Option, OptionParams } from "../types/option.types.ts";
+import type { OptionParams } from "../types/option.types.ts";
 import { type CHOICE_ALL, CHOICE_SOME, type Mentionable } from "../types/parsing.types.ts";
 
-abstract class BaseOptions<BuilderType extends ApplicationCommandOptionBase = any> implements Option {
+export abstract class BaseOption<BuilderType extends ApplicationCommandOptionBase = any> {
 	// id
 	id: string;
 	// display name of option in Discord UI
@@ -37,6 +37,8 @@ abstract class BaseOptions<BuilderType extends ApplicationCommandOptionBase = an
 	extraChoices?: (typeof CHOICE_ALL | typeof CHOICE_SOME)[];
 	// default value for the option (shown in description)
 	defaultValue?: any;
+	// minimum value for number options
+	minValue?: number;
 	// whether the option is required
 	required?: boolean;
 
@@ -52,12 +54,9 @@ abstract class BaseOptions<BuilderType extends ApplicationCommandOptionBase = an
 		this.choices = config?.choices ?? this.choices;
 		this.extraChoices = config?.extraChoices ?? this.extraChoices;
 		this.defaultValue = config?.defaultValue ?? this.defaultValue;
+		this.minValue = config?.minValue ?? this.minValue;
 		this.required = config?.required ?? this.required;
 	}
-
-	abstract addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void;
-
-	protected abstract getUncached(inter: AutocompleteInteraction | SlashInteraction): unknown;
 
 	get(inter: AutocompleteInteraction | SlashInteraction): unknown {
 		let selection = inter.parser.cache.get(this.name);
@@ -84,8 +83,18 @@ abstract class BaseOptions<BuilderType extends ApplicationCommandOptionBase = an
 		if (this.channelTypes) {
 			(optionBuilder as any).addChannelTypes(...this.channelTypes);
 		}
+		if (this.minValue != undefined) {
+			(optionBuilder as any).setMinValue(this.minValue);
+		}
+
 		return optionBuilder;
 	};
+
+	getAutocompletions?(options: AutoCompleteOptions): Promise<unknown[]>;
+
+	abstract addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void;
+
+	protected abstract getUncached(inter: AutocompleteInteraction | SlashInteraction): unknown;
 
 	private buildDescription(): string {
 		let description = this.description;
@@ -104,7 +113,7 @@ export interface AutoCompleteOptions {
 	lowerSearchText: string;
 }
 
-export abstract class CustomOption extends BaseOptions<SlashCommandStringOption> {
+export abstract class CustomOption extends BaseOption<SlashCommandStringOption> {
 	abstract id: string;
 	autocomplete = true;
 
@@ -117,7 +126,7 @@ export abstract class CustomOption extends BaseOptions<SlashCommandStringOption>
 	protected abstract getUncached(inter: AutocompleteInteraction | SlashInteraction): Promise<unknown>;
 }
 
-export abstract class StringOption extends BaseOptions<SlashCommandStringOption> {
+export abstract class StringOption extends BaseOption<SlashCommandStringOption> {
 	abstract id: string;
 
 	addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void {
@@ -134,7 +143,7 @@ export abstract class StringOption extends BaseOptions<SlashCommandStringOption>
 	}
 }
 
-export abstract class BooleanOption extends BaseOptions<SlashCommandBooleanOption> {
+export abstract class BooleanOption extends BaseOption<SlashCommandBooleanOption> {
 	abstract id: string;
 	abstract defaultValue: boolean | SQL<unknown>;
 
@@ -152,7 +161,7 @@ export abstract class BooleanOption extends BaseOptions<SlashCommandBooleanOptio
 	}
 }
 
-export abstract class IntegerOption extends BaseOptions<SlashCommandIntegerOption> {
+export abstract class IntegerOption extends BaseOption<SlashCommandIntegerOption> {
 	abstract id: string;
 
 	addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void {
@@ -169,7 +178,7 @@ export abstract class IntegerOption extends BaseOptions<SlashCommandIntegerOptio
 	}
 }
 
-export abstract class ChannelOption extends BaseOptions<SlashCommandChannelOption> {
+export abstract class ChannelOption extends BaseOption<SlashCommandChannelOption> {
 	abstract id: string;
 
 	addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void {
@@ -186,7 +195,7 @@ export abstract class ChannelOption extends BaseOptions<SlashCommandChannelOptio
 	}
 }
 
-export abstract class RoleOption extends BaseOptions<SlashCommandRoleOption> {
+export abstract class RoleOption extends BaseOption<SlashCommandRoleOption> {
 	abstract id: string;
 
 	addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void {
@@ -203,7 +212,7 @@ export abstract class RoleOption extends BaseOptions<SlashCommandRoleOption> {
 	}
 }
 
-export abstract class MentionableOption extends BaseOptions<SlashCommandMentionableOption> {
+export abstract class MentionableOption extends BaseOption<SlashCommandMentionableOption> {
 	abstract id: string;
 
 	addToCommand(command: SlashCommandBuilder | SlashCommandSubcommandBuilder): void {

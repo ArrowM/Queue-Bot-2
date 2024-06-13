@@ -1,7 +1,7 @@
 import { MemberDisplayType } from "../../types/db.types.ts";
 import type { AutocompleteInteraction, SlashInteraction } from "../../types/interaction.types.ts";
 import { toChoices } from "../../utils/misc.utils.ts";
-import { StringOption } from "../base.options.ts";
+import { StringOption } from "../base-option.ts";
 
 export class MemberDisplayTypeOption extends StringOption {
 	static readonly ID = "member_display_type";

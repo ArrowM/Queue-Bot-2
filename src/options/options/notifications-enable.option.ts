@@ -1,5 +1,5 @@
 import { QUEUE_TABLE } from "../../db/schema.ts";
-import { BooleanOption } from "../base.options.ts";
+import { BooleanOption } from "../base-option.ts";
 
 export class NotificationsToggleOption extends BooleanOption {
 	static readonly ID = "notifications_toggle";

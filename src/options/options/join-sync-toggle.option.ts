@@ -1,5 +1,5 @@
 import { VOICE_TABLE } from "../../db/schema.ts";
-import { BooleanOption } from "../base.options.ts";
+import { BooleanOption } from "../base-option.ts";
 
 export class JoinSyncToggleOption extends BooleanOption {
 	static readonly ID = "join_sync_toggle";

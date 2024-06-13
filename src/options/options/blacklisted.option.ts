@@ -4,7 +4,7 @@ import type { DbBlacklisted } from "../../db/schema.ts";
 import type { UIOption } from "../../types/handler.types.ts";
 import type { AutocompleteInteraction } from "../../types/interaction.types.ts";
 import { BlacklistedNotFoundError } from "../../utils/error.utils.ts";
-import { type AutoCompleteOptions, CustomOption } from "../base.options.ts";
+import { type AutoCompleteOptions, CustomOption } from "../base-option.ts";
 
 export class BlacklistedOption extends CustomOption {
 	static readonly ID = "blacklisted";

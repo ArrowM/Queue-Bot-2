@@ -4,7 +4,7 @@ import type { DbAdmin } from "../../db/schema.ts";
 import type { UIOption } from "../../types/handler.types.ts";
 import type { AutocompleteInteraction, SlashInteraction } from "../../types/interaction.types.ts";
 import { AdminNotFoundError } from "../../utils/error.utils.ts";
-import { type AutoCompleteOptions, CustomOption } from "../base.options.ts";
+import { type AutoCompleteOptions, CustomOption } from "../base-option.ts";
 
 export class AdminOption extends CustomOption {
 	static readonly ID = "admin";

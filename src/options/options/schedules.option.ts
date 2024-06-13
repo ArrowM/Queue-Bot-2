@@ -4,7 +4,7 @@ import type { DbSchedule } from "../../db/schema.ts";
 import type { AutocompleteInteraction, SlashInteraction } from "../../types/interaction.types.ts";
 import { CHOICE_ALL, CHOICE_SOME } from "../../types/parsing.types.ts";
 import { SelectMenuTransactor } from "../../utils/message-utils/select-menu-transactor.ts";
-import { CustomOption } from "../base.options.ts";
+import { CustomOption } from "../base-option.ts";
 import { ScheduleOption } from "./schedule.option.ts";
 
 export class SchedulesOption extends CustomOption {

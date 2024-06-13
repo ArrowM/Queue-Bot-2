@@ -5,7 +5,7 @@ import type { UIOption } from "../../types/handler.types.ts";
 import type { AutocompleteInteraction, SlashInteraction } from "../../types/interaction.types.ts";
 import { ScheduleNotFoundError } from "../../utils/error.utils.ts";
 import { scheduleMention } from "../../utils/string.utils.ts";
-import { type AutoCompleteOptions, CustomOption } from "../base.options.ts";
+import { type AutoCompleteOptions, CustomOption } from "../base-option.ts";
 
 export class ScheduleOption extends CustomOption {
 	static readonly ID = "schedule";

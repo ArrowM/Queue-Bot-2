@@ -1,6 +1,6 @@
 import { Collection } from "discord.js";
 
-import type { Option } from "../types/option.types.ts";
+import type { BaseOption } from "./base-option.ts";
 import { AdminOption } from "./options/admin.option.ts";
 import { AdminsOption } from "./options/admins.option.ts";
 import { AutopullToggleOption } from "./options/autopull-toggle.option.ts";
@@ -53,7 +53,7 @@ import { VoicesOption } from "./options/voices.option.ts";
 import { WhitelistedOption } from "./options/whitelisted.option.ts";
 import { WhitelistedsOption } from "./options/whitelisteds.option.ts";
 
-export const OPTIONS = new Collection<string, Option>([
+export const OPTIONS = new Collection<string, BaseOption>([
 	[AdminOption.ID, new AdminOption()],
 	[AdminsOption.ID, new AdminsOption()],
 	[AutopullToggleOption.ID, new AutopullToggleOption()],
