@@ -1,6 +1,6 @@
 <!-- TOC -->
   * [Running Locally](#running-locally)
-    * [Option 1: Install and run with Docker (recommended)](#option-1-install-and-run-with-docker-recommended)
+    * [Option 1: Install and run with Docker](#option-1-install-and-run-with-docker)
     * [Option 2: Manually install and run](#option-2-manually-install-and-run)
   * [How to create and edit commands](#how-to-create-and-edit-commands)
     * [Adding commands](#adding-commands)
@@ -18,7 +18,11 @@ Clone the repository:
 git clone https://github.com/ArrowM/Queue-Bot
 ```
 
-### Option 1: Install and run with Docker (recommended)
+Create or reuse a Discord bot application and invite it to your server. See [Discord.js guide](https://discordjs.guide/preparations/setting-up-a-bot-application.html).
+
+Update the `.env` file with your bot's TOKEN and CLIENT_ID.
+
+### Option 1: Install and run with Docker
 
 ```bash
 docker build
@@ -26,12 +30,7 @@ docker build
 
 ### Option 2: Manually install and run
 
-- [Install Node.js](https://nodejs.org/en/download/package-manager).
-- [Install Python](https://www.python.org/downloads/). **MUST** check `Add python.exe to PATH` on first screen.
-- (**WINDOWS ONLY**) [Install MVSC](https://visualstudio.microsoft.com/visual-cpp-build-tools/). During install, check
-the `Desktop Development with C++` tile, then click `Install`.
-
-If you installed one of the 3 above, you may need to restart your terminal or device.
+[Install Node.js](https://nodejs.org/en/download/package-manager).
 
 Install dependencies:
 ```bash
