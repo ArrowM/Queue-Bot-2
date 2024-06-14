@@ -58,7 +58,7 @@ export async function memberMention(store: Store, member: DbMember) {
 	return `${timeStr}${prioStr}${nameStr}${msgStr}`;
 }
 
-export function usersMention(users: {userId: Snowflake}[]) {
+export function usersMention(users: { userId: Snowflake }[]) {
 	return users.map(user => userMention(user.userId)).join(", ");
 }
 
@@ -90,11 +90,20 @@ export function timeMention(seconds: number) {
 	seconds = Number(seconds);
 	const numMinutes = Math.floor(seconds / 60);
 	const numSecondsRemainder = seconds % 60;
-	return (numMinutes > 0 ? bold(numMinutes.toString()) + " minute" : "") +
-		(numMinutes === 1 ? "" : "s") +
-		(numMinutes > 0 && numSecondsRemainder > 0 ? " and " : "") +
-		((numMinutes === 0 || numSecondsRemainder > 0) ? bold(numSecondsRemainder.toString()) + " second" : "") +
-		(numSecondsRemainder === 1 ? "" : "s");
+	let str = "";
+
+	if (numMinutes > 0) {
+		str += `${bold(String(numMinutes))} minute${numMinutes === 1 ? "" : "s"}`;
+		if (numSecondsRemainder > 0) {
+			str += " and ";
+		}
+	}
+
+	if (numMinutes === 0 || numSecondsRemainder > 0) {
+		str += `${bold(String(numSecondsRemainder))} second${numSecondsRemainder === 1 ? "" : "s"}`;
+	}
+
+	return str;
 }
 
 const GLOBAL_HIDDEN_PROPERTIES = ["id", "guildId", "queueId", "isRole"];
@@ -111,7 +120,7 @@ export function describeTable<T extends object>(options: {
 	queueIdProperty?: string,
 } & (
 	{ entryLabelProperty: string } | { entryLabel: string }
-)) {
+	)) {
 	const { store, table, tableLabel, color, entries } = options;
 	const hiddenProperties = options.hiddenProperties ?? [];
 	const propertyFormatters = options.propertyFormatters ?? {};

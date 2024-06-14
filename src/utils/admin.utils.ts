@@ -9,13 +9,12 @@ export namespace AdminUtils {
 	export function insertAdmins(store: Store, mentionables: Mentionable[]) {
 		return db.transaction(() =>
 			mentionables.map(mentionable =>
-			// insert into db
 				store.insertAdmin({
 					guildId: store.guild.id,
 					subjectId: mentionable.id,
 					isRole: mentionable instanceof Role,
-				})
-			)
+				}),
+			),
 		);
 	}
 

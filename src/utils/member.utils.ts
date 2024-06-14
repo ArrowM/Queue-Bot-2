@@ -35,7 +35,7 @@ export namespace MemberUtils {
 			if (mentionable instanceof GuildMember) {
 				for (const queue of queues.values()) {
 					insertedMembers.push(
-						await insertJsMember({ store, queue, jsMember: mentionable })
+						await insertJsMember({ store, queue, jsMember: mentionable }),
 					);
 				}
 			}
@@ -44,7 +44,7 @@ export namespace MemberUtils {
 				for (const queue of queues.values()) {
 					for (const jsMember of role.members.values()) {
 						insertedMembers.push(
-							await insertJsMember({ store, queue, jsMember })
+							await insertJsMember({ store, queue, jsMember }),
 						);
 					}
 				}

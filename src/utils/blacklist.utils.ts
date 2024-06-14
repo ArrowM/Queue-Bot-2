@@ -19,14 +19,13 @@ export namespace BlacklistUtils {
 			for (const mentionable of mentionables) {
 				for (const queue of _queues) {
 					insertedBlacklisted.push(
-						// insert into db
 						store.insertBlacklisted({
 							guildId: store.guild.id,
 							queueId: queue.id,
 							subjectId: mentionable.id,
 							isRole: mentionable instanceof Role,
 							reason,
-						})
+						}),
 					);
 					// delete members
 					const by = (mentionable instanceof Role) ? { roleId: mentionable.id } : { userId: mentionable.id };

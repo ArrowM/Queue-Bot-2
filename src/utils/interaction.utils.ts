@@ -61,7 +61,7 @@ export namespace InteractionUtils {
 		const response = await inter.respond({
 			content: message,
 			components: [
-				new ActionRowBuilder<ButtonBuilder>({ components: [ CANCEL_BUTTON, CONFIRM_BUTTON ] }),
+				new ActionRowBuilder<ButtonBuilder>({ components: [CANCEL_BUTTON, CONFIRM_BUTTON] }),
 			],
 		});
 		let confirmation;

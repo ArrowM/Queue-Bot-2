@@ -17,14 +17,13 @@ export namespace WhitelistUtils {
 			for (const mentionable of mentionables) {
 				for (const queue of _queues) {
 					insertedWhitelisted.push(
-						// insert into db
 						store.insertWhitelisted({
 							guildId: store.guild.id,
 							queueId: queue.id,
 							subjectId: mentionable.id,
 							isRole: mentionable instanceof Role,
 							reason,
-						})
+						}),
 					);
 				}
 			}

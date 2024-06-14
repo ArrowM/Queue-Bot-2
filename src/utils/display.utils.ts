@@ -33,7 +33,6 @@ import { commandMention, memberMention, queueMention, scheduleMention, timeMenti
 
 export namespace DisplayUtils {
 	export async function insertDisplays(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, displayChannelId: Snowflake) {
-		// insert into db
 		const insertedDisplays = map(queues, (queue) => store.insertDisplay({
 			guildId: store.guild.id,
 			queueId: queue.id,

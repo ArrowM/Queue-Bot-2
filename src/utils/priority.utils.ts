@@ -18,7 +18,6 @@ export namespace PriorityUtils {
 			for (const mentionable of mentionables) {
 				for (const queue of _queues) {
 					insertedPrioritized.push(
-						// insert into db
 						store.insertPrioritized({
 							guildId: store.guild.id,
 							queueId: queue.id,
@@ -26,7 +25,7 @@ export namespace PriorityUtils {
 							isRole: mentionable instanceof Role,
 							priorityOrder,
 							reason,
-						})
+						}),
 					);
 				}
 			}

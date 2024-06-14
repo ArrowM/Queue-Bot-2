@@ -42,8 +42,8 @@ export class HelpCommand extends EveryoneCommand {
 					.setTitle("Setup Help")
 					.setColor(Color.Indigo)
 					.setDescription(
-						`Hello there, I'm Queue Bot! I provide live user queues.\n` +
-						`Here are the steps to get started with me. `
+						"Hello there, I'm Queue Bot! I provide live user queues.\n" +
+						"Here are the steps to get started with me. ",
 					)
 					.addFields({
 						name: "1. Create queues",
@@ -77,9 +77,9 @@ export class HelpCommand extends EveryoneCommand {
 					.setTitle("General Help")
 					.setColor(Color.Indigo)
 					.setDescription(
-						`Hello there, I'm Queue Bot! I provide live user queues.\n` +
-						`Here are the commands available to everyone. ` +
-						`Commands may have required or optional arguments, so be sure to read them! `,
+						"Hello there, I'm Queue Bot! I provide live user queues.\n" +
+						"Here are the commands available to everyone. " +
+						"Commands may have required or optional arguments, so be sure to read them! ",
 					)
 					.addFields({
 						name: commandMention("help"),
@@ -116,7 +116,7 @@ export class HelpCommand extends EveryoneCommand {
 					.setTitle("Admin Help")
 					.setColor(Color.Indigo)
 					.setDescription(
-						`Hello there, I'm Queue Bot! I provide live user queues.\n` +
+						"Hello there, I'm Queue Bot! I provide live user queues.\n" +
 						`Here are the commands only available to server admins and users added via ${commandMention("admins", "add")}. ` +
 						`Some commands have additional subcommands like ${inlineCode("add")} or ${inlineCode("delete")}. `,
 					)
