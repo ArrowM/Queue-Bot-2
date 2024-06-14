@@ -73,6 +73,6 @@ If you need to add or modify database tables or columns:
 
 ## Misc
 
-There is no need to build the project, as it makes use of TypeScript's `ts-node` for running the bot.
-
 Use `npm run lint` to lint the project.
+
+This project is designed to run without compiling thanks to `@swc-node/register/esm`.
