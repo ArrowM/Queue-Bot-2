@@ -34,7 +34,7 @@ docker build
 
 Install dependencies:
 ```bash
-npm ci
+npm run setup
 ```
 
 Run the bot:

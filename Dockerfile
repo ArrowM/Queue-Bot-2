@@ -10,7 +10,7 @@ COPY package*.json ./
 FROM base AS dependencies
 
 # Install npm dependencies, including node-gyp
-RUN npm ci
+RUN npm run setup
 
 # Copy all source files
 COPY . .

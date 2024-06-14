@@ -4,7 +4,7 @@
   "module": "src/index.ts",
   "scripts": {
     "setup": "npm ci && drizzle-kit push",
-    "start": "node --loader @swc-node/register/esm --no-warnings --enable-source-maps --env-file=.env src/index.ts ",
+    "start": "node --loader @swc-node/register/esm --no-warnings --enable-source-maps --env-file=.env src/index.ts",
     "lint": "eslint src --fix"
   },
   "type": "module",
@@ -23,14 +23,13 @@
     "@swc-node/register": "^1.9.2",
     "better-sqlite3": "^11.0.0",
     "cronstrue": "^2.48.0",
-    "drizzle-kit": "^0.22.1",
     "date-fns": "^3.6.0",
     "discord.js": "^14.14.1",
+    "drizzle-kit": "^0.22.1",
     "drizzle-orm": "^0.31.0",
     "lodash-es": "^4.17.21",
     "moize": "^6.1.6",
     "node-cron": "^3.0.3",
-    "node-gyp": "^10.1.0",
     "topgg-autoposter": "^2.0.2"
   }
 }
