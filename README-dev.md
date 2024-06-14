@@ -13,8 +13,7 @@
 
 ## Running Locally
 
-Clone the repository
-
+Clone the repository:
 ```bash
 git clone https://github.com/ArrowM/Queue-Bot
 ```
@@ -27,11 +26,9 @@ docker build
 
 ### Option 2: Manually install and run
 
-[Install Node.js](https://nodejs.org/en/download/package-manager).
-
-[Install Python](https://www.python.org/downloads/). **MUST** check `Add python.exe to PATH` on first screen.
-
-(**WINDOWS ONLY**) [Install MVSC](https://visualstudio.microsoft.com/visual-cpp-build-tools/). During install, check
+- [Install Node.js](https://nodejs.org/en/download/package-manager).
+- [Install Python](https://www.python.org/downloads/). **MUST** check `Add python.exe to PATH` on first screen.
+- (**WINDOWS ONLY**) [Install MVSC](https://visualstudio.microsoft.com/visual-cpp-build-tools/). During install, check
 the `Desktop Development with C++` tile, then click `Install`.
 
 If you installed one of the 3 above, you may need to restart your terminal or device.
@@ -76,5 +73,7 @@ If you need to add or modify database tables or columns:
 3. Run `drizzle-kit generate` in the terminal. The drizzle command will generate the necessary SQL migration files for you, which will then be applied as part of `npm start`.
 
 ## Misc
+
 There is no need to build the project, as it makes use of TypeScript's `ts-node` for running the bot.
+
 Use `npm run lint` to lint the project.
