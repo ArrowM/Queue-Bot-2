@@ -79,7 +79,8 @@ export class HelpCommand extends EveryoneCommand {
 					.setDescription(
 						"Hello there, I'm Queue Bot! I provide live user queues.\n" +
 						"Here are the commands available to everyone. " +
-						"Commands may have required or optional arguments, so be sure to read them! ",
+						"Some commands have required and optional arguments, so be sure to read them! " +
+						"Options can be selected by typing and hitting tab will auto-complete. ",
 					)
 					.addFields({
 						name: commandMention("help"),

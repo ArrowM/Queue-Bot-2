@@ -4,7 +4,7 @@
   "module": "src/index.ts",
   "scripts": {
     "setup": "npm ci && drizzle-kit push",
-    "start": "node --loader @swc-node/register/esm --no-warnings --enable-source-maps --env-file=.env src/index.ts",
+    "start": "node --loader @swc-node/register/esm --no-warnings --enable-source-maps --env-file .env src/index.ts",
     "lint": "eslint src --fix"
   },
   "type": "module",
