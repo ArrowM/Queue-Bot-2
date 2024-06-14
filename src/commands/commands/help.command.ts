@@ -1,4 +1,4 @@
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { EmbedBuilder, inlineCode, SlashCommandBuilder } from "discord.js";
 
 import { EveryoneCommand } from "../../types/command.types.ts";
 import { Color } from "../../types/db.types.ts";
@@ -14,11 +14,11 @@ export class HelpCommand extends EveryoneCommand {
 
 	data = new SlashCommandBuilder()
 		.setName(HelpCommand.ID)
-		.setDescription("Get helpful info")
+		.setDescription("Get help")
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName("setup")
-				.setDescription("Get help with setup"),
+				.setDescription("Get help with setting up"),
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
@@ -41,7 +41,10 @@ export class HelpCommand extends EveryoneCommand {
 				new EmbedBuilder()
 					.setTitle("Setup Help")
 					.setColor(Color.Indigo)
-					.setDescription("Hello there! I'm Queue Bot, and I'm here to help you manage your queues. Here's how to get started:")
+					.setDescription(
+						`Hello there, I'm Queue Bot! I provide live user queues.\n` +
+						`Here are the steps to get started with me. `
+					)
 					.addFields({
 						name: "1. Create queues",
 						value: "Create queues by typing `/queues add`. You can create as many queues as you want.",
@@ -73,7 +76,11 @@ export class HelpCommand extends EveryoneCommand {
 				new EmbedBuilder()
 					.setTitle("General Help")
 					.setColor(Color.Indigo)
-					.setDescription("The basic queues commands available to everyone:")
+					.setDescription(
+						`Hello there, I'm Queue Bot! I provide live user queues.\n` +
+						`Here are the commands available to everyone. ` +
+						`Commands may have required or optional arguments, so be sure to read them! `,
+					)
 					.addFields({
 						name: commandMention("help"),
 						value: "Get helpful info",
@@ -108,17 +115,21 @@ export class HelpCommand extends EveryoneCommand {
 				new EmbedBuilder()
 					.setTitle("Admin Help")
 					.setColor(Color.Indigo)
-					.setDescription("The queue commands available to admins:")
+					.setDescription(
+						`Hello there, I'm Queue Bot! I provide live user queues.\n` +
+						`Here are the commands only available to server admins and users added via ${commandMention("admins", "add")}. ` +
+						`Some commands have additional subcommands like ${inlineCode("add")} or ${inlineCode("delete")}. `,
+					)
 					.addFields({
-						name: commandMention("admins", "add"),
+						name: commandMention("admins", "get"),
 						value: "Manage admin users and roles",
 					},
 					{
-						name: commandMention("blacklist", "add"),
+						name: commandMention("blacklist", "get"),
 						value: "Blacklist a user or role from queues",
 					},
 					{
-						name: commandMention("displays", "add"),
+						name: commandMention("displays", "get"),
 						value: "Manage display channels",
 					},
 					{
@@ -126,7 +137,7 @@ export class HelpCommand extends EveryoneCommand {
 						value: "Clear queues",
 					},
 					{
-						name: commandMention("members", "add"),
+						name: commandMention("members", "get"),
 						value: "Manage queue members",
 					},
 					{
@@ -134,7 +145,7 @@ export class HelpCommand extends EveryoneCommand {
 						value: "Move a member in queues",
 					},
 					{
-						name: commandMention("prioritize", "add"),
+						name: commandMention("prioritize", "get"),
 						value: "Manage prioritized users and roles",
 					},
 					{
@@ -142,7 +153,7 @@ export class HelpCommand extends EveryoneCommand {
 						value: "Pull members from queue(s)",
 					},
 					{
-						name: commandMention("queues", "add"),
+						name: commandMention("queues", "get"),
 						value: "Manage queues",
 					},
 					{
@@ -150,11 +161,11 @@ export class HelpCommand extends EveryoneCommand {
 						value: "Shuffle queues",
 					},
 					{
-						name: commandMention("voice", "add_source"),
+						name: commandMention("voice", "get"),
 						value: "Manage voice channel settings",
 					},
 					{
-						name: commandMention("whitelist", "add"),
+						name: commandMention("whitelist", "get"),
 						value: "Whitelist a user or role in queues",
 					}),
 			],

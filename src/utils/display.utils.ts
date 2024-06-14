@@ -368,11 +368,11 @@ export namespace DisplayUtils {
 		}
 
 		if (roleInQueueId) {
-			descriptionParts.push(`- Members are assigned the '${roleMention(roleInQueueId)}' role while in queue.`);
+			descriptionParts.push(`- Members are assigned the ${roleMention(roleInQueueId)} role while in queue.`);
 		}
 
 		if (roleOnPullId) {
-			descriptionParts.push(`- Members are assigned the '${roleMention(roleOnPullId)}' role when pulled from queue.`);
+			descriptionParts.push(`- Members are assigned the ${roleMention(roleOnPullId)} role when pulled from queue.`);
 		}
 
 		if (schedules.size) {
