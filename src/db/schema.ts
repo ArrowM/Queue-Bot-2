@@ -59,6 +59,7 @@ export const QUEUE_TABLE = sqliteTable("queue", ({
 
 	// configurable queue properties
 	autopullToggle: integer("autopull_toggle", { mode: "boolean" }).notNull().default(false),
+	badgeToggle: integer("badge_toggle", { mode: "boolean" }).notNull().default(true),
 	buttonsToggle: integer("buttons_toggle", { mode: "boolean" }).notNull().default(true),
 	color: text("color").$type<ColorResolvable>().notNull().default(get(Color, process.env.DEFAULT_COLOR) as ColorResolvable),
 	displayUpdateType: text("display_update_type").$type<DisplayUpdateType>().notNull().default(DisplayUpdateType.Edit),
@@ -68,6 +69,7 @@ export const QUEUE_TABLE = sqliteTable("queue", ({
 	memberDisplayType: text("member_display_type").$type<MemberDisplayType>().notNull().default(MemberDisplayType.Mention),
 	notificationsToggle: integer("notifications_toggle", { mode: "boolean" }).notNull().default(true),
 	pullBatchSize: integer("pull_batch_size").notNull().default(1),
+	pullMessage: text("pull_message"),
 	rejoinCooldownPeriod: integer("rejoin_cooldown_period").notNull().default(0),
 	rejoinGracePeriod: integer("rejoin_grace_period").notNull().default(0),
 	roleInQueueId: text("role_in_queue_id").$type<Snowflake | null>(),
@@ -186,6 +188,7 @@ export const SCHEDULE_TABLE = sqliteTable("schedule", ({
 	command: text("command").notNull().$type<ScheduleCommand | null>(),
 	cron: text("cron").notNull(),
 	timezone: text("timezone").notNull(),
+	messageChannelId: text("user_id").$type<Snowflake | null>(),
 	reason: text("reason"),
 }),
 (table) => ({

@@ -5,6 +5,7 @@ import { isNil, omitBy } from "lodash-es";
 import { type DbQueue, type DbSchedule, SCHEDULE_TABLE } from "../../db/schema.ts";
 import { CommandOption } from "../../options/options/command.option.ts";
 import { CronOption } from "../../options/options/cron.option.ts";
+import { MessageChannelOption } from "../../options/options/message-channel.option.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
 import { ReasonOption } from "../../options/options/reason.option.ts";
 import { SchedulesOption } from "../../options/options/schedules.option.ts";
@@ -98,6 +99,7 @@ export class SchedulesCommand extends AdminCommand {
 		command: new CommandOption({ required: true, description: "Command to schedule" }),
 		cron: new CronOption({ required: true, description: "Cron schedule" }),
 		timezone: new TimezoneOption({ required: true, description: "Timezone for the schedule" }),
+		messageChannel: new MessageChannelOption({ description: "Channel to send command messages" }),
 		reason: new ReasonOption({ description: "Reason for the schedule" }),
 	};
 
@@ -108,6 +110,7 @@ export class SchedulesCommand extends AdminCommand {
 			command: SchedulesCommand.ADD_OPTIONS.command.get(inter),
 			cron: SchedulesCommand.ADD_OPTIONS.cron.get(inter),
 			timezone: await SchedulesCommand.ADD_OPTIONS.timezone.get(inter),
+			messageChannelId: SchedulesCommand.ADD_OPTIONS.messageChannel.get(inter)?.id,
 			reason: SchedulesCommand.ADD_OPTIONS.reason.get(inter),
 		};
 
@@ -129,6 +132,7 @@ export class SchedulesCommand extends AdminCommand {
 		command: new CommandOption({ description: "Command to schedule" }),
 		cron: new CronOption({ description: "Cron schedule" }),
 		timezone: new TimezoneOption({ description: "Timezone for the schedule" }),
+		messageChannelId: new MessageChannelOption({ description: "Channel to send command messages" }),
 		reason: new ReasonOption({ description: "Reason for the schedule" }),
 	};
 
@@ -138,6 +142,7 @@ export class SchedulesCommand extends AdminCommand {
 			command: SchedulesCommand.SET_OPTIONS.command.get(inter),
 			cron: SchedulesCommand.SET_OPTIONS.cron.get(inter),
 			timezone: SchedulesCommand.SET_OPTIONS.timezone.get(inter),
+			messageChannelId: SchedulesCommand.SET_OPTIONS.messageChannelId.get(inter),
 			reason: SchedulesCommand.SET_OPTIONS.reason.get(inter),
 		}, isNil) as Partial<DbSchedule>;
 

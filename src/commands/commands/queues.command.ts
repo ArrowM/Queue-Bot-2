@@ -5,6 +5,7 @@ import { findKey, isNil, omitBy } from "lodash-es";
 import { db } from "../../db/db.ts";
 import { type DbQueue, QUEUE_TABLE } from "../../db/schema.ts";
 import { AutopullToggleOption } from "../../options/options/autopull-toggle.option.ts";
+import { BadgeToggleOption } from "../../options/options/badge-toggle.option.ts";
 import { ButtonsToggleOption } from "../../options/options/buttons-toggle.option.ts";
 import { ColorOption } from "../../options/options/color.option.ts";
 import { DisplayUpdateTypeOption } from "../../options/options/display-update-type.option.ts";
@@ -15,6 +16,7 @@ import { MemberDisplayTypeOption } from "../../options/options/member-display-ty
 import { NameOption } from "../../options/options/name.option.ts";
 import { NotificationsToggleOption } from "../../options/options/notifications-enable.option.ts";
 import { PullBatchSizeOption } from "../../options/options/pull-batch-size.option.ts";
+import { PullMessageOption } from "../../options/options/pull-message.option.ts";
 import { QueueOption } from "../../options/options/queue.option.ts";
 import { QueuesOption } from "../../options/options/queues.option.ts";
 import { RejoinCooldownPeriodOption } from "../../options/options/rejoin-cooldown-period.option.ts";
@@ -121,6 +123,7 @@ export class QueuesCommand extends AdminCommand {
 	static readonly ADD_OPTIONS = {
 		name: new NameOption({ required: true, description: "Name of the queue" }),
 		autopullToggle: new AutopullToggleOption({ description: "Toggle automatic pulling of queue members" }),
+		badgeToggle: new BadgeToggleOption({ description: "Toggle badges next to queue name" }),
 		buttonsToggle: new ButtonsToggleOption({ description: "Toggle buttons beneath queue displays" }),
 		color: new ColorOption({ description: "Color of the queue" }),
 		displayUpdateType: new DisplayUpdateTypeOption({ description: "How to update displays" }),
@@ -130,6 +133,7 @@ export class QueuesCommand extends AdminCommand {
 		memberDisplayType: new MemberDisplayTypeOption({ description: "How to display members" }),
 		notificationsToggle: new NotificationsToggleOption({ description: "Toggle whether users are DM-ed on pull" }),
 		pullBatchSize: new PullBatchSizeOption({ description: "How many queue members to include in a pull" }),
+		pullMessage: new PullMessageOption({ description: "Additional message to include on pull" }),
 		rejoinCooldownPeriod: new RejoinCooldownPeriodOption({ description: "# of seconds a member must wait before re-queueing after being pulled" }),
 		rejoinGracePeriod: new RejoinGracePeriodOption({ description: "# of seconds a member has to reclaim their queue spot after leaving" }),
 		roleInQueue: new RoleInQueueOption({ description: "Role to assign members of the queue" }),
@@ -146,6 +150,7 @@ export class QueuesCommand extends AdminCommand {
 			name: QueuesCommand.ADD_OPTIONS.name.get(inter),
 			...omitBy({
 				autopullToggle: QueuesCommand.ADD_OPTIONS.autopullToggle.get(inter),
+				badgeToggle: QueuesCommand.ADD_OPTIONS.badgeToggle.get(inter),
 				buttonsToggle: QueuesCommand.ADD_OPTIONS.buttonsToggle.get(inter),
 				color: QueuesCommand.ADD_OPTIONS.color.get(inter),
 				displayUpdateType: QueuesCommand.ADD_OPTIONS.displayUpdateType.get(inter),
@@ -155,6 +160,7 @@ export class QueuesCommand extends AdminCommand {
 				memberDisplayType: QueuesCommand.ADD_OPTIONS.memberDisplayType.get(inter),
 				notificationsToggle: QueuesCommand.ADD_OPTIONS.notificationsToggle.get(inter),
 				pullBatchSize: QueuesCommand.ADD_OPTIONS.pullBatchSize.get(inter),
+				pullMessage: QueuesCommand.ADD_OPTIONS.pullMessage.get(inter),
 				rejoinCooldownPeriod: QueuesCommand.ADD_OPTIONS.rejoinCooldownPeriod.get(inter),
 				rejoinGracePeriod: QueuesCommand.ADD_OPTIONS.rejoinGracePeriod.get(inter),
 				roleInQueueId: QueuesCommand.ADD_OPTIONS.roleInQueue.get(inter)?.id,
@@ -179,6 +185,7 @@ export class QueuesCommand extends AdminCommand {
 	static readonly SET_OPTIONS = {
 		queues: new QueuesOption({ required: true, description: "Queue(s) to update" }),
 		autopullToggle: new AutopullToggleOption({ description: "Toggle automatic pulling of queue members" }),
+		badgeToggle: new BadgeToggleOption({ description: "Toggle badges next to queue name" }),
 		buttonsToggle: new ButtonsToggleOption({ description: "Toggle buttons beneath queue displays" }),
 		color: new ColorOption({ description: "Color of the queue" }),
 		displayUpdateType: new DisplayUpdateTypeOption({ description: "How to update displays" }),
@@ -189,6 +196,7 @@ export class QueuesCommand extends AdminCommand {
 		name: new NameOption({ description: "Name of the queue" }),
 		notificationsToggle: new NotificationsToggleOption({ description: "Toggle whether users are DM-ed on pull" }),
 		pullBatchSize: new PullBatchSizeOption({ description: "How many queue members to include in a pull" }),
+		pullMessage: new PullMessageOption({ description: "Additional message to include on pull" }),
 		rejoinCooldownPeriod: new RejoinCooldownPeriodOption({ description: "# of seconds a  member must wait before re-queueing after being pulled" }),
 		rejoinGracePeriod: new RejoinGracePeriodOption({ description: "# of seconds a  member has to reclaim their queue spot after leaving" }),
 		roleInQueue: new RoleInQueueOption({ description: "Role to assign members of the queue" }),
@@ -203,6 +211,7 @@ export class QueuesCommand extends AdminCommand {
 		const queues = await QueuesCommand.SET_OPTIONS.queues.get(inter);
 		const update = omitBy({
 			autopullToggle: QueuesCommand.SET_OPTIONS.autopullToggle.get(inter),
+			badgeToggle: QueuesCommand.SET_OPTIONS.badgeToggle.get(inter),
 			buttonsToggle: QueuesCommand.SET_OPTIONS.buttonsToggle.get(inter),
 			color: QueuesCommand.SET_OPTIONS.color.get(inter),
 			displayUpdateType: QueuesCommand.SET_OPTIONS.displayUpdateType.get(inter),
@@ -213,6 +222,7 @@ export class QueuesCommand extends AdminCommand {
 			name: QueuesCommand.SET_OPTIONS.name.get(inter),
 			notificationsToggle: QueuesCommand.SET_OPTIONS.notificationsToggle.get(inter),
 			pullBatchSize: QueuesCommand.SET_OPTIONS.pullBatchSize.get(inter),
+			pullMessage: QueuesCommand.SET_OPTIONS.pullMessage.get(inter),
 			rejoinCooldownPeriod: QueuesCommand.SET_OPTIONS.rejoinCooldownPeriod.get(inter),
 			rejoinGracePeriod: QueuesCommand.SET_OPTIONS.rejoinGracePeriod.get(inter),
 			roleInQueueId: QueuesCommand.SET_OPTIONS.roleInQueue.get(inter)?.id,
@@ -264,6 +274,7 @@ export class QueuesCommand extends AdminCommand {
 
 		const selectMenuOptions = [
 			{ name: AutopullToggleOption.ID, value: QUEUE_TABLE.autopullToggle.name },
+			{ name: BadgeToggleOption.ID, value: QUEUE_TABLE.badgeToggle.name },
 			{ name: ButtonsToggleOption.ID, value: QUEUE_TABLE.buttonsToggle.name },
 			{ name: ColorOption.ID, value: QUEUE_TABLE.color.name },
 			{ name: DisplayUpdateTypeOption.ID, value: QUEUE_TABLE.displayUpdateType.name },
@@ -274,6 +285,7 @@ export class QueuesCommand extends AdminCommand {
 			{ name: NameOption.ID, value: QUEUE_TABLE.name.name },
 			{ name: NotificationsToggleOption.ID, value: QUEUE_TABLE.notificationsToggle.name },
 			{ name: PullBatchSizeOption.ID, value: QUEUE_TABLE.pullBatchSize.name },
+			{ name: PullMessageOption.ID, value: QUEUE_TABLE.pullMessage.name },
 			{ name: RejoinCooldownPeriodOption.ID, value: QUEUE_TABLE.rejoinCooldownPeriod.name },
 			{ name: RejoinGracePeriodOption.ID, value: QUEUE_TABLE.rejoinGracePeriod.name },
 			{ name: RoleInQueueOption.ID, value: QUEUE_TABLE.roleInQueueId.name },

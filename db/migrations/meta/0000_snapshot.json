@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "de0bece5-3761-45b7-86be-81f1e1478869",
+  "id": "7e4a92ca-7062-449e-bd6f-e1539502683e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "admin": {
@@ -752,6 +752,14 @@
           "autoincrement": false,
           "default": false
         },
+        "badge_toggle": {
+          "name": "badge_toggle",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
         "buttons_toggle": {
           "name": "buttons_toggle",
           "type": "integer",
@@ -822,6 +830,13 @@
           "notNull": true,
           "autoincrement": false,
           "default": 1
+        },
+        "pull_message": {
+          "name": "pull_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         },
         "rejoin_cooldown_period": {
           "name": "rejoin_cooldown_period",
@@ -962,6 +977,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "reason": {

@@ -35,17 +35,15 @@ export class PullCommand extends AdminCommand {
 		const count = PullCommand.PULL_OPTIONS.count.get(inter);
 		const members = await PullCommand.PULL_OPTIONS.members.get(inter);
 
-		const pulledMembers = await MemberUtils.deleteMembers({
+		await MemberUtils.deleteMembers({
 			store: inter.store,
 			queues,
 			reason: ArchivedMemberReason.Pulled,
 			by: { userIds: members?.map((member) => member.userId), count },
-			channelToLink: inter.channel,
+			messageChannelId: inter.channel.id,
 			force: true,
 		});
-		await inter.respond({
-			embeds: await MemberUtils.describePulledMembers(inter.store, queues, pulledMembers),
-			ephemeral: false,
-		}, true);
+
+		await inter.deleteReply();
 	}
 }

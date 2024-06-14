@@ -32,6 +32,7 @@ Admin commands are restricted to users with the **Administrator** permission and
 `/blacklist` - manage blacklisted users and roles  
 `/clear` - clear a queue  
 `/displays` - manage display channels  
+`/logging` - manage logging channels
 `/members` - manage queue members  
 `/move` - change the position of a queue member  
 `/prioritize` - manage prioritized users and roles  

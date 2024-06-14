@@ -14,7 +14,8 @@ import { type Parser } from "../utils/message-utils/parser.ts";
 interface BaseProperties {
 	store: Store;
 	/** InteractionUtils.respond() */
-	respond: (options: (InteractionReplyOptions | string), log?: boolean) => Promise<Message>;
+	respond: (message: (InteractionReplyOptions | string), log?: boolean) => Promise<Message>;
+	log: (originalMessage: Message | string) => Promise<Message>;
 	member: GuildMember; // overrides default type of `GuildMember | APIInteractionGuildMember`
 }
 

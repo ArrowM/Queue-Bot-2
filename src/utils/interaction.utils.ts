@@ -10,41 +10,34 @@ import {
 	type Interaction,
 	type InteractionReplyOptions,
 	type Message,
-	messageLink,
 	PermissionsBitField,
 } from "discord.js";
 
-import { Color, LogScope } from "../types/db.types.ts";
+import { Color } from "../types/db.types.ts";
 import type { AnyInteraction, SlashInteraction } from "../types/interaction.types.ts";
 import { CustomError } from "./error.utils.ts";
+import { LoggingUtils } from "./message-utils/logging.utils.ts";
 
 export namespace InteractionUtils {
-	export async function respond(inter: AnyInteraction, isAdmin: boolean, response: (InteractionReplyOptions | string), log = false) {
+	export async function respond(inter: AnyInteraction, isAdmin: boolean, message: (InteractionReplyOptions | string), log = false) {
 		const interaction = inter as any;
 
-		let result: Message;
-
-		if (typeof response === "object" && "ephemeral" in response && response.ephemeral === false) {
-			await Promise.all([
-				interaction.deleteReply(),
-				result = interaction.channel.send(response),
-			]);
-		}
-		else if (interaction.replied) {
-			result = await interaction.followUp(response);
+		let response: Message;
+		if (interaction.replied) {
+			response = await interaction.followUp(message);
 		}
 		else if (interaction.deferred) {
-			result = await interaction.editReply(response);
+			response = await interaction.editReply(message);
 		}
 		else {
-			result = await (await interaction.reply(response)).fetch();
+			response = await (await interaction.reply(message)).fetch();
 		}
 
 		if (log) {
-			await logResponse(inter, isAdmin, response, result);
+			await LoggingUtils.log(inter.store, isAdmin, response);
 		}
 
-		return result;
+		return response;
 	}
 
 	const CANCEL_BUTTON = new ButtonBuilder()
@@ -112,26 +105,6 @@ export namespace InteractionUtils {
 		}
 		if (!perms?.has(PermissionsBitField.Flags.SendMessages)) {
 			throwPermissionError("Send Messages");
-		}
-	}
-
-	async function logResponse(inter: AnyInteraction, isAdmin: boolean, response: (InteractionReplyOptions | string), result: Message) {
-		const { logChannelId, logScope } = inter.store.dbGuild();
-		const logChannel = await inter.store.jsChannel(logChannelId) as GuildTextBasedChannel;
-
-		if (!logChannel) return;
-
-		if (typeof response === "string") {
-			response = { content: response };
-		}
-
-		response.content = messageLink(result.channelId, result.id) + " " + response.content;
-
-		if (
-			isAdmin && ([LogScope.Admin, LogScope.All].includes(logScope)) ||
-			!isAdmin && ([LogScope.NonAdmin, LogScope.All].includes(logScope))
-		) {
-			await logChannel.send(response as any);
 		}
 	}
 }

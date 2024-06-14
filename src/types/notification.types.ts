@@ -1,8 +1,10 @@
 import type { GuildTextBasedChannel } from "discord.js";
 
-export enum NotificationType {
+import type { DbQueue } from "../db/schema.ts";
+
+export enum NotificationAction {
 	ADDED_TO_QUEUE = "added to",
-	REMOVED_FROM_QUEUE = "removed from",
+	KICKED_FROM_QUEUE = "kicked from",
 	PULLED_FROM_QUEUE = "pulled from",
 	// ADDED_TO_WHITELIST = "added to the whitelist for",
 	// REMOVED_FROM_WHITELIST = "removed from the whitelist for",
@@ -13,6 +15,7 @@ export enum NotificationType {
 }
 
 export interface NotificationOptions {
-	type: NotificationType;
+	queue: DbQueue,
+	action: NotificationAction;
 	channelToLink?: GuildTextBasedChannel;
 }

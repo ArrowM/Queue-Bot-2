@@ -94,6 +94,7 @@ CREATE TABLE `queue` (
 	`name` text NOT NULL,
 	`guild_id` text NOT NULL,
 	`autopull_toggle` integer DEFAULT false NOT NULL,
+	`badge_toggle` integer DEFAULT true NOT NULL,
 	`buttons_toggle` integer DEFAULT true NOT NULL,
 	`color` text DEFAULT 'Random' NOT NULL,
 	`display_update_type` text DEFAULT 'edit' NOT NULL,
@@ -103,6 +104,7 @@ CREATE TABLE `queue` (
 	`member_display_type` text DEFAULT 'mention' NOT NULL,
 	`notifications_toggle` integer DEFAULT true NOT NULL,
 	`pull_batch_size` integer DEFAULT 1 NOT NULL,
+	`pull_message` text,
 	`rejoin_cooldown_period` integer DEFAULT 0 NOT NULL,
 	`rejoin_grace_period` integer DEFAULT 0 NOT NULL,
 	`role_in_queue_id` text,
@@ -121,6 +123,7 @@ CREATE TABLE `schedule` (
 	`command` text NOT NULL,
 	`cron` text NOT NULL,
 	`timezone` text NOT NULL,
+	`user_id` text,
 	`reason` text,
 	FOREIGN KEY (`guild_id`) REFERENCES `guild`(`guild_id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`queue_id`) REFERENCES `queue`(`id`) ON UPDATE no action ON DELETE cascade

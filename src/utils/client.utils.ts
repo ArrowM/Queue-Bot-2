@@ -92,8 +92,8 @@ export namespace ClientUtils {
 				console.log("");
 				console.log(`Patch notes for '${fileName}' have not been sent. Enter a number to continue:`);
 				console.log("[1] send patch notes to patch notes channel");
-				console.log("[2] mark patch note as skipped (will be skipped in future runs)");
-				console.log("[3] ignore");
+				console.log("[2] mark patch note as already sent)");
+				console.log("[3] skip");
 				userInput = (await new Promise(resolve => process.stdin.once("data", resolve))).toString().trim();
 			}
 			if (userInput === "1") {
@@ -103,7 +103,7 @@ export namespace ClientUtils {
 			}
 			else if (userInput === "2") {
 				QueryUtils.insertPatchNotes({ fileName });
-				console.log(`Marked '${fileName}' as skipped. Continuing...`);
+				console.log(`Marked '${fileName}' as sent. Continuing...`);
 			}
 			else {
 				console.log("Continuing...");

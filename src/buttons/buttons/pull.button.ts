@@ -16,17 +16,14 @@ export class PullButton extends AdminButton {
 	async handle(inter: ButtonInteraction) {
 		const { queue } = await ButtonUtils.getButtonContext(inter);
 
-		const pulledMembers = await MemberUtils.deleteMembers({
+		await MemberUtils.deleteMembers({
 			store: inter.store,
 			queues: [queue],
 			reason: ArchivedMemberReason.Pulled,
-			channelToLink: inter.channel,
+			messageChannelId: inter.channel.id,
 			force: true,
 		});
 
-		await inter.respond({
-			embeds: await MemberUtils.describePulledMembers(inter.store, [queue], pulledMembers),
-			ephemeral: false,
-		}, true);
+		await inter.deleteReply();
 	}
 }

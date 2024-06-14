@@ -137,6 +137,10 @@ export class HelpCommand extends EveryoneCommand {
 						value: "Clear queues",
 					},
 					{
+						name: commandMention("logging", "get"),
+						value: "Manage logging settings",
+					},
+					{
 						name: commandMention("members", "get"),
 						value: "Manage queue members",
 					},
@@ -155,6 +159,10 @@ export class HelpCommand extends EveryoneCommand {
 					{
 						name: commandMention("queues", "get"),
 						value: "Manage queues",
+					},
+					{
+						name: commandMention("schedules", "get"),
+						value: "Manage schedules",
 					},
 					{
 						name: commandMention("shuffle"),

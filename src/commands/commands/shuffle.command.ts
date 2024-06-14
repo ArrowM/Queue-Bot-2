@@ -33,11 +33,10 @@ export class ShuffleCommand extends AdminCommand {
 			return;
 		}
 
-		queues.forEach((queue) => MemberUtils.shuffleMembers(inter.store, queue));
+		for (const queue of queues.values()) {
+			await MemberUtils.shuffleMembers(inter.store, queue, inter.channelId);
+		}
 
-		await inter.respond({
-			content: `Shuffled the '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`,
-			ephemeral: false,
-		}, true);
+		await inter.deleteReply();
 	}
 }

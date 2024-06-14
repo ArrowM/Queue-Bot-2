@@ -17,11 +17,12 @@ import type { Store } from "../db/store.ts";
 import { ArchivedMemberReason } from "../types/db.types.ts";
 import type { MemberDeleteBy } from "../types/member.types.ts";
 import type { ArrayOrCollection } from "../types/misc.types.ts";
-import { NotificationType } from "../types/notification.types.ts";
+import { NotificationAction } from "../types/notification.types.ts";
 import type { Mentionable } from "../types/parsing.types.ts";
 import { BlacklistUtils } from "./blacklist.utils.ts";
 import { DisplayUtils } from "./display.utils.ts";
 import { CustomError, NotOnQueueWhitelistError, OnQueueBlacklistError, QueueFullError, QueueLockedError } from "./error.utils.ts";
+import { LoggingUtils } from "./message-utils/logging.utils.ts";
 import { map } from "./misc.utils.ts";
 import { NotificationUtils } from "./notification.utils.ts";
 import { PriorityUtils } from "./priority.utils.ts";
@@ -121,7 +122,7 @@ export namespace MemberUtils {
 	 * @param options.queues - The queue(s) to delete members from.
 	 * @param options.reason - The reason for deleting the members.
 	 * @param options.by - Optionally specify the members to delete.
-	 * @param options.notification - Optionally notify the deleted members.
+	 * @param options.messageChannelId - Optionally specify a channel to send a kick/pull message in
 	 * @param options.force - Optionally force the deletion of members.
 	 */
 	export async function deleteMembers(options: {
@@ -129,11 +130,11 @@ export namespace MemberUtils {
 		queues: ArrayOrCollection<bigint, DbQueue>,
 		reason: ArchivedMemberReason,
 		by?: MemberDeleteBy,
-		channelToLink?: GuildTextBasedChannel;
+		messageChannelId?: Snowflake;
 		force?: boolean,
 	}) {
-		const { store, queues: _queues, reason, by, channelToLink, force } = options;
-		const queues = _queues instanceof Collection ? [..._queues.values()] : _queues;
+		const { store, reason, by, messageChannelId, force } = options;
+		const queues = options.queues instanceof Collection ? [...options.queues.values()] : options.queues;
 		const { userId, userIds, roleId, count } = by ?? {} as any;
 		const deletedMembers: DbMember[] = [];
 
@@ -159,17 +160,26 @@ export namespace MemberUtils {
 				}
 			}
 
-			// Notify of pull or kick
-			let notification: NotificationType;
-			if (reason === ArchivedMemberReason.Pulled) {
-				notification = NotificationType.PULLED_FROM_QUEUE;
+			if ([ArchivedMemberReason.Pulled, ArchivedMemberReason.Kicked].includes(reason)) {
+				// Notify of pull or kick
+				const action = (reason === ArchivedMemberReason.Pulled)
+					? NotificationAction.PULLED_FROM_QUEUE
+					: NotificationAction.KICKED_FROM_QUEUE;
+				let messageLink;
+				if (messageChannelId) {
+					const messageChannel = await store.jsChannel(messageChannelId) as GuildTextBasedChannel;
+					if (messageChannel) {
+						const embed = await describePulledMembers(store, queue, deleted);
+						const message = await messageChannel?.send({ embeds: [embed] });
+						LoggingUtils.log(store, true, message).catch(() => null);
+						messageLink = message.url;
+					}
+				}
+				if (queue.notificationsToggle) {
+					await NotificationUtils.dmToMembers({ store, queue, action, members: deleted, messageLink });
+				}
 			}
-			else if (reason === ArchivedMemberReason.Kicked) {
-				notification = NotificationType.REMOVED_FROM_QUEUE;
-			}
-			if (queue.notificationsToggle && notification) {
-				NotificationUtils.notify(store, deleted, { type: notification, channelToLink });
-			}
+
 
 			DisplayUtils.requestDisplayUpdate(store, queue.id);
 
@@ -230,20 +240,38 @@ export namespace MemberUtils {
 		});
 	}
 
-	export function clearMembers(store: Store, queue: DbQueue) {
+	export async function clearMembers(store: Store, queue: DbQueue, messageChannelId: Snowflake) {
 		const members = store.deleteManyMembers({ queueId: queue.id }, ArchivedMemberReason.Kicked);
+
 		DisplayUtils.requestDisplayUpdate(store, queue.id);
+
+		if (messageChannelId) {
+			const messageChannel = await store.jsChannel(messageChannelId) as GuildTextBasedChannel;
+			if (messageChannel) {
+				const message = await messageChannel?.send(`Cleared the ${queueMention(queue)} queue.`).catch(() => null);
+				LoggingUtils.log(store, true, message).catch(() => null);
+			}
+		}
+
 		return members;
 	}
 
-	export function shuffleMembers(store: Store, queue: DbQueue) {
-		return db.transaction(() => {
+	export async function shuffleMembers(store: Store, queue: DbQueue, messageChannelId: Snowflake) {
+		return db.transaction(async () => {
 			const members = store.dbMembers().filter(member => member.queueId === queue.id);
 			const shuffledPositionTimes = shuffle(members.map(member => member.positionTime));
 
 			members.forEach((member) => store.updateMember({ ...member, positionTime: shuffledPositionTimes.pop() }));
 
 			DisplayUtils.requestDisplayUpdate(store, queue.id);
+
+			if (messageChannelId) {
+				const messageChannel = await store.jsChannel(messageChannelId) as GuildTextBasedChannel;
+				if (messageChannel) {
+					const message = await messageChannel?.send(`Shuffled the ${queueMention(queue)} queue.`).catch(() => null);
+					LoggingUtils.log(store, true, message).catch(() => null);
+				}
+			}
 
 			return members;
 		});
@@ -257,23 +285,18 @@ export namespace MemberUtils {
 			.setDescription(await DisplayUtils.createMemberDisplayLine(store, member, position));
 	}
 
-	export async function describePulledMembers(store: Store, queues: ArrayOrCollection<bigint, DbQueue>, pulledMembers: DbMember[]) {
-		const embeds: EmbedBuilder[] = [];
-		const _queues = queues instanceof Collection ? [...queues.values()] : queues;
-		for (const queue of _queues) {
-			const pulledMembersOfQueue = pulledMembers.filter(member => member.queueId === queue.id);
-			const membersStr = await membersMention(store, pulledMembersOfQueue);
-			const description = pulledMembersOfQueue.length
-				? `Pulled from queue:\n${membersStr}`
-				: `No members were pulled from the '${queueMention(queue)}' queue`;
-			embeds.push(
-				new EmbedBuilder()
-					.setTitle(queueMention(queue))
-					.setColor(queue.color)
-					.setDescription(description),
-			);
+	export async function describePulledMembers(store: Store, queue: DbQueue, pulledMembers: DbMember[]) {
+		const pulledMembersOfQueue = pulledMembers.filter(member => member.queueId === queue.id);
+		const membersStr = await membersMention(store, pulledMembersOfQueue);
+		let description = "";
+		if (queue.pullMessage) {
+			description += `> ${queue.pullMessage}\n\n`;
 		}
-		return embeds;
+		description += pulledMembersOfQueue.length ? `Pulled from queue:\n${membersStr}` : `No members were pulled from queue`;
+		return new EmbedBuilder()
+			.setTitle(queueMention(queue))
+			.setColor(queue.color)
+			.setDescription(description);
 	}
 
 	export async function describeMyPositions(store: Store, userId: Snowflake) {

@@ -33,11 +33,10 @@ export class ClearCommand extends AdminCommand {
 			return;
 		}
 
-		queues.forEach(queue => MemberUtils.clearMembers(inter.store, queue));
+		for (const queue of queues.values()) {
+			await MemberUtils.clearMembers(inter.store, queue, inter.channelId);
+		}
 
-		await inter.respond({
-			content: `Cleared the '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`,
-			ephemeral: false,
-		}, true);
+		await inter.deleteReply();
 	}
 }

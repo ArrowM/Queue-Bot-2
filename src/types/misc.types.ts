@@ -4,12 +4,12 @@ import type { GuildStat } from "./db.types.ts";
 
 // /  Channel types
 
-export const TEXT_CHANNELS = [
+export const TEXT_CHANNEL_TYPE = [
 	ChannelType.GuildText,
 	ChannelType.GuildAnnouncement,
 ] as const;
 
-export const VOICE_CHANNELS = [
+export const VOICE_CHANNEL_TYPE = [
 	ChannelType.GuildVoice,
 	ChannelType.GuildStageVoice,
 ] as const;

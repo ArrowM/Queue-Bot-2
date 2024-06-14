@@ -26,10 +26,12 @@ export const ERROR_HEADER_LINE = "⚠️    ERROR    ⚠️";
 
 export function queueMention(queue: DbQueue): string {
 	const badges = [];
-	if (queue.lockToggle) badges.push("🔒");
-	if (!queue.notificationsToggle) badges.push("🔕");
-	if (queue.autopullToggle) badges.push("🔁");
-	if (queue.voiceOnlyToggle) badges.push("🔊");
+	if (queue.badgeToggle) {
+		if (queue.lockToggle) badges.push("🔒");
+		if (!queue.notificationsToggle) badges.push("🔕");
+		if (queue.autopullToggle) badges.push("🔁");
+		if (queue.voiceOnlyToggle) badges.push("🔊");
+	}
 	return bold(queue.name) + (badges.length ? " " + badges.join(" ") : "");
 }
 

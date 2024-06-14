@@ -129,7 +129,7 @@ export namespace ScheduleUtils {
 
 		switch (schedule.command) {
 			case ScheduleCommand.Clear:
-				MemberUtils.clearMembers(store, queue);
+				await MemberUtils.clearMembers(store, queue, schedule.messageChannelId);
 				break;
 			case ScheduleCommand.Pull:
 				await MemberUtils.deleteMembers({
@@ -142,7 +142,7 @@ export namespace ScheduleUtils {
 				DisplayUtils.requestDisplayUpdate(store, queue.id, { updateTypeOverride: DisplayUpdateType.Replace });
 				break;
 			case ScheduleCommand.Shuffle:
-				MemberUtils.shuffleMembers(store, queue);
+				await MemberUtils.shuffleMembers(store, queue, schedule.messageChannelId);
 		}
 	}
 

@@ -34,7 +34,7 @@ docker build
 
 [Install Node.js](https://nodejs.org/en/download/package-manager).
 
-Install dependencies:
+Run the setup script (**this should be done every time after pulling**):
 
 ```bash
 npm run setup
@@ -55,6 +55,7 @@ to the files that will need to be added/updated.
 
 1. Add a new `.command.ts` file to the `src/commands/commands` directory. Commands should extend `EveryoneCommand` or `AdminCommand`.
 2. Add the new command class to the `src/commands.command.loader.ts` file.
+3. Update the `README.md` file and the help commands in the `src/commands/help.command.ts` file.
 
 ### Adding command options
 
@@ -78,7 +79,7 @@ If you need to add or modify database tables or columns:
 1. Update the `src/db/schema.ts` file.
 2. If you add a new table, or need new querying methods, update the `src/db/store.ts` file and the `src/db/queries.ts` file.
 3. Run `drizzle-kit generate` in the terminal. The drizzle command will generate the necessary SQL migration files for you, which will then
-   be applied as part of `npm start`.
+   be applied with `drizzle-kit push`.
 
 ## Misc
 

@@ -8,7 +8,7 @@ import { QueuesOption } from "../../options/options/queues.option.ts";
 import { AdminCommand } from "../../types/command.types.ts";
 import { ArchivedMemberReason } from "../../types/db.types.ts";
 import type { SlashInteraction } from "../../types/interaction.types.ts";
-import { NotificationType } from "../../types/notification.types.ts";
+import { NotificationAction } from "../../types/notification.types.ts";
 import { MemberUtils } from "../../utils/member.utils.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
 import { NotificationUtils } from "../../utils/notification.utils.ts";
@@ -92,12 +92,17 @@ export class MembersCommand extends AdminCommand {
 
 		const insertedMembers = await MemberUtils.insertMentionables(inter.store, mentionables, queues);
 
-		await inter.respond(`Added ${usersMention(insertedMembers)} to '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`, true);
+		const message = await inter.respond(`Added ${usersMention(insertedMembers)} to '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`, true);
 
-		NotificationUtils.notify(inter.store, insertedMembers, {
-			type: NotificationType.ADDED_TO_QUEUE,
-			channelToLink: inter.channel,
-		});
+		for (const queue of queues.values()) {
+			await NotificationUtils.dmToMembers({
+				store: inter.store,
+				queue,
+				action: NotificationAction.ADDED_TO_QUEUE,
+				members: insertedMembers,
+				messageLink: message.url,
+			});
+		}
 
 		const updatedQueues = insertedMembers.map(inserted => inter.store.dbQueues().get(inserted.queueId));
 		await MembersCommand.members_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
@@ -144,7 +149,7 @@ export class MembersCommand extends AdminCommand {
 			queues,
 			reason: ArchivedMemberReason.Kicked,
 			by: { userIds: members.map(member => member.userId) },
-			channelToLink: inter.channel,
+			messageChannelId: inter.channel.id,
 			force: true,
 		});
 

@@ -1,35 +1,35 @@
-import { groupBy } from "lodash-es";
+import { map } from "lodash-es";
 
-import type { DbMember } from "../db/schema.ts";
+import type { DbMember, DbQueue } from "../db/schema.ts";
 import type { Store } from "../db/store.ts";
-import type { NotificationOptions } from "../types/notification.types.ts";
+import { NotificationAction } from "../types/notification.types.ts";
 import { queueMention } from "./string.utils.ts";
 
 export namespace NotificationUtils {
-	export function notify(
+	export async function dmToMembers(options: {
 		store: Store,
-		membersToNotify: DbMember[],
-		notificationOptions: NotificationOptions,
-	) {
-		const { type, channelToLink } = notificationOptions;
-		const notificationPromises = [];
-		const queues = store.dbQueues();
+		queue: DbQueue,
+		action: NotificationAction,
+		members: DbMember[],
+		messageLink?: string,
+	}) {
+		const { store, queue, action, members, messageLink } = options;
 
-		for (const [userId, members] of Object.entries(groupBy(membersToNotify, "userId"))) {
-			const queuesOfMember = members.map(member => queues.get(member.queueId));
-			const queuesStr = queuesOfMember.length
-				? `${queuesOfMember.map(queueMention).join(", ")} queue${queuesOfMember.length > 1 ? "s" : ""}`
-				: "whole server";
-			const link = channelToLink ?? store.guild;
-			const message = `You were just ${type} the ${queuesStr}.\n${link}`;
+		const link = messageLink ?? store.guild;
 
-			notificationPromises.push(
-				store.jsMember(userId).then(member =>
-					member.user.send(message).catch(() => null),
-				),
-			);
+		// build message
+		let message = `${link}You were just ${action} the '${queueMention(queue)}' queue.`;
+		if (queue.pullMessage) {
+			message += `\n> ${queue.pullMessage}`;
 		}
 
-		Promise.all(notificationPromises);
+		// send
+		Promise.all(
+			map(members, member => {
+				store.jsMember(member.userId).then(member => {
+					member?.user?.send(message).catch(() => null);
+				});
+			}),
+		);
 	}
 }

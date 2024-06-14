@@ -5,7 +5,7 @@ import type { ButtonInteraction } from "../../types/interaction.types.ts";
 import { MemberUtils } from "../../utils/member.utils.ts";
 
 export class MyPositionsButton extends EveryoneButton {
-	static readonly ID = "my-positions";
+	static readonly ID = "my_positions";
 
 	customId = MyPositionsButton.ID;
 	label = "My Positions";

@@ -4,6 +4,7 @@ import type { BaseOption } from "./base-option.ts";
 import { AdminOption } from "./options/admin.option.ts";
 import { AdminsOption } from "./options/admins.option.ts";
 import { AutopullToggleOption } from "./options/autopull-toggle.option.ts";
+import { BadgeToggleOption } from "./options/badge-toggle.option.ts";
 import { BlacklistedOption } from "./options/blacklisted.option.ts";
 import { BlacklistedsOption } from "./options/blacklisteds.option.ts";
 import { ButtonsToggleOption } from "./options/buttons-toggle.option.ts";
@@ -25,6 +26,7 @@ import { MemberDisplayTypeOption } from "./options/member-display-type.option.ts
 import { MembersOption } from "./options/members.option.ts";
 import { MentionableOption } from "./options/mentionable.option.ts";
 import { MessageOption } from "./options/message.option.ts";
+import { MessageChannelOption } from "./options/message-channel.option.ts";
 import { NameOption } from "./options/name.option.ts";
 import { NotificationsToggleOption } from "./options/notifications-enable.option.ts";
 import { NumberOption } from "./options/number.option.ts";
@@ -33,6 +35,7 @@ import { PrioritizedOption } from "./options/prioritized.option.ts";
 import { PrioritizedsOption } from "./options/prioritizeds.option.ts";
 import { PriorityOrderOption } from "./options/priority-order.option.ts";
 import { PullBatchSizeOption } from "./options/pull-batch-size.option.ts";
+import { PullMessageOption } from "./options/pull-message.option.ts";
 import { QueueOption } from "./options/queue.option.ts";
 import { QueuesOption } from "./options/queues.option.ts";
 import { ReasonOption } from "./options/reason.option.ts";
@@ -57,6 +60,7 @@ export const OPTIONS = new Collection<string, BaseOption>([
 	[AdminOption.ID, new AdminOption()],
 	[AdminsOption.ID, new AdminsOption()],
 	[AutopullToggleOption.ID, new AutopullToggleOption()],
+	[BadgeToggleOption.ID, new BadgeToggleOption()],
 	[BlacklistedOption.ID, new BlacklistedOption()],
 	[BlacklistedsOption.ID, new BlacklistedsOption()],
 	[ButtonsToggleOption.ID, new ButtonsToggleOption()],
@@ -77,6 +81,7 @@ export const OPTIONS = new Collection<string, BaseOption>([
 	[MemberDisplayTypeOption.ID, new MemberDisplayTypeOption()],
 	[MembersOption.ID, new MembersOption()],
 	[MentionableOption.ID, new MentionableOption()],
+	[MessageChannelOption.ID, new MessageChannelOption()],
 	[MessageOption.ID, new MessageOption()],
 	[NameOption.ID, new NameOption()],
 	[NotificationsToggleOption.ID, new NotificationsToggleOption()],
@@ -86,6 +91,7 @@ export const OPTIONS = new Collection<string, BaseOption>([
 	[PrioritizedsOption.ID, new PrioritizedsOption()],
 	[PriorityOrderOption.ID, new PriorityOrderOption()],
 	[PullBatchSizeOption.ID, new PullBatchSizeOption()],
+	[PullMessageOption.ID, new PullMessageOption()],
 	[QueueOption.ID, new QueueOption()],
 	[QueuesOption.ID, new QueuesOption()],
 	[ReasonOption.ID, new ReasonOption()],
