@@ -3,7 +3,11 @@
 **Queue Bot** is a Discord bot that provides live user queues, is customizable, and easy to use. Built
 with [Discord.js](https://discord.js.org/).
 
-[⛑️ Support server](https://discord.gg/RbmfnP3) | [🗃️ GitHub](https://github.com/ArrowM/Queue-Bot) | [💖 Donate](https://www.buymeacoffee.com/Arroww)
+<p align="center">
+  <a href="https://discord.gg/RbmfnP3">⛑️ Support server</a> | 
+  <a href="https://github.com/ArrowM/Queue-Bot">🗃️ GitHub</a> | 
+  <a href="https://www.buymeacoffee.com/Arroww">💖 Donate</a>
+</p>
 
 ## Getting started
 
@@ -26,7 +30,7 @@ with [Discord.js](https://discord.js.org/).
 
 ## Commands for admins
 
-Admin commands are restricted to users with the **Administrator** permission and users added via `/admins add`.
+Restricted to users with the **Administrator** permission and users added via `/admins add`.
 
 `/admins` - manage admin users and roles  
 `/blacklist` - manage blacklisted users and roles  
