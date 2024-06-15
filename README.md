@@ -49,6 +49,3 @@ Restricted to users with the **Administrator** permission and users added via `/
 `/shuffle` - shuffle queue(s)  
 `/voice` - manage voice integrations  
 `/whitelist` - manage whitelisted users and roles  
-
-## Demo
-
