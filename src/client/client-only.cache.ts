@@ -1,9 +1,10 @@
 import { LimitedCollection, Message } from "discord.js";
+
 import { CLIENT } from "./CLIENT.ts";
 
 /**
  * This message cache only caches messages from this bot
- **/
+ * */
 export class BotOnlyMessageCollection<K, V> extends LimitedCollection<K, V> {
 	public set(key: any, value: any) {
 		const msg = value as Message;

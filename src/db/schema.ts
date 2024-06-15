@@ -76,7 +76,7 @@ export const QUEUE_TABLE = sqliteTable("queue", ({
 	roleOnPullId: text("role_on_pull_id").$type<Snowflake | null>(),
 	size: integer("size"),
 	timestampType: text("time_display_type").$type<TimestampType>().default(TimestampType.Off),
-	voiceDestinationChannelId: text("destination_channel_id").$type<Snowflake | null>(),
+	voiceDestinationChannelId: text("voice_destination_channel_id").$type<Snowflake | null>(),
 	voiceOnlyToggle: integer("voice_only_toggle", { mode: "boolean" }).notNull().default(false),
 }),
 (table) => ({

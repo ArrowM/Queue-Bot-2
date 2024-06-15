@@ -1,6 +1,6 @@
 <!-- TOC -->
   * [Running Locally](#running-locally)
-    * [Option 1: Install and run with Docker](#option-1-install-and-run-with-docker)
+    * [Option 1: Install and run with Docker (recommended)](#option-1-install-and-run-with-docker-recommended)
     * [Option 2: Manually install and run](#option-2-manually-install-and-run)
   * [How to create and edit commands](#how-to-create-and-edit-commands)
     * [Adding commands](#adding-commands)

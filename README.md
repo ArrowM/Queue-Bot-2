@@ -1,4 +1,7 @@
-# Queue Bot
+<div align="center">
+   <h1>Queue Bot</h1>
+</div>
+
 
 **Queue Bot** is a Discord bot that provides live user queues, is customizable, and easy to use. Built
 with [Discord.js](https://discord.js.org/).
@@ -46,3 +49,6 @@ Restricted to users with the **Administrator** permission and users added via `/
 `/shuffle` - shuffle queue(s)  
 `/voice` - manage voice integrations  
 `/whitelist` - manage whitelisted users and roles  
+
+## Demo
+

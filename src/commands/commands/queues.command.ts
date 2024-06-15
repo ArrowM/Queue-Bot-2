@@ -1,4 +1,4 @@
-import { bold, channelMention, type Collection, inlineCode, roleMention, SlashCommandBuilder } from "discord.js";
+import { channelMention, type Collection, inlineCode, roleMention, SlashCommandBuilder } from "discord.js";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 import { findKey, isNil, omitBy } from "lodash-es";
 
@@ -35,7 +35,7 @@ import { MemberUtils } from "../../utils/member.utils.ts";
 import { SelectMenuTransactor } from "../../utils/message-utils/select-menu-transactor.ts";
 import { toCollection } from "../../utils/misc.utils.ts";
 import { QueueUtils } from "../../utils/queue.utils.ts";
-import { describeTable, queueMention, queuesMention, timeMention } from "../../utils/string.utils.ts";
+import { describeTable, propertyMention, queueMention, queuesMention, timeMention } from "../../utils/string.utils.ts";
 
 export class QueuesCommand extends AdminCommand {
 	static readonly ID = "queues";
@@ -168,6 +168,7 @@ export class QueuesCommand extends AdminCommand {
 				size: QueuesCommand.ADD_OPTIONS.size.get(inter),
 				timestampType: QueuesCommand.ADD_OPTIONS.timestampType.get(inter),
 				voiceOnlyToggle: QueuesCommand.ADD_OPTIONS.voiceOnlyToggle.get(inter),
+				voiceDestinationChannelId: QueuesCommand.ADD_OPTIONS.voiceDestinationChannel.get(inter)?.id,
 			}, isNil),
 		};
 
@@ -230,6 +231,7 @@ export class QueuesCommand extends AdminCommand {
 			size: QueuesCommand.SET_OPTIONS.size.get(inter),
 			timestampType: QueuesCommand.SET_OPTIONS.timestampType.get(inter),
 			voiceOnlyToggle: QueuesCommand.SET_OPTIONS.voiceOnlyToggle.get(inter),
+			voiceDestinationChannelId: QueuesCommand.ADD_OPTIONS.voiceDestinationChannel.get(inter)?.id,
 		}, isNil);
 
 		if (update.voiceOnlyToggle) {
@@ -256,7 +258,7 @@ export class QueuesCommand extends AdminCommand {
 
 		const { updatedQueues } = await QueueUtils.updateQueues(inter.store, queues, update);
 
-		await inter.respond(`Updated ${Object.keys(update).map(bold).join(", ")} of '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`, true);
+		await inter.respond(`Updated ${Object.keys(update).map(propertyMention).join(", ")} of '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`, true);
 
 		await QueuesCommand.queues_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}

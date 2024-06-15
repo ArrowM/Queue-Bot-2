@@ -63,14 +63,14 @@ export class VoiceCommand extends AdminCommand {
 			subcommand
 				.setName("set_destination")
 				.setDescription("Set voice destination channel (also possible with /queues set)");
-			Object.values(VoiceCommand.ADD_SOURCE_OPTIONS).forEach(option => option.addToCommand(subcommand));
+			Object.values(VoiceCommand.SET_DESTINATION_OPTIONS).forEach(option => option.addToCommand(subcommand));
 			return subcommand;
 		})
 		.addSubcommand(subcommand => {
 			subcommand
 				.setName("disable_destination")
 				.setDescription("Reset voice destination channel (also possible with /queues reset)");
-			Object.values(VoiceCommand.SET_SOURCE_OPTIONS).forEach(option => option.addToCommand(subcommand));
+			Object.values(VoiceCommand.DISABLE_DESTINATION_OPTIONS).forEach(option => option.addToCommand(subcommand));
 			return subcommand;
 		});
 
@@ -171,19 +171,19 @@ export class VoiceCommand extends AdminCommand {
 
 	static readonly SET_SOURCE_OPTIONS = {
 		voices: new VoicesOption({ required: true, description: "Voice integrations to update" }),
-		sourceVoiceChannel: new VoiceSourceChannelOption({ description: "Voice channel to pull members from" }),
+		voiceSourceChannel: new VoiceSourceChannelOption({ description: "Voice channel to pull members from" }),
 		joinSync: new JoinSyncToggleOption({ description: "Toggle whether members are enqueued on voice join" }),
 		leaveSync: new LeaveSyncToggleOption({ description: "Toggle whether members are dequeued on voice leave" }),
 	};
 
 	static async voice_set_source(inter: SlashInteraction) {
 		const voices = await VoiceCommand.SET_SOURCE_OPTIONS.voices.get(inter);
-		const sourceVoiceChannel = VoiceCommand.SET_SOURCE_OPTIONS.sourceVoiceChannel.get(inter);
+		const voiceSourceChannelId = VoiceCommand.SET_SOURCE_OPTIONS.voiceSourceChannel.get(inter)?.id;
 		const joinSync = VoiceCommand.SET_SOURCE_OPTIONS.joinSync.get(inter);
 		const leaveSync = VoiceCommand.SET_SOURCE_OPTIONS.leaveSync.get(inter);
 
 		const update = omitBy({
-			sourceVoiceChannelId: sourceVoiceChannel?.id,
+			voiceSourceChannelId,
 			joinSync,
 			leaveSync,
 		}, isNil);
@@ -224,18 +224,16 @@ export class VoiceCommand extends AdminCommand {
 
 	static readonly SET_DESTINATION_OPTIONS = {
 		queues: new QueuesOption({ required: true, description: "Queue(s) to set destination voice channel" }),
-		destinationVoiceChannel: new VoiceDestinationChannelOption({ required: true, description: "Voice channel to push members to" }),
+		voiceDestinationChannel: new VoiceDestinationChannelOption({ required: true, description: "Voice channel to push members to" }),
 	};
 
 	static async voice_set_destination(inter: SlashInteraction) {
 		const queues = await VoiceCommand.SET_DESTINATION_OPTIONS.queues.get(inter);
-		const voiceDestinationChannelId = VoiceCommand.SET_DESTINATION_OPTIONS.destinationVoiceChannel.get(inter)?.id;
+		const voiceDestinationChannelId = VoiceCommand.SET_DESTINATION_OPTIONS.voiceDestinationChannel.get(inter)?.id;
 
-		const { updatedQueues } = await QueueUtils.updateQueues(inter.store, queues, { voiceDestinationChannelId });
+		await QueueUtils.updateQueues(inter.store, queues, { voiceDestinationChannelId });
 
 		await inter.respond(`Updated voice destination channel of '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`, true);
-
-		await VoiceCommand.voice_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
 	// ====================================================================
@@ -249,10 +247,8 @@ export class VoiceCommand extends AdminCommand {
 	static async voice_disable_destination(inter: SlashInteraction) {
 		const queues = await VoiceCommand.DISABLE_DESTINATION_OPTIONS.queues.get(inter);
 
-		const { updatedQueues } = await QueueUtils.updateQueues(inter.store, queues, { voiceDestinationChannelId: null });
+		await QueueUtils.updateQueues(inter.store, queues, { voiceDestinationChannelId: null });
 
 		await inter.respond(`Unset voice destination channel of '${queuesMention(queues)}' queue${queues.size > 1 ? "s" : ""}.`, true);
-
-		await VoiceCommand.voice_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 }

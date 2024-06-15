@@ -527,7 +527,7 @@ export class Store {
 	) {
 		this.dbVoices.clear();
 		const cond = "channelId" in by
-			? this.createCondition(VOICE_TABLE, { sourceChannelId: by.channelId, destinationChannelId: by.channelId })
+			? this.createCondition(VOICE_TABLE, { sourceChannelId: by.channelId, destinationChannelId: by.channelId }, "OR")
 			: this.createCondition(VOICE_TABLE, by);
 		return db.delete(VOICE_TABLE).where(cond).returning().all();
 	}

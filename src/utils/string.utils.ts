@@ -108,6 +108,10 @@ export function timeMention(seconds: number) {
 	return str;
 }
 
+export function propertyMention(propertName: string) {
+	return bold(convertCamelCaseToTitleCase(propertName));
+}
+
 const GLOBAL_HIDDEN_PROPERTIES = ["id", "guildId", "queueId", "isRole"];
 
 export function describeTable<T extends object>(options: {

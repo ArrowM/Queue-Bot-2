@@ -1,8 +1,8 @@
 import { Client, GatewayIntentBits, Options } from "discord.js";
 
+import { ClientListeners } from "../listeners/client.listeners.ts";
 import { ClientUtils } from "../utils/client.utils.ts";
 import { ScheduleUtils } from "../utils/schedule.utils.ts";
-import { ClientListeners } from "../listeners/client.listeners.ts";
 import { BotOnlyMessageCollection } from "./client-only.cache.ts";
 
 export const CLIENT = new Client({
