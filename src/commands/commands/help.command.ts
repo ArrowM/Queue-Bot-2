@@ -130,12 +130,12 @@ export class HelpCommand extends EveryoneCommand {
 						value: "Blacklist a user or role from queues",
 					},
 					{
-						name: commandMention("displays", "get"),
-						value: "Manage display channels",
-					},
-					{
 						name: commandMention("clear"),
 						value: "Clear queues",
+					},
+					{
+						name: commandMention("displays", "get"),
+						value: "Manage display channels",
 					},
 					{
 						name: commandMention("logging", "get"),

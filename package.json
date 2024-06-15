@@ -5,7 +5,7 @@
   "scripts": {
     "setup": "npm ci && drizzle-kit push",
     "start": "node --loader @swc-node/register/esm --no-warnings --enable-source-maps --env-file .env src/index.ts",
-    "dock": "docker-compose up --build -d",
+    "dock": "docker-compose up --build -d && docker logs -f queue-bot",
     "lint": "eslint src --fix"
   },
   "type": "module",

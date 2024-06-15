@@ -13,7 +13,7 @@ import {
 import { chunk } from "lodash-es";
 import AutoPoster from "topgg-autoposter";
 
-import { CLIENT } from "../client/client.ts";
+import { CLIENT } from "../client/CLIENT.ts";
 import { COMMANDS } from "../commands/commands.loader.ts";
 import { QueryUtils } from "../db/queries.ts";
 import { Store } from "../db/store.ts";
@@ -121,7 +121,6 @@ export namespace ClientUtils {
 	}
 
 	export async function checkForOfflineVoiceChanges() {
-		console.time("Checked for offline voice changes");
 		// Force fetch of all guilds
 		await CLIENT.guilds.fetch();
 		const voices = QueryUtils.selectAllVoices();
@@ -139,6 +138,5 @@ export namespace ClientUtils {
 			}
 			await Promise.all(promises);
 		}
-		console.timeEnd("Checked for offline voice changes");
 	}
 }

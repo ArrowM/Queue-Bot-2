@@ -2,7 +2,7 @@ import { Events } from "discord.js";
 
 import { ClientHandler } from "../handlers/client.handler.ts";
 import { InteractionHandler } from "../handlers/interaction.handler.ts";
-import { CLIENT } from "./client.ts";
+import { CLIENT } from "../client/CLIENT.ts";
 
 export namespace ClientListeners {
 	export function load() {

@@ -16,44 +16,44 @@ import { toCollection } from "../../utils/misc.utils.ts";
 import { ScheduleUtils } from "../../utils/schedule.utils.ts";
 import { describeTable, queuesMention } from "../../utils/string.utils.ts";
 
-export class SchedulesCommand extends AdminCommand {
+export class ScheduleCommand extends AdminCommand {
 	static readonly ID = "schedules";
 
-	schedules_get = SchedulesCommand.schedules_get;
-	schedules_add = SchedulesCommand.schedules_add;
-	schedules_set = SchedulesCommand.schedules_set;
-	schedules_delete = SchedulesCommand.schedules_delete;
-	schedules_help = SchedulesCommand.schedules_help;
+	schedule_get = ScheduleCommand.schedule_get;
+	schedule_add = ScheduleCommand.schedule_add;
+	schedule_set = ScheduleCommand.schedule_set;
+	schedule_delete = ScheduleCommand.schedule_delete;
+	schedule_help = ScheduleCommand.schedule_help;
 
 	data = new SlashCommandBuilder()
-		.setName(SchedulesCommand.ID)
+		.setName(ScheduleCommand.ID)
 		.setDescription("Manage scheduled commands")
 		.addSubcommand((subcommand) => {
 			subcommand
 				.setName("get")
 				.setDescription("Get scheduled commands");
-			Object.values(SchedulesCommand.GET_OPTIONS).forEach(option => option.addToCommand(subcommand));
+			Object.values(ScheduleCommand.GET_OPTIONS).forEach(option => option.addToCommand(subcommand));
 			return subcommand;
 		})
 		.addSubcommand((subcommand) => {
 			subcommand
 				.setName("add")
 				.setDescription("Create a scheduled command");
-			Object.values(SchedulesCommand.ADD_OPTIONS).forEach(option => option.addToCommand(subcommand));
+			Object.values(ScheduleCommand.ADD_OPTIONS).forEach(option => option.addToCommand(subcommand));
 			return subcommand;
 		})
 		.addSubcommand((subcommand) => {
 			subcommand
 				.setName("set")
 				.setDescription("Update a scheduled command");
-			Object.values(SchedulesCommand.SET_OPTIONS).forEach(option => option.addToCommand(subcommand));
+			Object.values(ScheduleCommand.SET_OPTIONS).forEach(option => option.addToCommand(subcommand));
 			return subcommand;
 		})
 		.addSubcommand((subcommand) => {
 			subcommand
 				.setName("delete")
 				.setDescription("Delete a scheduled command");
-			Object.values(SchedulesCommand.DELETE_OPTIONS).forEach(option => option.addToCommand(subcommand));
+			Object.values(ScheduleCommand.DELETE_OPTIONS).forEach(option => option.addToCommand(subcommand));
 			return subcommand;
 		})
 		.addSubcommand((subcommand) => {
@@ -64,15 +64,15 @@ export class SchedulesCommand extends AdminCommand {
 		});
 
 	// ====================================================================
-	//                           /schedules get
+	//                           /schedule get
 	// ====================================================================
 
 	static readonly GET_OPTIONS = {
 		queues: new QueuesOption({ required: true, description: "Get schedules of specific queue(s)" }),
 	};
 
-	static async schedules_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
-		queues = queues ?? await SchedulesCommand.GET_OPTIONS.queues.get(inter);
+	static async schedule_get(inter: SlashInteraction, queues?: Collection<bigint, DbQueue>) {
+		queues = queues ?? await ScheduleCommand.GET_OPTIONS.queues.get(inter);
 
 		const schedules = inter.store.dbSchedules().filter(schedule => queues.has(schedule.queueId));
 
@@ -91,7 +91,7 @@ export class SchedulesCommand extends AdminCommand {
 	}
 
 	// ====================================================================
-	//                           /schedules add
+	//                           /schedule add
 	// ====================================================================
 
 	static readonly ADD_OPTIONS = {
@@ -103,15 +103,15 @@ export class SchedulesCommand extends AdminCommand {
 		reason: new ReasonOption({ description: "Reason for the schedule" }),
 	};
 
-	static async schedules_add(inter: SlashInteraction) {
-		const queues = await SchedulesCommand.ADD_OPTIONS.queues.get(inter);
+	static async schedule_add(inter: SlashInteraction) {
+		const queues = await ScheduleCommand.ADD_OPTIONS.queues.get(inter);
 		const schedule = {
 			guildId: inter.guildId,
-			command: SchedulesCommand.ADD_OPTIONS.command.get(inter),
-			cron: SchedulesCommand.ADD_OPTIONS.cron.get(inter),
-			timezone: await SchedulesCommand.ADD_OPTIONS.timezone.get(inter),
-			messageChannelId: SchedulesCommand.ADD_OPTIONS.messageChannel.get(inter)?.id,
-			reason: SchedulesCommand.ADD_OPTIONS.reason.get(inter),
+			command: ScheduleCommand.ADD_OPTIONS.command.get(inter),
+			cron: ScheduleCommand.ADD_OPTIONS.cron.get(inter),
+			timezone: await ScheduleCommand.ADD_OPTIONS.timezone.get(inter),
+			messageChannelId: ScheduleCommand.ADD_OPTIONS.messageChannel.get(inter)?.id,
+			reason: ScheduleCommand.ADD_OPTIONS.reason.get(inter),
 		};
 
 		const {
@@ -120,11 +120,11 @@ export class SchedulesCommand extends AdminCommand {
 		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
 		await inter.respond(`Scheduled ${schedule.command} for the '${queuesMention(updatedQueues)}' queue${updatedQueues.length > 1 ? "s" : ""}.`, true);
-		await this.schedules_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
+		await this.schedule_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
 	// ====================================================================
-	//                           /schedules set
+	//                           /schedule set
 	// ====================================================================
 
 	static readonly SET_OPTIONS = {
@@ -136,14 +136,14 @@ export class SchedulesCommand extends AdminCommand {
 		reason: new ReasonOption({ description: "Reason for the schedule" }),
 	};
 
-	static async schedules_set(inter: SlashInteraction) {
-		const schedules = await SchedulesCommand.SET_OPTIONS.schedules.get(inter);
+	static async schedule_set(inter: SlashInteraction) {
+		const schedules = await ScheduleCommand.SET_OPTIONS.schedules.get(inter);
 		const scheduleUpdate = omitBy({
-			command: SchedulesCommand.SET_OPTIONS.command.get(inter),
-			cron: SchedulesCommand.SET_OPTIONS.cron.get(inter),
-			timezone: SchedulesCommand.SET_OPTIONS.timezone.get(inter),
-			messageChannelId: SchedulesCommand.SET_OPTIONS.messageChannelId.get(inter),
-			reason: SchedulesCommand.SET_OPTIONS.reason.get(inter),
+			command: ScheduleCommand.SET_OPTIONS.command.get(inter),
+			cron: ScheduleCommand.SET_OPTIONS.cron.get(inter),
+			timezone: ScheduleCommand.SET_OPTIONS.timezone.get(inter),
+			messageChannelId: ScheduleCommand.SET_OPTIONS.messageChannelId.get(inter),
+			reason: ScheduleCommand.SET_OPTIONS.reason.get(inter),
 		}, isNil) as Partial<DbSchedule>;
 
 		const {
@@ -152,19 +152,19 @@ export class SchedulesCommand extends AdminCommand {
 		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
 		await inter.respond(`Updated ${schedules.size} schedule${schedules.size ? "s" : ""}.`, true);
-		await this.schedules_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
+		await this.schedule_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
 	// ====================================================================
-	//                           /schedules delete
+	//                           /schedule delete
 	// ====================================================================
 
 	static readonly DELETE_OPTIONS = {
 		schedules: new SchedulesOption({ required: true, description: "Scheduled commands to delete" }),
 	};
 
-	static async schedules_delete(inter: SlashInteraction) {
-		const schedules = await SchedulesCommand.DELETE_OPTIONS.schedules.get(inter);
+	static async schedule_delete(inter: SlashInteraction) {
+		const schedules = await ScheduleCommand.DELETE_OPTIONS.schedules.get(inter);
 
 		const {
 			updatedQueueIds,
@@ -172,14 +172,14 @@ export class SchedulesCommand extends AdminCommand {
 		const updatedQueues = updatedQueueIds.map(queueId => inter.store.dbQueues().get(queueId));
 
 		await inter.respond(`Deleted ${schedules.size} schedule${schedules.size ? "s" : ""}.`, true);
-		await this.schedules_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
+		await this.schedule_get(inter, toCollection<bigint, DbQueue>("id", updatedQueues));
 	}
 
 	// ====================================================================
-	//                           /schedules help
+	//                           /schedule help
 	// ====================================================================
 
-	static async schedules_help(inter: SlashInteraction) {
+	static async schedule_help(inter: SlashInteraction) {
 		const embeds = [new EmbedBuilder()
 			.setTitle("Scheduled Commands")
 			.setDescription(
