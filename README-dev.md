@@ -24,17 +24,19 @@ See [Discord.js guide](https://discordjs.guide/preparations/setting-up-a-bot-app
 
 Update the `.env` file with your bot's TOKEN and CLIENT_ID.
 
-### Option 1: Install and run with Docker
+### Option 1: Install and run with Docker (recommended)
 
 ```bash
-docker build
+npm run dock
 ```
+
+This will build the Docker image and run the bot in a container. The bot will automatically restart if it crashes.
 
 ### Option 2: Manually install and run
 
 [Install Node.js](https://nodejs.org/en/download/package-manager).
 
-Run the setup script (**this should be done every time after pulling**):
+Run the setup script (**run each time you update the project**):
 
 ```bash
 npm run setup

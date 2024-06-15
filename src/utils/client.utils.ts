@@ -56,7 +56,8 @@ export namespace ClientUtils {
 		console.timeEnd("Logged in");
 	}
 
-	export function checkRequiredEnvironmentVariables() {
+	export function verifyRequiredEnvironmentVariables() {
+		// Required exist
 		[
 			"TOKEN",
 			"CLIENT_ID",
@@ -66,7 +67,7 @@ export namespace ClientUtils {
 				throw new Error(`Required environment variable ${name} not set. Please edit .env file`);
 			}
 		});
-		// color check
+		// DEFAULT_COLOR is valid
 		if (!Object.keys(Color).includes(process.env.DEFAULT_COLOR as string)) {
 			throw new Error(`Invalid DEFAULT_COLOR value. Please edit .env file\nOptions: [${Object.keys(Color).join(", ")}]`);
 		}
@@ -82,7 +83,7 @@ export namespace ClientUtils {
 		// Use dynamic import to load the .ts file
 		const patchNotesChannelId = process.env.PATCH_NOTES_CHANNEL_ID;
 		if (!patchNotesChannelId) return;
-		const patchNoteChannel = CLIENT.channels.cache.get(patchNotesChannelId) as TextChannel;
+		const patchNotesChannel = CLIENT.channels.cache.get(patchNotesChannelId) as TextChannel;
 		for (const fileName of unreadFileNames) {
 			const { embeds } = await import(`../../patch-notes/${fileName}`);
 
@@ -92,12 +93,12 @@ export namespace ClientUtils {
 				console.log("");
 				console.log(`Patch notes for '${fileName}' have not been sent. Enter a number to continue:`);
 				console.log("[1] send patch notes to patch notes channel");
-				console.log("[2] mark patch note as already sent)");
+				console.log("[2] mark patch note as already sent");
 				console.log("[3] skip");
 				userInput = (await new Promise(resolve => process.stdin.once("data", resolve))).toString().trim();
 			}
 			if (userInput === "1") {
-				await patchNoteChannel.send({ embeds });
+				await patchNotesChannel.send({ embeds });
 				QueryUtils.insertPatchNotes({ fileName });
 				console.log(`Sent ${fileName}. Continuing...`);
 			}

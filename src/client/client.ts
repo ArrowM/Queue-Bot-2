@@ -19,7 +19,7 @@ export async function start() {
 
 		ClientListeners.load();
 
-		ClientUtils.checkRequiredEnvironmentVariables();
+		ClientUtils.verifyRequiredEnvironmentVariables();
 
 		await ClientUtils.login();
 

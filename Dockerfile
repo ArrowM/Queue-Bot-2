@@ -5,6 +5,12 @@ WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
+# Copy DB Requirements
+COPY .env ./
+COPY drizzle.config.ts ./
+COPY ./db/migrations ./db/migrations
+COPY ./src/types ./src/types
+COPY ./src/db/schema.ts ./src/db/schema.ts
 
 # ---- Dependencies ----
 FROM base AS dependencies
