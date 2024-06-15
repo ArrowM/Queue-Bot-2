@@ -85,6 +85,9 @@ If you need to add or modify database tables or columns:
 
 ## Misc
 
-Use `npm run lint` to lint the project.
+Please lint before pushing:
+```bash
+npm run lint
+```
 
 This project is designed to run without compiling thanks to `@swc-node/register/esm`.
